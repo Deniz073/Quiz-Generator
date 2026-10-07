@@ -1,4 +1,5 @@
 import { Link, createFileRoute } from '@tanstack/react-router'
+import { DataBackup } from '#/components/DataBackup'
 import { countQuestions, quizzes } from '#/quizzes'
 
 export const Route = createFileRoute('/')({ component: Home })
@@ -30,6 +31,7 @@ function Home() {
           </li>
         ))}
       </ul>
+      <DataBackup />
     </div>
   )
 }
