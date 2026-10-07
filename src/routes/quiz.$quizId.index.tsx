@@ -1,6 +1,8 @@
 import { Link, createFileRoute, notFound } from '@tanstack/react-router'
 import { NotFound } from '#/components/NotFound'
+import { getFlaggedQuestions } from '#/lib/flags'
 import { formatResult } from '#/lib/progress'
+import { useFlags } from '#/lib/use-flags'
 import { useQuizProgress } from '#/lib/use-progress'
 import { countQuestions, getQuiz } from '#/quizzes'
 
@@ -20,7 +22,12 @@ function QuizPage() {
   const quiz = getQuiz(quizId)
   // Empty on the server and during hydration, then filled in from localStorage.
   const progress = useQuizProgress(quizId)
+  const flags = useFlags(quizId)
   if (!quiz) return null
+
+  const countFlagged = (chapterId?: string) =>
+    flags ? getFlaggedQuestions(quiz, flags, chapterId).length : 0
+  const totalFlagged = countFlagged()
 
   const total = countQuestions(quiz)
   // Offer only sizes that actually draw fewer questions than "all".
@@ -43,6 +50,7 @@ function QuizPage() {
         {quiz.chapters.map((chapter) => {
           const count = chapter.questions.length
           const result = progress?.chapters[chapter.id]
+          const flagged = countFlagged(chapter.id)
           return (
             <li key={chapter.id} className="flex items-stretch gap-3">
               {/* Siblings, not nested: a link inside a link is invalid HTML. */}
@@ -74,6 +82,17 @@ function QuizPage() {
               >
                 Study
               </Link>
+              {flagged > 0 ? (
+                <Link
+                  to="/quiz/$quizId/flagged"
+                  params={{ quizId: quiz.id }}
+                  search={{ chapter: chapter.id }}
+                  aria-label={`Practice ${flagged} flagged in chapter ${chapter.number}: ${chapter.title}`}
+                  className={`flex shrink-0 items-center text-sm font-medium text-amber-700 dark:text-amber-400 ${cardLinkClasses}`}
+                >
+                  Flagged ({flagged})
+                </Link>
+              ) : null}
             </li>
           )
         })}
@@ -107,6 +126,22 @@ function QuizPage() {
           </Link>
         </li>
       </ul>
+
+      <h2 className="mt-8 text-lg font-semibold">Flagged questions</h2>
+      <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
+        {totalFlagged > 0
+          ? 'Practice the questions you flagged, from all chapters. Not saved.'
+          : 'Use \u201cFlag for review\u201d during a chapter or practice round to collect questions here.'}
+      </p>
+      {totalFlagged > 0 ? (
+        <Link
+          to="/quiz/$quizId/flagged"
+          params={{ quizId: quiz.id }}
+          className={`mt-3 inline-block font-medium ${cardLinkClasses}`}
+        >
+          Practice all {totalFlagged} flagged
+        </Link>
+      ) : null}
 
       <h2 className="mt-8 text-lg font-semibold">Study</h2>
       <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">

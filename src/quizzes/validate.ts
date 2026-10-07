@@ -9,6 +9,7 @@ const RESERVED_CHAPTER_IDS: ReadonlyArray<string> = [
   'practice',
   'exam',
   'study',
+  'flagged',
 ]
 
 /** The quiz UI has hotkeys for options 1-6 / A-F. */

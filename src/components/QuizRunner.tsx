@@ -2,6 +2,7 @@ import { useEffect, useEffectEvent, useReducer } from 'react'
 import { useHotkey, useHotkeys } from '@tanstack/react-hotkeys'
 import type { PlannedQuestion } from '#/lib/quiz-plan'
 import type { Round } from '#/lib/quiz-state'
+import { toggleFlag } from '#/lib/flags'
 import { OPTION_KEYS } from '#/lib/option-keys'
 import { reshufflePlan } from '#/lib/quiz-plan'
 import {
@@ -11,12 +12,12 @@ import {
   getCurrentItem,
   getScore,
   getSelected,
-  isFlagged,
   isSubmitted,
   quizReducer,
 } from '#/lib/quiz-state'
 import { QuestionCard } from '#/components/QuestionCard'
 import { ResultsScreen } from '#/components/ResultsScreen'
+import { useFlags } from '#/lib/use-flags'
 
 type Props = {
   quizId: string
@@ -27,6 +28,8 @@ type Props = {
    * Used to save progress; omit for modes that are not recorded.
    */
   onFinish?: (score: number, total: number) => void
+  /** False hides the "retry" button, e.g. when `buildPlan` would be empty. */
+  canRetry?: boolean
 } & (
   | { mode: 'chapter'; nextChapterId: string | undefined }
   // Mixed practice: immediate feedback across chapters.
@@ -34,16 +37,21 @@ type Props = {
   // Practice again on a fixed subset of questions (e.g. the ones missed in a
   // mock exam). Never recorded.
   | { mode: 'subset' }
+  // Practice the questions flagged in earlier rounds. Never recorded.
+  | { mode: 'flagged' }
 )
 
 const RETRY_LABELS = {
   chapter: 'Retry chapter',
   practice: 'New practice round',
   subset: 'Practice again',
+  flagged: 'Practice flagged again',
 }
 
 export function QuizRunner(props: Props) {
-  const { quizId, mode, buildPlan, onFinish } = props
+  const { quizId, mode, buildPlan, onFinish, canRetry = true } = props
+  // Undefined until loaded from localStorage; nothing shows as flagged then.
+  const flags = useFlags(quizId)
 
   // A full round of this mode. Only "subset" rounds are never recorded.
   const fullRound = (): Round => ({ subset: props.mode === 'subset' })
@@ -58,6 +66,9 @@ export function QuizRunner(props: Props) {
   const submitted = isSubmitted(state)
   const finished = item === undefined
   const { round } = state
+  const flaggedIndexes = state.plan.flatMap((planned, index) =>
+    flags?.has(planned.question.question) ? [index] : [],
+  )
 
   // Save once per finished full round. The effect event keeps the latest
   // onFinish without making it a dependency (a new closure each render would
@@ -104,7 +115,7 @@ export function QuizRunner(props: Props) {
   )
 
   if (finished) {
-    const answers = getAnswers(state)
+    const answers = getAnswers(state, flaggedIndexes)
     return (
       <ResultsScreen
         quizId={quizId}
@@ -114,8 +125,15 @@ export function QuizRunner(props: Props) {
         nextChapterId={
           props.mode === 'chapter' ? props.nextChapterId : undefined
         }
-        onRetry={() =>
-          dispatch({ type: 'retry', plan: buildPlan(), round: fullRound() })
+        onRetry={
+          canRetry
+            ? () =>
+                dispatch({
+                  type: 'retry',
+                  plan: buildPlan(),
+                  round: fullRound(),
+                })
+            : undefined
         }
         onRetryIncorrect={() =>
           dispatch({
@@ -141,11 +159,11 @@ export function QuizRunner(props: Props) {
       total={state.plan.length}
       score={getScore(state)}
       isLast={state.current === state.plan.length - 1}
-      flagged={isFlagged(state)}
+      flagged={flaggedIndexes.includes(state.current)}
       onToggle={(originalIndex) => dispatch({ type: 'toggle', originalIndex })}
       onCheck={() => dispatch({ type: 'check' })}
       onNext={() => dispatch({ type: 'next' })}
-      onFlag={() => dispatch({ type: 'flag' })}
+      onFlag={() => toggleFlag(quizId, item.question)}
     />
   )
 }

@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as QuizQuizIdIndexRouteImport } from './routes/quiz.$quizId.index'
 import { Route as QuizQuizIdChapterIdRouteImport } from './routes/quiz.$quizId.$chapterId'
 import { Route as QuizQuizIdExamRouteImport } from './routes/quiz.$quizId.exam'
+import { Route as QuizQuizIdFlaggedRouteImport } from './routes/quiz.$quizId.flagged'
 import { Route as QuizQuizIdPracticeRouteImport } from './routes/quiz.$quizId.practice'
 import { Route as QuizQuizIdStudyRouteImport } from './routes/quiz.$quizId.study'
 
@@ -36,6 +37,11 @@ const QuizQuizIdExamRoute = QuizQuizIdExamRouteImport.update({
   path: '/quiz/$quizId/exam',
   getParentRoute: () => rootRouteImport,
 } as any)
+const QuizQuizIdFlaggedRoute = QuizQuizIdFlaggedRouteImport.update({
+  id: '/quiz/$quizId/flagged',
+  path: '/quiz/$quizId/flagged',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const QuizQuizIdPracticeRoute = QuizQuizIdPracticeRouteImport.update({
   id: '/quiz/$quizId/practice',
   path: '/quiz/$quizId/practice',
@@ -51,6 +57,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/quiz/$quizId/$chapterId': typeof QuizQuizIdChapterIdRoute
   '/quiz/$quizId/exam': typeof QuizQuizIdExamRoute
+  '/quiz/$quizId/flagged': typeof QuizQuizIdFlaggedRoute
   '/quiz/$quizId/practice': typeof QuizQuizIdPracticeRoute
   '/quiz/$quizId/study': typeof QuizQuizIdStudyRoute
   '/quiz/$quizId/': typeof QuizQuizIdIndexRoute
@@ -59,6 +66,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/quiz/$quizId/$chapterId': typeof QuizQuizIdChapterIdRoute
   '/quiz/$quizId/exam': typeof QuizQuizIdExamRoute
+  '/quiz/$quizId/flagged': typeof QuizQuizIdFlaggedRoute
   '/quiz/$quizId/practice': typeof QuizQuizIdPracticeRoute
   '/quiz/$quizId/study': typeof QuizQuizIdStudyRoute
   '/quiz/$quizId': typeof QuizQuizIdIndexRoute
@@ -68,6 +76,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/quiz/$quizId/$chapterId': typeof QuizQuizIdChapterIdRoute
   '/quiz/$quizId/exam': typeof QuizQuizIdExamRoute
+  '/quiz/$quizId/flagged': typeof QuizQuizIdFlaggedRoute
   '/quiz/$quizId/practice': typeof QuizQuizIdPracticeRoute
   '/quiz/$quizId/study': typeof QuizQuizIdStudyRoute
   '/quiz/$quizId/': typeof QuizQuizIdIndexRoute
@@ -78,6 +87,7 @@ export interface FileRouteTypes {
     | '/'
     | '/quiz/$quizId/$chapterId'
     | '/quiz/$quizId/exam'
+    | '/quiz/$quizId/flagged'
     | '/quiz/$quizId/practice'
     | '/quiz/$quizId/study'
     | '/quiz/$quizId/'
@@ -86,6 +96,7 @@ export interface FileRouteTypes {
     | '/'
     | '/quiz/$quizId/$chapterId'
     | '/quiz/$quizId/exam'
+    | '/quiz/$quizId/flagged'
     | '/quiz/$quizId/practice'
     | '/quiz/$quizId/study'
     | '/quiz/$quizId'
@@ -94,6 +105,7 @@ export interface FileRouteTypes {
     | '/'
     | '/quiz/$quizId/$chapterId'
     | '/quiz/$quizId/exam'
+    | '/quiz/$quizId/flagged'
     | '/quiz/$quizId/practice'
     | '/quiz/$quizId/study'
     | '/quiz/$quizId/'
@@ -103,6 +115,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   QuizQuizIdChapterIdRoute: typeof QuizQuizIdChapterIdRoute
   QuizQuizIdExamRoute: typeof QuizQuizIdExamRoute
+  QuizQuizIdFlaggedRoute: typeof QuizQuizIdFlaggedRoute
   QuizQuizIdPracticeRoute: typeof QuizQuizIdPracticeRoute
   QuizQuizIdStudyRoute: typeof QuizQuizIdStudyRoute
   QuizQuizIdIndexRoute: typeof QuizQuizIdIndexRoute
@@ -138,6 +151,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof QuizQuizIdExamRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/quiz/$quizId/flagged': {
+      id: '/quiz/$quizId/flagged'
+      path: '/quiz/$quizId/flagged'
+      fullPath: '/quiz/$quizId/flagged'
+      preLoaderRoute: typeof QuizQuizIdFlaggedRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/quiz/$quizId/practice': {
       id: '/quiz/$quizId/practice'
       path: '/quiz/$quizId/practice'
@@ -159,6 +179,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   QuizQuizIdChapterIdRoute: QuizQuizIdChapterIdRoute,
   QuizQuizIdExamRoute: QuizQuizIdExamRoute,
+  QuizQuizIdFlaggedRoute: QuizQuizIdFlaggedRoute,
   QuizQuizIdPracticeRoute: QuizQuizIdPracticeRoute,
   QuizQuizIdStudyRoute: QuizQuizIdStudyRoute,
   QuizQuizIdIndexRoute: QuizQuizIdIndexRoute,

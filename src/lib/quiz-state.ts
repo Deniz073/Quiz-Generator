@@ -30,8 +30,6 @@ export interface QuizState {
    * current question counts as answered iff `answers.length > current`.
    */
   answers: ReadonlyArray<ReadonlyArray<number>>
-  /** Plan indexes the user flagged for review. */
-  flagged: ReadonlyArray<number>
 }
 
 export type QuizAction =
@@ -41,8 +39,6 @@ export type QuizAction =
   | { type: 'check' }
   /** Moves past the answered question. */
   | { type: 'next' }
-  /** Flags or unflags the current question. */
-  | { type: 'flag' }
   /** The plan is passed in so the reducer stays pure (shuffling is random). */
   | { type: 'retry'; plan: ReadonlyArray<PlannedQuestion>; round: Round }
 
@@ -60,7 +56,7 @@ export function createInitialState(
   plan: ReadonlyArray<PlannedQuestion>,
   round: Round,
 ): QuizState {
-  return { plan, round, current: 0, draft: [], answers: [], flagged: [] }
+  return { plan, round, current: 0, draft: [], answers: [] }
 }
 
 export function quizReducer(state: QuizState, action: QuizAction): QuizState {
@@ -91,16 +87,6 @@ export function quizReducer(state: QuizState, action: QuizAction): QuizState {
     case 'next':
       if (!isSubmitted(state)) return state
       return { ...state, current: state.current + 1, draft: [] }
-    case 'flag': {
-      if (!item) return state
-      const { current } = state
-      return {
-        ...state,
-        flagged: state.flagged.includes(current)
-          ? state.flagged.filter((i) => i !== current)
-          : [...state.flagged, current],
-      }
-    }
     case 'retry':
       return createInitialState(action.plan, action.round)
   }
@@ -124,10 +110,6 @@ export function getSelected(state: QuizState): ReadonlyArray<number> {
   return state.answers.at(state.current) ?? state.draft
 }
 
-export function isFlagged(state: QuizState): boolean {
-  return state.flagged.includes(state.current)
-}
-
 /** A multiple-answer draft has exactly as many picks as there are answers. */
 export function canCheck(state: QuizState): boolean {
   const item = getCurrentItem(state)
@@ -139,12 +121,18 @@ export function canCheck(state: QuizState): boolean {
   )
 }
 
-/** Answered questions so far (all of them once the round is finished). */
-export function getAnswers(state: QuizState): Array<Answer> {
+/**
+ * Answered questions so far (all of them once the round is finished).
+ * Flags are saved outside the round (see ./flags), so they are passed in.
+ */
+export function getAnswers(
+  state: QuizState,
+  flagged: ReadonlyArray<number> = [],
+): Array<Answer> {
   return buildAnswers(
     state.plan.slice(0, state.answers.length),
     state.answers,
-    state.flagged,
+    flagged,
   )
 }
 

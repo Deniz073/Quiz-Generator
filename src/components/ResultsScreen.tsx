@@ -16,7 +16,8 @@ interface Props {
   /** Exam only: pass mark in percent. Shows a PASSED / FAILED verdict. */
   passPercent?: number
   nextChapterId?: string
-  onRetry: () => void
+  /** Omit to hide the retry button (e.g. nothing left to practice). */
+  onRetry?: () => void
   /** Starts a practice round with only the questions answered wrong. */
   onRetryIncorrect: () => void
 }
@@ -69,13 +70,15 @@ export function ResultsScreen({
       </div>
 
       <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-        <button
-          type="button"
-          onClick={onRetry}
-          className={buttonClasses('primary')}
-        >
-          {retryLabel}
-        </button>
+        {onRetry ? (
+          <button
+            type="button"
+            onClick={onRetry}
+            className={buttonClasses('primary')}
+          >
+            {retryLabel}
+          </button>
+        ) : null}
         {wrong.length > 0 ? (
           <button
             type="button"
