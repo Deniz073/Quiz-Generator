@@ -5,6 +5,11 @@
  */
 
 interface BaseQuestion {
+  /**
+   * Stable slug, unique within the quiz, e.g. "3-07" (a-z, 0-9, hyphens). Saved
+   * flags refer to it, so never change or reuse an existing question's id.
+   */
+  id: string
   /** The question text. For multi-answer questions state the count, e.g. "Select two." */
   question: string
   /**

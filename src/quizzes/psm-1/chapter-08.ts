@@ -6,6 +6,7 @@ export const chapter08: Chapter = {
   title: 'Increment, Definition of Done & End Note',
   questions: [
     {
+      id: '8-01',
       question: 'How does the Scrum Guide define an Increment?',
       options: [
         'The list of Product Backlog items the Developers selected for the Sprint',
@@ -18,6 +19,7 @@ export const chapter08: Chapter = {
         'An Increment is a concrete stepping stone toward the Product Goal. It is a usable piece of the product, not a plan, a report or only the final release.',
     },
     {
+      id: '8-02',
       question:
         'Which two statements about every Increment are supported by the Scrum Guide? Select two.',
       options: [
@@ -31,6 +33,7 @@ export const chapter08: Chapter = {
         'Each Increment is additive to all prior Increments and thoroughly verified, ensuring that all Increments work together. Work counts as part of an Increment when it meets the Definition of Done, not when stakeholders sign it off.',
     },
     {
+      id: '8-03',
       question:
         'According to the Scrum Guide, what must an Increment be in order to provide value?',
       options: [
@@ -44,6 +47,7 @@ export const chapter08: Chapter = {
         'In order to provide value, the Increment must be usable. The Guide names no approval step, documentation rule or size requirement.',
     },
     {
+      id: '8-04',
       question: 'How many Increments may be created within one Sprint?',
       options: [
         'Exactly one, at the end of the Sprint',
@@ -56,6 +60,7 @@ export const chapter08: Chapter = {
         'Multiple Increments may be created within a Sprint, and their sum is presented at the Sprint Review. Each is born when a Product Backlog item meets the Definition of Done.',
     },
     {
+      id: '8-05',
       question:
         'On day six of a ten-day Sprint, the Developers complete a Product Backlog item that meets the Definition of Done. The Product Owner wants it released now, but the Scrum Master says it must wait for the Sprint Review. What does the Scrum Guide say?',
       options: [
@@ -69,6 +74,7 @@ export const chapter08: Chapter = {
         'The Guide states that an Increment may be delivered prior to the end of the Sprint and that the Sprint Review should never be considered a gate to releasing value. The Review is for inspection and adaptation, not for approval.',
     },
     {
+      id: '8-06',
       question:
         'At what moment is an Increment born, according to the Scrum Guide?',
       options: [
@@ -82,6 +88,7 @@ export const chapter08: Chapter = {
         'The moment a Product Backlog item meets the Definition of Done, an Increment is born. It does not depend on the Sprint ending or on a Review acceptance.',
     },
     {
+      id: '8-07',
       question: 'What is the Definition of Done?',
       options: [
         'A list of acceptance criteria written by the Product Owner for each Product Backlog item',
@@ -94,6 +101,7 @@ export const chapter08: Chapter = {
         'The Definition of Done is a formal description of the state of the Increment when it meets the quality measures required for the product. It gives everyone a shared understanding of what work was completed as part of the Increment.',
     },
     {
+      id: '8-08',
       question:
         'At the end of the Sprint, one Product Backlog item does not meet the Definition of Done. Which two statements are supported by the Scrum Guide? Select two.',
       options: [
@@ -107,6 +115,7 @@ export const chapter08: Chapter = {
         'An item that does not meet the Definition of Done cannot be released or even presented at the Sprint Review, and it returns to the Product Backlog for future consideration. It is neither shown as almost done nor carried over automatically.',
     },
     {
+      id: '8-09',
       question:
         'The organization has a quality standard that is part of the Definition of Done for the product. A Scrum Team prefers a less strict Definition of Done. What does the Scrum Guide say?',
       options: [
@@ -120,6 +129,7 @@ export const chapter08: Chapter = {
         'If the Definition of Done is part of the standards of the organization, all Scrum Teams must follow it as a minimum. A team may be stricter than the standard, but not weaker.',
     },
     {
+      id: '8-10',
       question:
         'The organization has no standard that applies to the Definition of Done for a product. What does the Scrum Guide say?',
       options: [
@@ -133,6 +143,7 @@ export const chapter08: Chapter = {
         'If the Definition of Done is not an organizational standard, the Scrum Team must create one appropriate for the product. Without it, transparency about what Done means would be lost.',
     },
     {
+      id: '8-11',
       question:
         'Three Scrum Teams work together on the same product. What does the Scrum Guide say about their Definition of Done?',
       options: [
@@ -146,6 +157,7 @@ export const chapter08: Chapter = {
         'If multiple Scrum Teams work together on a product, they must mutually define and comply with the same Definition of Done. Self-management does not allow each team to define Done differently for one product.',
     },
     {
+      id: '8-12',
       question:
         'Who is required to conform to the Definition of Done, according to the Scrum Guide?',
       options: [
@@ -159,6 +171,7 @@ export const chapter08: Chapter = {
         'The Developers are required to conform to the Definition of Done, as they are accountable for instilling quality by adhering to it. It is the commitment of the Increment.',
     },
     {
+      id: '8-13',
       question:
         'Which two statements are made in the End Note of the Scrum Guide? Select two.',
       options: [
@@ -172,6 +185,7 @@ export const chapter08: Chapter = {
         'The framework is immutable, and implementing only parts of it is possible, but the result is not Scrum. Scrum exists only in its entirety, yet it functions well as a container for other techniques.',
     },
     {
+      id: '8-14',
       question:
         'How does the Scrum Guide describe the relationship between Scrum and other techniques, methodologies and practices?',
       options: [

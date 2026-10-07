@@ -6,6 +6,7 @@ export const chapter04: Chapter = {
   title: 'Core Azure architectural components',
   questions: [
     {
+      id: '4-01',
       question: 'What is an Azure region?',
       options: [
         'A single physical datacenter building owned by Microsoft',
@@ -18,6 +19,7 @@ export const chapter04: Chapter = {
         'A region is a geographic area with at least one, and often several, datacenters that are close together and linked by a low-latency network. A region pair is a different concept: two regions linked for resiliency.',
     },
     {
+      id: '4-02',
       question: 'Which description best matches an Azure availability zone?',
       options: [
         'A group of regions within the same country that share one billing account',
@@ -30,6 +32,7 @@ export const chapter04: Chapter = {
         'An availability zone is made up of one or more datacenters with their own power, cooling, and networking, and acts as an isolation boundary: if one zone fails, the others keep running. A secondary region is the role of a region pair, not a zone.',
     },
     {
+      id: '4-03',
       question:
         'An Azure service is described as "zone-redundant". What does this mean?',
       options: [
@@ -43,6 +46,7 @@ export const chapter04: Chapter = {
         'Zone-redundant services are replicated automatically by the platform across zones. With zonal services you choose the zone yourself, and surviving a region-wide outage requires non-regional services or a region pair.',
     },
     {
+      id: '4-04',
       question:
         'A company wants to deploy a virtual machine into availability zone 2 specifically, so it runs close to another resource in that zone. Which type of zone-supporting service is this?',
       options: [
@@ -56,6 +60,7 @@ export const chapter04: Chapter = {
         'With zonal services you pin a resource to a specific zone of your choice. Zone-redundant services replicate across zones automatically, so you do not select one.',
     },
     {
+      id: '4-05',
       question:
         'Why does Azure pair most regions with another region in the same geography, typically at least 300 miles away?',
       options: [
@@ -69,6 +74,7 @@ export const chapter04: Chapter = {
         'The distance between paired regions lowers the likelihood that natural disasters, civil unrest, power failures, or network outages hit both at once. The large distance actually increases latency, so low latency is not the goal.',
     },
     {
+      id: '4-06',
       question: 'Which is a benefit of Azure region pairs?',
       options: [
         'Resources are automatically moved to the paired region every month',
@@ -81,6 +87,7 @@ export const chapter04: Chapter = {
         'Planned updates are applied to paired regions sequentially, which reduces downtime and the risk of unavailable applications. During a broad outage, one region of each pair is prioritized for recovery, not both. Data also stays within the same geography for residency and tax reasons.',
     },
     {
+      id: '4-07',
       question:
         'You delete an Azure resource group. What happens to the resources inside it?',
       options: [
@@ -94,6 +101,7 @@ export const chapter04: Chapter = {
         'Deleting a resource group deletes every resource it contains, which is why resource groups are useful for lifecycle management. Resources are not moved elsewhere automatically.',
     },
     {
+      id: '4-08',
       question:
         'Which statement about Azure resources and resource groups is correct?',
       options: [
@@ -107,6 +115,7 @@ export const chapter04: Chapter = {
         'Every resource must be in exactly one resource group, although you can move it to another one. Resource groups cannot be nested. Management groups are the construct that can be nested.',
     },
     {
+      id: '4-09',
       question:
         'Which two kinds of boundaries can an Azure subscription define?',
       options: [
@@ -120,6 +129,7 @@ export const chapter04: Chapter = {
         'A subscription is a unit of management, billing, and scale: it determines how an account is billed and is the level at which access control policies are applied. The other pairings are not subscription boundary types.',
     },
     {
+      id: '4-10',
       question:
         'A company wants separate Azure invoices for its Marketing and HR departments, and wants to give each department its own access policies. What is the most appropriate approach?',
       options: [
@@ -133,6 +143,7 @@ export const chapter04: Chapter = {
         'Subscriptions are the billing and access control boundary, so separate subscriptions give separate invoices and access policies. Resource groups do not split billing into separate invoices, and a management group does not produce invoices at all.',
     },
     {
+      id: '4-11',
       question:
         'An organization has dozens of Azure subscriptions and wants to apply the same access and policy rules to all of them without configuring each one separately. What should it use?',
       options: [
@@ -146,6 +157,7 @@ export const chapter04: Chapter = {
         'Management groups sit above subscriptions and let you apply governance conditions that are inherited by all subscriptions inside them. Unlike resource groups, management groups can be nested.',
     },
     {
+      id: '4-12',
       question:
         'Which order shows the Azure management hierarchy from the highest to the lowest level?',
       options: [
@@ -159,6 +171,7 @@ export const chapter04: Chapter = {
         'Management groups contain subscriptions, subscriptions contain resource groups, and resource groups contain resources. Governance applied at a higher level is inherited by the levels below it.',
     },
     {
+      id: '4-13',
       question:
         'Azure services that support availability zones fall into which three categories? Select three.',
       options: [
@@ -173,6 +186,7 @@ export const chapter04: Chapter = {
         'Zonal services are pinned to a zone you choose, zone-redundant services are replicated across zones automatically, and non-regional services are always available from Azure geographies and resilient to zone-wide and region-wide outages. Pairing applies to regions, not to zone support.',
     },
     {
+      id: '4-14',
       question:
         'Which two statements about Azure management groups are correct? Select two.',
       options: [

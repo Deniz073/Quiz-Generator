@@ -6,7 +6,7 @@ import {
 } from '#/lib/flags'
 
 /**
- * Flagged question texts of a quiz, or undefined until loaded. localStorage
+ * Flagged question ids of a quiz, or undefined until loaded. localStorage
  * only exists in the browser, so the server and the first client render
  * (hydration) see undefined; the saved flags appear right after.
  */
@@ -16,7 +16,7 @@ export function useFlags(quizId: string): ReadonlySet<string> | undefined {
     getFlagsSnapshot,
     getServerFlagsSnapshot,
   )
-  const texts = flags === null ? undefined : flags[quizId]
+  const ids = flags === null ? undefined : flags[quizId]
   const loaded = flags !== null
-  return useMemo(() => (loaded ? new Set(texts) : undefined), [loaded, texts])
+  return useMemo(() => (loaded ? new Set(ids) : undefined), [loaded, ids])
 }

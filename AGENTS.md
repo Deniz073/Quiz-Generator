@@ -43,6 +43,7 @@ const quiz: Quiz = {
       title: 'Basics',
       questions: [
         {
+          id: '1-01', // slug, unique within the quiz; never change it later
           question: 'Which option is correct?',
           options: [
             'Right answer',
@@ -55,6 +56,7 @@ const quiz: Quiz = {
             'Why it is correct, and why the most tempting distractor is not.',
         },
         {
+          id: '1-02',
           question: 'Which two options are correct? Select two.',
           options: ['Right A', 'Right B', 'Wrong 1', 'Wrong 2'],
           correctIndexes: [0, 1],
@@ -75,6 +77,7 @@ Violations throw at app load and fail `npm run validate:quizzes`, listing quiz >
 - Quiz `id` and chapter `id`s are URL-safe slugs (`a-z`, `0-9`, single hyphens). Quiz ids are unique across all quizzes; chapter ids unique within a quiz.
 - Chapter ids `practice`, `exam`, `study` and `flagged` are reserved (they are routes: `/quiz/<id>/practice`, `/quiz/<id>/exam`, `/quiz/<id>/study`, `/quiz/<id>/flagged`).
 - Chapter `number`s are unique integers within a quiz.
+- Every question has an `id`: a slug unique within the quiz. Convention: `<chapter number>-<two-digit index>`, e.g. `3-07`. Saved flags refer to it, so when editing an existing quiz never change or reuse an id; give new questions a new one.
 - `title`, `description`, `question`, `explanation` and every option are non-empty.
 - Each quiz has at least one chapter; each chapter at least one question.
 - 2-6 options per question (UI hotkeys cover 6); no duplicate option texts.

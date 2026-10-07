@@ -6,6 +6,7 @@ export const chapter11: Chapter = {
   title: 'Azure monitoring tools',
   questions: [
     {
+      id: '11-01',
       question:
         'Which Azure service evaluates your existing resources and gives recommendations to improve reliability, security and performance, optimize operations and reduce costs?',
       options: [
@@ -19,6 +20,7 @@ export const chapter11: Chapter = {
         'Azure Advisor analyzes your resources and recommends improvements. Azure Cost Management only covers the cost side, and Azure Monitor collects telemetry rather than giving recommendations.',
     },
     {
+      id: '11-02',
       question:
         'A company notices that several virtual machines are barely used and wants Azure to suggest how to lower its bill. Which service provides this advice?',
       options: [
@@ -32,6 +34,7 @@ export const chapter11: Chapter = {
         'Azure Advisor includes cost recommendations, such as resizing or shutting down underused VMs. Service Health reports on service issues, not savings.',
     },
     {
+      id: '11-03',
       question:
         'Which Azure service automatically keeps track of the health of your Azure infrastructure and individual resources, so you do not have to check this manually?',
       options: [
@@ -45,6 +48,7 @@ export const chapter11: Chapter = {
         'Azure Service Health tracks the status of Azure services and your resources automatically. Azure Advisor gives optimization recommendations, not health status.',
     },
     {
+      id: '11-04',
       question:
         'A web application becomes slow, and the team wants to analyze request handling times and CPU usage and to be alerted automatically about performance problems. Which service should they use?',
       options: [
@@ -58,6 +62,7 @@ export const chapter11: Chapter = {
         'Azure Monitor collects and analyzes telemetry from applications, from request speed down to CPU usage, and can alert on performance. Advisor only gives general recommendations.',
     },
     {
+      id: '11-05',
       question: 'Which task is Azure Monitor designed for?',
       options: [
         'Estimating the price of a planned Azure deployment',
@@ -70,6 +75,7 @@ export const chapter11: Chapter = {
         'Azure Monitor tracks, logs and analyzes telemetry and automates performance alerts. Price estimates come from the Pricing calculator and locks from resource locking.',
     },
     {
+      id: '11-06',
       question:
         'An administrator wants to know whether a problem on one of their Azure resources is caused by an issue on the Azure platform or by their own configuration. Which service helps to find out?',
       options: [
@@ -83,6 +89,7 @@ export const chapter11: Chapter = {
         'Azure Service Health shows the health of Azure services and your individual resources, so you can see whether Azure itself is having an issue. Cost Management and the TCO calculator deal only with money.',
     },
     {
+      id: '11-07',
       question:
         'A security officer wants a list of suggestions to improve the security posture and reliability of the existing Azure resources. Which service gives these suggestions?',
       options: [
@@ -96,6 +103,7 @@ export const chapter11: Chapter = {
         'Azure Advisor evaluates your resources and recommends improvements in reliability, security, performance, operations and cost. Azure Monitor shows telemetry but does not give such recommendations.',
     },
     {
+      id: '11-08',
       question:
         'Azure Advisor provides recommendations in which three categories? Select three.',
       options: [
@@ -110,6 +118,7 @@ export const chapter11: Chapter = {
         'Azure Advisor recommends improvements in reliability, security, performance, operational excellence and cost. Data residency and licensing are not Advisor categories.',
     },
     {
+      id: '11-09',
       question:
         'Which two questions can Azure Service Health help you answer? Select two.',
       options: [

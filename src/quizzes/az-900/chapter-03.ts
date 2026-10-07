@@ -6,6 +6,7 @@ export const chapter03: Chapter = {
   title: 'Cloud service types',
   questions: [
     {
+      id: '3-01',
       question:
         'Which cloud service type is the most flexible and gives you the most control over your resources?',
       options: [
@@ -19,6 +20,7 @@ export const chapter03: Chapter = {
         'IaaS offers maximum control, but it also places most of the responsibility on the customer. SaaS is the least flexible of the three.',
     },
     {
+      id: '3-02',
       question:
         'In an IaaS model, which of the following is the responsibility of the customer rather than the cloud provider?',
       options: [
@@ -32,6 +34,7 @@ export const chapter03: Chapter = {
         'In IaaS the provider handles hardware, datacenter connectivity and physical security, while the customer manages the OS and network, database and storage configuration.',
     },
     {
+      id: '3-03',
       question:
         'A company wants to move its existing on-premises servers to the cloud with as few changes as possible, recreating a setup similar to its own datacenter. Which service type and approach fit best?',
       options: [
@@ -45,6 +48,7 @@ export const chapter03: Chapter = {
         'Lift-and-shift migrates what runs on-premises to IaaS infrastructure that resembles your datacenter. PaaS would typically require adapting the applications.',
     },
     {
+      id: '3-04',
       question:
         'A team needs development and test environments that can be started and shut down quickly while keeping full control over the configuration. Which service type suits this best?',
       options: ['SaaS', 'IaaS', 'Private cloud only', 'Azure Arc'],
@@ -53,6 +57,7 @@ export const chapter03: Chapter = {
         'IaaS lets you quickly replicate, start and stop test and development environments while keeping full control. SaaS provides a finished application and no environment control.',
     },
     {
+      id: '3-05',
       question:
         'How does the shared responsibility model divide responsibility in a PaaS solution?',
       options: [
@@ -66,6 +71,7 @@ export const chapter03: Chapter = {
         'PaaS is the middle ground: the provider manages infrastructure, operating systems and middleware, while the customer focuses on applications and data. Even in SaaS, the customer remains responsible for data and access.',
     },
     {
+      id: '3-06',
       question:
         'Developers want to build and customize a cloud application without managing operating systems or middleware, and benefit from built-in scalability and high availability. Which service type fits?',
       options: ['IaaS', 'SaaS', 'PaaS', 'On-premises hosting'],
@@ -74,6 +80,7 @@ export const chapter03: Chapter = {
         'PaaS provides a development framework with built-in features such as scalability, high availability and multi-tenancy, so developers write less code. In IaaS they would have to manage the OS themselves.',
     },
     {
+      id: '3-07',
       question:
         'An organization wants to analyze and mine its data, find patterns and predict outcomes using tools delivered as a managed service. Which cloud service type is the typical scenario for this?',
       options: ['IaaS', 'SaaS', 'Private cloud', 'PaaS'],
@@ -82,6 +89,7 @@ export const chapter03: Chapter = {
         'Analytics and business intelligence tools provided as a service are a typical PaaS scenario. The provider maintains the BI services that form the cloud solution.',
     },
     {
+      id: '3-08',
       question:
         "A company wants to use hosted email and messaging without managing servers or updating software. For SaaS, what remains the customer's responsibility?",
       options: [
@@ -95,6 +103,7 @@ export const chapter03: Chapter = {
         'In SaaS the provider is responsible for everything including updates and patches. The customer always stays responsible for their data and access to it (plus their own devices, accounts and identities).',
     },
     {
+      id: '3-09',
       question:
         'Which three of the following are responsibilities of the cloud provider in an IaaS model? Select three.',
       options: [
@@ -109,6 +118,7 @@ export const chapter03: Chapter = {
         'In IaaS the provider is responsible for hardware, network connectivity and physical security. The customer installs, configures and maintains the operating system and configures databases and storage, which is why IaaS gives the most control.',
     },
     {
+      id: '3-10',
       question:
         'Which two of the following Azure services are PaaS offerings? Select two.',
       options: [

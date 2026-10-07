@@ -6,6 +6,7 @@ export const chapter07: Chapter = {
   title: 'Azure identity, access and security',
   questions: [
     {
+      id: '7-01',
       question:
         'Which service lets users sign in and access Microsoft cloud applications as well as cloud apps you develop yourself, and also supports single sign-on, MFA and device registration?',
       options: [
@@ -19,6 +20,7 @@ export const chapter07: Chapter = {
         'Microsoft Entra ID (formerly Azure AD) is the cloud directory and identity service for authentication, SSO, application management and device registration. Intune can manage registered devices but does not provide the directory itself.',
     },
     {
+      id: '7-02',
       question:
         'A company migrated a legacy application to Azure VMs. The app needs domain join, Group Policy, LDAP and Kerberos/NTLM authentication, but the company does not want to deploy and manage domain controllers. What should it use?',
       options: [
@@ -32,6 +34,7 @@ export const chapter07: Chapter = {
         'Microsoft Entra Domain Services provides managed domain services (domain join, Group Policy, LDAP, Kerberos/NTLM) without you running domain controllers. Entra ID alone does not offer these legacy protocols.',
     },
     {
+      id: '7-03',
       question:
         'A user signs in with a password and then has to confirm the sign-in with a fingerprint scan. Which authentication method is being used, and which factor does the fingerprint represent?',
       options: [
@@ -45,6 +48,7 @@ export const chapter07: Chapter = {
         'Requiring a second form of verification on top of a password is MFA. Biometric data is something the user is, whereas a code sent to a phone is something the user has and a password is something the user knows.',
     },
     {
+      id: '7-04',
       question:
         'Which of the following is a passwordless authentication option in Azure?',
       options: [
@@ -58,6 +62,7 @@ export const chapter07: Chapter = {
         'The three passwordless options are Windows Hello, the Microsoft Authenticator app and FIDO2 security keys. Self-service password reset and the banned password list are features that still revolve around passwords.',
     },
     {
+      id: '7-05',
       question:
         'Employees of a partner company must collaborate on your resources using their own corporate identities. They should appear as guest users in your directory. Which feature should be used?',
       options: [
@@ -71,6 +76,7 @@ export const chapter07: Chapter = {
         'B2B collaboration lets external users sign in with their preferred identity and adds them to your directory as guest users. B2B direct connect is a mutual trust between two organizations and does not create guest users in your directory.',
     },
     {
+      id: '7-06',
       question:
         'What characterizes B2B direct connect between two Microsoft Entra organizations?',
       options: [
@@ -84,6 +90,7 @@ export const chapter07: Chapter = {
         'B2B direct connect is a mutual, two-way trust relationship between two Microsoft Entra organizations. Publishing apps to customers is the purpose of B2C.',
     },
     {
+      id: '7-07',
       question:
         'A company publishes a modern SaaS application to its customers and wants to manage the identities and access of those customers. Which service fits?',
       options: [
@@ -97,6 +104,7 @@ export const chapter07: Chapter = {
         'Azure AD B2C (now Microsoft Entra External ID) is for customer-facing apps: it handles identity and access management for consumers. B2B collaboration is for partner organizations, not for customers.',
     },
     {
+      id: '7-08',
       question:
         'A company wants to block access to a cloud app when users sign in from untrusted locations. Which Microsoft Entra capability evaluates signals such as location, device and user identity to make such decisions?',
       options: [
@@ -110,6 +118,7 @@ export const chapter07: Chapter = {
         'Conditional Access allows or blocks access, or requires MFA, based on identity signals like location, device and user. RBAC controls what an authenticated user can do on resources, not how they sign in.',
     },
     {
+      id: '7-09',
       question:
         'How can Conditional Access improve the experience of end users?',
       options: [
@@ -123,6 +132,7 @@ export const chapter07: Chapter = {
         'Because policies depend on signals, MFA can be waived when the sign-in comes from a trusted location or managed device. Authentication is never removed entirely.',
     },
     {
+      id: '7-10',
       question:
         'A user is assigned the Contributor role at the resource group scope. What access does the user get for the resources inside that resource group?',
       options: [
@@ -136,6 +146,7 @@ export const chapter07: Chapter = {
         'Azure RBAC is hierarchical: access granted at a parent scope (management group, subscription, resource group) is inherited by all child scopes below it, but not by sibling scopes.',
     },
     {
+      id: '7-11',
       question:
         'Which of the following is a valid scope to which an Azure RBAC role can be assigned?',
       options: [
@@ -149,6 +160,7 @@ export const chapter07: Chapter = {
         'The scopes are management group, subscription, resource group and individual resource. Regions, address ranges and availability zones are not RBAC scopes.',
     },
     {
+      id: '7-12',
       question: 'How is Azure RBAC enforced?',
       options: [
         'By Microsoft Defender for Cloud scanning every VM',
@@ -161,6 +173,7 @@ export const chapter07: Chapter = {
         'Every action goes through Azure Resource Manager, and Azure RBAC is evaluated on top of it. NSGs filter network traffic and Azure Policy enforces resource compliance, neither enforces user permissions.',
     },
     {
+      id: '7-13',
       question:
         'Which security model assumes a breach has already happened and verifies every request as if it originated from an open network?',
       options: [
@@ -174,6 +187,7 @@ export const chapter07: Chapter = {
         'Zero Trust starts from the assumption of breach and verifies each request explicitly. Defense in depth is a layered protection model, not a verification model.',
     },
     {
+      id: '7-14',
       question:
         'Which Zero Trust principle is implemented by granting users just-in-time (JIT) and just-enough-access (JEA)?',
       options: [
@@ -187,6 +201,7 @@ export const chapter07: Chapter = {
         'JIT and JEA limit users to the minimum access, for the minimum time, which is the least privilege access principle. Verify explicitly is about authenticating and authorizing on all available data points.',
     },
     {
+      id: '7-15',
       question:
         'A company uses DDoS protection to filter large-scale attacks before they reach its network. Which layer of defense in depth does this belong to?',
       options: ['Data', 'Compute', 'Application', 'Perimeter'],
@@ -195,6 +210,7 @@ export const chapter07: Chapter = {
         'The perimeter layer protects against network attacks with DDoS protection and perimeter firewalls. The Network layer, by contrast, limits connectivity between resources.',
     },
     {
+      id: '7-16',
       question:
         'An architect restricts communication between resources, denies access by default and sets up secure connections to on-premises networks. Which defense-in-depth layer is being addressed?',
       options: [
@@ -208,6 +224,7 @@ export const chapter07: Chapter = {
         'The Network layer limits connectivity to what is strictly required to reduce the spread of an attack. The Perimeter layer deals with filtering attacks at the network edge, such as DDoS.',
     },
     {
+      id: '7-17',
       question:
         'Which layer is the first line of defense in the defense-in-depth model, covering buildings and access to hardware?',
       options: [
@@ -221,6 +238,7 @@ export const chapter07: Chapter = {
         'Physical security protects buildings and controls physical access to hardware, and is the first line of defense. Identity and access follows and concerns securing identities, SSO and MFA.',
     },
     {
+      id: '7-18',
       question:
         'A company wants a tool that assesses and strengthens the security posture of its Azure resources and can also protect resources running in Amazon Web Services. Which should it use?',
       options: [
@@ -234,6 +252,7 @@ export const chapter07: Chapter = {
         'Microsoft Defender for Cloud is the Azure security management and threat protection service, and it also covers multicloud resources such as AWS (and GCP). Azure Advisor gives general best-practice recommendations, not threat protection.',
     },
     {
+      id: '7-19',
       question:
         'Which three are guiding principles of the Zero Trust model? Select three.',
       options: [
@@ -248,6 +267,7 @@ export const chapter07: Chapter = {
         'Zero Trust is built on verifying explicitly, using least privilege access (for example just-in-time and just-enough-access) and assuming breach. Implicitly trusting the internal network or relying on the perimeter alone is exactly what Zero Trust moves away from.',
     },
     {
+      id: '7-20',
       question:
         'Which three capabilities are provided by Microsoft Entra ID (formerly Azure Active Directory)? Select three.',
       options: [

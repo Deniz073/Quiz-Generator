@@ -6,6 +6,7 @@ export const chapter02: Chapter = {
   title: 'Scrum Values',
   questions: [
     {
+      id: '2-01',
       question: 'Which three of the following are Scrum values? Select three.',
       options: [
         'Transparency',
@@ -19,6 +20,7 @@ export const chapter02: Chapter = {
         'The five Scrum values are Commitment, Focus, Openness, Respect, and Courage. Transparency is one of the three pillars of empiricism, not a value, and accountability is not listed.',
     },
     {
+      id: '2-02',
       question:
         'The Scrum Team and its stakeholders are ______ about the work and the challenges. Which Scrum value completes the sentence?',
       options: ['Courageous', 'Committed', 'Open', 'Respectful'],
@@ -27,6 +29,7 @@ export const chapter02: Chapter = {
         'Openness is the value of the Scrum Team and its stakeholders being open about the work and the challenges. Courage is about doing the right thing and working on tough problems.',
     },
     {
+      id: '2-03',
       question:
         'According to the Scrum Guide, what does the Scrum value Focus mean for the Scrum Team?',
       options: [
@@ -40,6 +43,7 @@ export const chapter02: Chapter = {
         "The Guide says the Scrum Team's primary focus is on the work of the Sprint to make the best possible progress toward its goals. Working on separate initiatives is the opposite of what the Sprint Goal encourages.",
     },
     {
+      id: '2-04',
       question:
         'According to the Scrum Guide, what does the Scrum value Commitment mean?',
       options: [
@@ -53,6 +57,7 @@ export const chapter02: Chapter = {
         'Commitment means the Scrum Team commits to achieving its goals and supporting each other. Scope can still be clarified and renegotiated with the Product Owner during the Sprint, and working overtime is not mentioned in the Guide.',
     },
     {
+      id: '2-05',
       question:
         'A manager regularly tells individual Developers exactly how to do their work, assuming they cannot decide this themselves. Which Scrum value is being undermined?',
       options: ['Focus', 'Courage', 'Openness', 'Respect'],
@@ -61,6 +66,7 @@ export const chapter02: Chapter = {
         "The Guide says Scrum Team members respect each other to be capable, independent people, and are respected as such by the people with whom they work. Telling Developers how to turn items into Increments also contradicts the Developers' sole discretion over this.",
     },
     {
+      id: '2-06',
       question:
         'According to the Scrum Guide, the members of the Scrum Team have the courage to:',
       options: [
@@ -74,6 +80,7 @@ export const chapter02: Chapter = {
         'The Guide says Scrum Team members have the courage to do the right thing and to work on tough problems. Nothing in the Guide suggests ignoring decisions or over-committing.',
     },
     {
+      id: '2-07',
       question:
         'According to the Scrum Guide, what happens when the Scrum values are embodied by the Scrum Team and the people they work with?',
       options: [
@@ -87,6 +94,7 @@ export const chapter02: Chapter = {
         'The Guide says that when the values are embodied, the empirical pillars come to life, building trust. The values reinforce the pillars and do not replace them or make events optional.',
     },
     {
+      id: '2-08',
       question:
         'Which two statements about the Scrum values are supported by the Scrum Guide? Select two.',
       options: [

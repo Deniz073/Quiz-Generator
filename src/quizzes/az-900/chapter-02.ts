@@ -6,6 +6,7 @@ export const chapter02: Chapter = {
   title: 'Benefits of using cloud services',
   questions: [
     {
+      id: '2-01',
       question: 'What is the goal of high availability in the cloud?',
       options: [
         'Keeping services accessible as much as possible, regardless of interruptions or events',
@@ -18,6 +19,7 @@ export const chapter02: Chapter = {
         'High availability is about maximizing the uptime of services despite disruptions. Adding CPU and RAM is vertical scaling, which is a different concept.',
     },
     {
+      id: '2-02',
       question:
         'What does a service level agreement (SLA) for an Azure service define?',
       options: [
@@ -31,6 +33,7 @@ export const chapter02: Chapter = {
         'An SLA is an agreement on the guaranteed uptime of Azure services. It is defined per service, so it can differ from one service to another.',
     },
     {
+      id: '2-03',
       question: 'Which statement about Azure SLAs is correct?',
       options: [
         'One SLA applies equally to every Azure service',
@@ -43,6 +46,7 @@ export const chapter02: Chapter = {
         'SLAs are agreed per service, so uptime guarantees vary. They express a guaranteed uptime percentage, not a promise of zero failures.',
     },
     {
+      id: '2-04',
       question:
         'An online shop expects a sudden traffic spike during a sale and does not want to pay for unused capacity afterwards. Which cloud benefit addresses this?',
       options: [
@@ -56,6 +60,7 @@ export const chapter02: Chapter = {
         'Scalability lets you adjust resources to demand, scaling up for peaks and back down afterwards so you do not overpay. Reliability is about recovering from failures.',
     },
     {
+      id: '2-05',
       question:
         'An application on a running VM needs more processing power, so you give that same VM additional CPU cores and RAM. What is this called?',
       options: [
@@ -69,6 +74,7 @@ export const chapter02: Chapter = {
         'Vertical scaling (scale up) adds CPU and RAM to an existing resource. Horizontal scaling would add more VM instances instead.',
     },
     {
+      id: '2-06',
       question:
         'To handle more load, a team deploys a second and third VM next to the existing one instead of enlarging it. What is this called?',
       options: [
@@ -82,6 +88,7 @@ export const chapter02: Chapter = {
         'Horizontal scaling (scale out) duplicates existing resources by adding more instances. Vertical scaling makes one instance larger.',
     },
     {
+      id: '2-07',
       question:
         'Which cloud benefit is described as the ability of a system to recover from failures and keep functioning?',
       options: ['Reliability', 'Scalability', 'Predictability', 'Governance'],
@@ -90,6 +97,7 @@ export const chapter02: Chapter = {
         "Reliability is a system's ability to recover from failures and continue to operate. Scalability is about matching resources to demand.",
     },
     {
+      id: '2-08',
       question:
         'How does Azure help provide reliability if an entire datacenter region is irreparably damaged?',
       options: [
@@ -103,6 +111,7 @@ export const chapter02: Chapter = {
         'Azure supports duplicating your cloud resources across different geographic regions. If one region is lost, another region is still available to use.',
     },
     {
+      id: '2-09',
       question:
         "A company wants to build a solution in Azure for which it can forecast both the system's performance and its costs with confidence. Which cloud benefit is this?",
       options: [
@@ -116,6 +125,7 @@ export const chapter02: Chapter = {
         'Predictability in the cloud covers two sides: performance predictability and cost predictability. It lets you work in the cloud with confidence.',
     },
     {
+      id: '2-10',
       question:
         'Which of the following is an example of management OF the cloud (as opposed to management IN the cloud)?',
       options: [
@@ -129,6 +139,7 @@ export const chapter02: Chapter = {
         'Management of the cloud covers automatic scaling, template-based deployment, health monitoring with automatic replacement, and alerts. The portal, CLI, APIs and PowerShell are ways of managing in the cloud.',
     },
     {
+      id: '2-11',
       question:
         'A team wants to deploy identical resources repeatedly without manual configuration, to reduce human error. Which manageability capability supports this?',
       options: [
@@ -142,6 +153,7 @@ export const chapter02: Chapter = {
         'Deploying resources according to templates reduces or avoids manual configuration. The other options do not address repeatable, automated deployment.',
     },
     {
+      id: '2-12',
       question:
         'Which of the following is a way to manage your Azure resources (management IN the cloud)?',
       options: [
@@ -155,6 +167,7 @@ export const chapter02: Chapter = {
         'You can manage Azure through the web portal, a CLI, APIs and PowerShell. Microsoft does not require support requests or physical access for this.',
     },
     {
+      id: '2-13',
       question:
         'Which two are benefits of scalability in the cloud? Select two.',
       options: [
@@ -168,6 +181,7 @@ export const chapter02: Chapter = {
         'Scalability means matching resources to demand: scale out or up for peaks and back down afterwards. A guaranteed uptime percentage is an SLA (high availability), and duplicating resources across regions is about reliability.',
     },
     {
+      id: '2-14',
       question:
         'Which two of the following are examples of management OF the cloud (rather than management IN the cloud)? Select two.',
       options: [

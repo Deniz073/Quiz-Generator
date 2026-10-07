@@ -6,6 +6,7 @@ export const chapter05: Chapter = {
   title: 'The Sprint & Sprint Planning',
   questions: [
     {
+      id: '5-01',
       question:
         'According to the Scrum Guide, what is the relationship between the Sprint and the other Scrum events?',
       options: [
@@ -19,6 +20,7 @@ export const chapter05: Chapter = {
         'The Guide states that the Sprint is a container for all other events. All work necessary to achieve the Product Goal, including Sprint Planning, Daily Scrums, Sprint Review and Sprint Retrospective, happens within Sprints.',
     },
     {
+      id: '5-02',
       question: 'Which statement about the length of a Sprint is correct?',
       options: [
         'Sprints are fixed length events of one month or less',
@@ -31,6 +33,7 @@ export const chapter05: Chapter = {
         'Sprints are fixed length events of one month or less to create consistency. Extending a Sprint to finish work would break the fixed length, and Scrum does not mandate exactly two weeks.',
     },
     {
+      id: '5-03',
       question:
         'A Sprint has just concluded with its Sprint Retrospective. When does the next Sprint start?',
       options: [
@@ -44,6 +47,7 @@ export const chapter05: Chapter = {
         'A new Sprint starts immediately after the conclusion of the previous Sprint. The Guide describes no gap, approval step or preparation phase between Sprints.',
     },
     {
+      id: '5-04',
       question:
         'Which two statements describe what happens during the Sprint, according to the Scrum Guide? Select two.',
       options: [
@@ -57,6 +61,7 @@ export const chapter05: Chapter = {
         'The Guide lists: no changes that endanger the Sprint Goal, quality does not decrease, the Product Backlog is refined as needed, and scope may be clarified and renegotiated with the Product Owner. Scope is therefore not frozen, and refinement does not pause.',
     },
     {
+      id: '5-05',
       question:
         "According to the Scrum Guide, what may happen when a Sprint's horizon is too long? Select three.",
       options: [
@@ -71,6 +76,7 @@ export const chapter05: Chapter = {
         "The Guide says that when a Sprint's horizon is too long the Sprint Goal may become invalid, complexity may rise, and risk may increase. Sprints are limited to one month or less so that progress toward the Product Goal is inspected at least every calendar month.",
     },
     {
+      id: '5-06',
       question:
         'Halfway through a Sprint, the organization changes direction and the Sprint Goal no longer makes sense. Who has the authority to cancel the Sprint?',
       options: [
@@ -84,6 +90,7 @@ export const chapter05: Chapter = {
         'A Sprint could be cancelled if the Sprint Goal becomes obsolete, and only the Product Owner has the authority to cancel it. Neither the Scrum Master, the Developers nor stakeholders may do so.',
     },
     {
+      id: '5-07',
       question:
         'Which two reasons does the Scrum Guide give for employing shorter Sprints? Select two.',
       options: [
@@ -97,6 +104,7 @@ export const chapter05: Chapter = {
         'The Guide says shorter Sprints can generate more learning cycles and limit risk of cost and effort to a smaller time frame. Nothing in Scrum lets shorter Sprints lower quality standards or drop an event.',
     },
     {
+      id: '5-08',
       question:
         'A stakeholder says that the burn-down chart of the Scrum Team forecasts the outcome, so empirical inspection of progress is no longer needed. What does the Scrum Guide say about burn-downs, burn-ups and cumulative flows?',
       options: [
@@ -110,6 +118,7 @@ export const chapter05: Chapter = {
         'The Guide acknowledges these practices as proven useful but says they do not replace empiricism, because in complex environments only what has already happened may be used for forward-looking decisions. They are neither required nor prohibited.',
     },
     {
+      id: '5-09',
       question:
         'Why does the Scrum Guide say events are used in Scrum, besides creating opportunities to inspect and adapt?',
       options: [
@@ -123,6 +132,7 @@ export const chapter05: Chapter = {
         'Events create regularity and minimize the need for meetings not defined in Scrum. They are formal opportunities to inspect and adapt artifacts, not reporting mechanisms for management or the Scrum Master.',
     },
     {
+      id: '5-10',
       question:
         'Who creates the plan for the Sprint that is laid out during Sprint Planning?',
       options: [
@@ -136,6 +146,7 @@ export const chapter05: Chapter = {
         'The resulting plan is created by the collaborative work of the entire Scrum Team. The Developers have sole discretion over how items are turned into Increments, but the Sprint plan as a whole is a Scrum Team effort.',
     },
     {
+      id: '5-11',
       question:
         'Who ensures that attendees of Sprint Planning are prepared to discuss the most important Product Backlog items and how they map to the Product Goal?',
       options: [
@@ -149,6 +160,7 @@ export const chapter05: Chapter = {
         'The Guide assigns this to the Product Owner. The Scrum Master ensures the event takes place and stays in its timebox, but does not own the preparation of Product Backlog content.',
     },
     {
+      id: '5-12',
       question:
         'The Developers want a security specialist from another department to join Sprint Planning. What does the Scrum Guide say?',
       options: [
@@ -162,6 +174,7 @@ export const chapter05: Chapter = {
         'The Scrum Team may invite other people to attend Sprint Planning to provide advice. They are there to advise, not to select work for the Developers.',
     },
     {
+      id: '5-13',
       question:
         'Which three topics does Sprint Planning address, according to the Scrum Guide? Select three.',
       options: [
@@ -176,6 +189,7 @@ export const chapter05: Chapter = {
         'Sprint Planning covers why the Sprint is valuable, what can be Done, and how the chosen work will get done. Stakeholders do not approve the Sprint scope, and looking back on the previous Sprint is the purpose of the Sprint Retrospective.',
     },
     {
+      id: '5-14',
       question:
         'Sprint Planning is nearly over. The Developers have selected Product Backlog items, but the Scrum Team has not agreed on a Sprint Goal. What does the Scrum Guide require?',
       options: [
@@ -189,6 +203,7 @@ export const chapter05: Chapter = {
         'The whole Scrum Team collaborates on the Sprint Goal and it must be finalized prior to the end of Sprint Planning. It is also part of the Sprint Backlog, which is the output of Sprint Planning.',
     },
     {
+      id: '5-15',
       question:
         'During Sprint Planning, who selects the Product Backlog items to include in the current Sprint?',
       options: [
@@ -202,6 +217,7 @@ export const chapter05: Chapter = {
         'Through discussion with the Product Owner, the Developers select items from the Product Backlog. The Product Owner proposes how the product could increase its value, but does not assign work to the Developers.',
     },
     {
+      id: '5-16',
       question:
         'During Sprint Planning, the Product Owner insists that the Developers break the selected items into tasks in a specific way. Who decides how Product Backlog items are turned into Increments of value?',
       options: [
@@ -215,6 +231,7 @@ export const chapter05: Chapter = {
         'How the Developers plan the work is at their sole discretion, and no one else tells them how to turn Product Backlog items into Increments of value. Decomposing items into work of one day or less is typical, but that remains up to the Developers.',
     },
     {
+      id: '5-17',
       question:
         'What is the maximum timebox for Sprint Planning in a one-month Sprint?',
       options: ['Four hours', 'Three hours', 'Fifteen minutes', 'Eight hours'],

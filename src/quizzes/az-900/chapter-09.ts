@@ -6,6 +6,7 @@ export const chapter09: Chapter = {
   title: 'Azure governance and compliance',
   questions: [
     {
+      id: '9-01',
       question:
         'What did Azure Blueprints let you do with an environment or subscription?',
       options: [
@@ -19,6 +20,7 @@ export const chapter09: Chapter = {
         'A blueprint packages repeatable settings and policies so a team can quickly set up a compliant environment, for example a new test environment. Preventing deletion is the job of resource locks, not blueprints.',
     },
     {
+      id: '9-02',
       question:
         'Azure Blueprints has been deprecated. Which Azure features does Microsoft recommend as its replacement for standardizing environment deployments?',
       options: [
@@ -32,6 +34,7 @@ export const chapter09: Chapter = {
         'Microsoft points Blueprints users to Template Specs (versioned, shareable ARM/Bicep templates) combined with Deployment Stacks (managing resources as a unit), alongside Azure Policy. The other options are management and monitoring tools without deployment definitions.',
     },
     {
+      id: '9-03',
       question: 'Which of the following is a type of Azure resource lock?',
       options: ['WriteOnly', 'Contributor', 'ReadOnly', 'Disabled'],
       correctIndex: 2,
@@ -39,6 +42,7 @@ export const chapter09: Chapter = {
         'Azure has two lock levels: Delete (called CanNotDelete in the API, CLI and PowerShell) and ReadOnly. Contributor is an RBAC role, not a lock.',
     },
     {
+      id: '9-04',
       question:
         'A production storage account must stay editable by authorized administrators, but nobody should be able to delete it by accident. Which lock should be applied?',
       options: [
@@ -52,6 +56,7 @@ export const chapter09: Chapter = {
         'A Delete lock still allows authorized users to read and modify the resource but blocks deletion. A ReadOnly lock would also prevent changes, which goes further than required.',
     },
     {
+      id: '9-05',
       question:
         'An operations team wants to make sure a critical virtual network configuration cannot be modified or deleted, even by authorized users, until the lock is removed. What should they use?',
       options: [
@@ -65,6 +70,7 @@ export const chapter09: Chapter = {
         'With a ReadOnly lock, authorized users can only read the resource: no changes and no deletion. A Delete lock still allows modifications.',
     },
     {
+      id: '9-06',
       question:
         'A compliance officer needs Microsoft audit reports and information on how Microsoft protects cloud services and customer data. Where should they look?',
       options: [
@@ -78,6 +84,7 @@ export const chapter09: Chapter = {
         'The Service Trust Portal contains information about the controls and processes Microsoft uses to protect its cloud services and the customer data in them. Service Health only reports on the availability of Azure services.',
     },
     {
+      id: '9-07',
       question:
         'In the Service Trust Portal, you want to save a compliance document and be notified whenever Microsoft updates it. Which page offers this?',
       options: [
@@ -91,6 +98,7 @@ export const chapter09: Chapter = {
         'My Library lets you save or pin documents and configure notifications for updates. Trust Documents and Industries & Regions are where you find the documents, not where you track them.',
     },
     {
+      id: '9-08',
       question:
         'Which two statements about Azure resource locks are correct? Select two.',
       options: [
@@ -104,6 +112,7 @@ export const chapter09: Chapter = {
         'Locks can be set on a subscription, resource group or resource, and child resources inherit the lock of their parent. A Delete lock still allows modification, while a ReadOnly lock blocks both modification and deletion.',
     },
     {
+      id: '9-09',
       question:
         'Which two statements about Azure Policy are correct? Select two.',
       options: [

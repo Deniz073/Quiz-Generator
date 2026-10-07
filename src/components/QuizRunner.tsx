@@ -67,7 +67,7 @@ export function QuizRunner(props: Props) {
   const finished = item === undefined
   const { round } = state
   const flaggedIndexes = state.plan.flatMap((planned, index) =>
-    flags?.has(planned.question.question) ? [index] : [],
+    flags?.has(planned.question.id) ? [index] : [],
   )
 
   // Save once per finished full round. The effect event keeps the latest

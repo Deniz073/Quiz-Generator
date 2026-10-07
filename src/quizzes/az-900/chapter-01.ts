@@ -6,6 +6,7 @@ export const chapter01: Chapter = {
   title: 'Cloud computing',
   questions: [
     {
+      id: '1-01',
       question: 'Which statement best describes cloud computing?',
       options: [
         'Delivering IT services such as virtual machines, storage, databases and networking over the internet',
@@ -18,6 +19,7 @@ export const chapter01: Chapter = {
         'Cloud computing is the delivery of IT services (compute, storage, databases, networking, and also IoT, machine learning and AI) over the internet.',
     },
     {
+      id: '1-02',
       question:
         'Under the shared responsibility model, which responsibility always stays with the customer, regardless of the cloud service type?',
       options: [
@@ -31,6 +33,7 @@ export const chapter01: Chapter = {
         'The customer is always responsible for their own data and who can access it. Physical security, power, cooling and datacenter connectivity belong to the cloud provider.',
     },
     {
+      id: '1-03',
       question:
         'A company runs a database on an Azure virtual machine. Who is responsible for applying updates and patches to the database software?',
       options: [
@@ -44,6 +47,7 @@ export const chapter01: Chapter = {
         'When you run a database on a VM, you manage the software on it, including updates and patches. Microsoft only handles the underlying physical infrastructure.',
     },
     {
+      id: '1-04',
       question:
         'Which of the following is the responsibility of the cloud provider in every cloud service type?',
       options: [
@@ -57,6 +61,7 @@ export const chapter01: Chapter = {
         "The physical layer is always the provider's job. Guest OS patching depends on the service type (customer in IaaS), while data and access are always the customer's.",
     },
     {
+      id: '1-05',
       question: 'Which cloud model is used by a single organization only?',
       options: ['Public cloud', 'Multi-cloud', 'Private cloud', 'Hybrid cloud'],
       correctIndex: 2,
@@ -64,6 +69,7 @@ export const chapter01: Chapter = {
         'A private cloud is used by a single entity and can be hosted on-premises or in a dedicated off-site datacenter. It gives high control but at higher cost and with fewer benefits than a public cloud.',
     },
     {
+      id: '1-06',
       question:
         'A company keeps its core systems in its own datacenter but wants to temporarily use extra capacity from a public cloud during seasonal peaks. Which cloud model fits this scenario?',
       options: [
@@ -77,6 +83,7 @@ export const chapter01: Chapter = {
         'A hybrid cloud combines private and public cloud in one connected environment, so the private side can scale out into the public cloud during peaks. Multi-cloud would mean using multiple public cloud providers.',
     },
     {
+      id: '1-07',
       question: 'What characterizes a multi-cloud environment?',
       options: [
         'It combines one private cloud with one public cloud',
@@ -89,6 +96,7 @@ export const chapter01: Chapter = {
         'Multi-cloud means working with two or more public cloud providers, for example to use different applications per provider or while migrating between providers. Private plus public is hybrid.',
     },
     {
+      id: '1-08',
       question:
         'Which Azure service helps you manage resources across on-premises, multi-cloud and other cloud environments from a single place?',
       options: [
@@ -102,6 +110,7 @@ export const chapter01: Chapter = {
         'Azure Arc extends Azure management to resources running outside Azure, such as on-premises and other clouds. Azure VMware Solution is about migrating VMware workloads, not general management.',
     },
     {
+      id: '1-09',
       question:
         'A company runs VMware workloads in its own private cloud and wants to migrate them to Azure while keeping the same tooling. Which service is intended for this?',
       options: [
@@ -115,6 +124,7 @@ export const chapter01: Chapter = {
         'Azure VMware Solution lets you move VMware workloads from a private cloud to a public or hybrid cloud with seamless integration and scalability. Azure Arc manages resources but does not host the VMware workloads.',
     },
     {
+      id: '1-10',
       question:
         'Buying physical servers for a datacenter is a typical example of which type of expenditure?',
       options: [
@@ -128,6 +138,7 @@ export const chapter01: Chapter = {
         'CapEx is typically a one-time, upfront spend on tangible resources such as datacenter hardware. OpEx is the cost of services or products over time, such as using Azure VMs.',
     },
     {
+      id: '1-11',
       question:
         'Which of the following is an advantage of the consumption-based model used by cloud providers?',
       options: [
@@ -141,6 +152,7 @@ export const chapter01: Chapter = {
         'The consumption-based model has no upfront costs and no need to buy and manage expensive infrastructure that may be underused. You buy resources when needed and stop paying when you release them.',
     },
     {
+      id: '1-12',
       question:
         'Which three of the following environments make use of public cloud services? Select three.',
       options: [
@@ -155,6 +167,7 @@ export const chapter01: Chapter = {
         'Hybrid cloud, multi-cloud and a pure public cloud solution all consume public cloud resources. A private cloud is used by a single organization only, and a datacenter without cloud services is not cloud computing at all.',
     },
     {
+      id: '1-13',
       question:
         'Which two of the following are examples of operational expenditure (OpEx)? Select two.',
       options: [

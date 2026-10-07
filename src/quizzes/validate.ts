@@ -26,6 +26,9 @@ function validateQuestion(
 ) {
   const fail = (message: string) => errors.push(`${where}: ${message}`)
 
+  if (typeof question.id !== 'string' || !SLUG.test(question.id)) {
+    fail('id must be a URL-safe slug like "1-01"')
+  }
   if (isBlank(question.question)) fail('"question" must not be empty')
   if (isBlank(question.explanation)) fail('"explanation" must not be empty')
 
@@ -114,7 +117,7 @@ function validateExam(
 
 /**
  * Checks everything the type system cannot: slugs, uniqueness, non-empty
- * text, option counts, answer indexes, reserved ids and exam settings. Returns human-readable errors with
+ * text, option counts, answer indexes, question ids, reserved ids and exam settings. Returns human-readable errors with
  * quiz / chapter / question location; an empty array means valid.
  */
 export function validateQuizzes(quizzes: ReadonlyArray<Quiz>): Array<string> {
@@ -137,6 +140,7 @@ export function validateQuizzes(quizzes: ReadonlyArray<Quiz>): Array<string> {
       errors.push(`${quizWhere}: needs at least one chapter`)
     }
 
+    const questionIds = new Set<string>()
     const chapterIds = new Set<string>()
     const chapterNumbers = new Set<number>()
     for (const chapter of quiz.chapters) {
@@ -172,11 +176,14 @@ export function validateQuizzes(quizzes: ReadonlyArray<Quiz>): Array<string> {
       }
 
       chapter.questions.forEach((question, index) => {
-        validateQuestion(
-          question,
-          `${chapterWhere} > question #${index + 1}`,
-          errors,
-        )
+        const where = `${chapterWhere} > question #${index + 1}`
+        validateQuestion(question, where, errors)
+        if (questionIds.has(question.id)) {
+          errors.push(
+            `${where}: duplicate question id "${question.id}" within the quiz`,
+          )
+        }
+        questionIds.add(question.id)
       })
     }
 

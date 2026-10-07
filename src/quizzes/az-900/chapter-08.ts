@@ -6,6 +6,7 @@ export const chapter08: Chapter = {
   title: 'Azure cost management',
   questions: [
     {
+      id: '8-01',
       question:
         'What is the main financial shift when a company moves its infrastructure from on-premises to Azure?',
       options: [
@@ -19,6 +20,7 @@ export const chapter08: Chapter = {
         'In the cloud you rent infrastructure when you need it, so up-front CapEx turns into ongoing OpEx. Maintenance of the underlying hardware moves to Microsoft, but you still pay for and must manage your own resources.',
     },
     {
+      id: '8-02',
       question:
         'You deploy the same virtual machine size in two different Azure regions and notice the price differs. Which cost factor explains this?',
       options: [
@@ -32,6 +34,7 @@ export const chapter08: Chapter = {
         'The resource type, its settings and the Azure region it runs in all influence what it costs. Pricing varies per region, so choosing a region is also a cost decision.',
     },
     {
+      id: '8-03',
       question:
         'A company pays for Azure compute only for the hours its virtual machines actually run in a billing cycle. Which cost factor does this describe?',
       options: [
@@ -45,6 +48,7 @@ export const chapter08: Chapter = {
         'Consumption-based pricing means you pay for the resources you use during a billing cycle: the more compute you use, the more you pay. Resource type only describes what you deploy, not how long or how much you use it.',
     },
     {
+      id: '8-04',
       question:
         'A company wants to compare the cost of running its current on-premises datacenter with the cost of running the same workloads in Azure. Which tool should it use?',
       options: [
@@ -58,6 +62,7 @@ export const chapter08: Chapter = {
         'The TCO calculator takes your on-premises configuration as input and calculates the difference with an Azure deployment. The Pricing calculator only estimates the cost of Azure services you plan to use, without an on-premises comparison.',
     },
     {
+      id: '8-05',
       question:
         'An architect wants to estimate the monthly cost of a new solution made up of Azure virtual machines and a SQL database before deploying anything. Which tool fits best?',
       options: [
@@ -71,6 +76,7 @@ export const chapter08: Chapter = {
         'The Pricing calculator estimates the cost of the specific Azure services and configurations you select. Azure Cost Management analyzes costs of resources that already exist, so it cannot price a planned solution.',
     },
     {
+      id: '8-06',
       question:
         'Which Azure tool gives an overview of all your resources and their usage, lets you analyze costs at different levels of detail, and can warn you when you approach your budget?',
       options: [
@@ -84,6 +90,7 @@ export const chapter08: Chapter = {
         'Azure Cost Management provides cost analysis plus budgets and alerts for when spending nears a limit. Azure Monitor tracks telemetry and performance, not spending.',
     },
     {
+      id: '8-07',
       question:
         'The finance team wants to see the Azure costs of all resources that belong to the Marketing department, even though those resources are spread over several resource groups. What should be applied to the resources?',
       options: [
@@ -97,6 +104,7 @@ export const chapter08: Chapter = {
         'Tags are name-value pairs that organize resources logically, and costs can be viewed for all resources sharing the same tag. A resource lock only prevents changes or deletion and says nothing about billing.',
     },
     {
+      id: '8-08',
       question:
         'A team buys a third-party firewall appliance and a monitoring solution that are offered as ready-to-deploy Azure solutions from external vendors. Where do these purchases come from?',
       options: [
@@ -110,6 +118,7 @@ export const chapter08: Chapter = {
         'Azure Marketplace lets you buy Azure-based solutions and services from third-party vendors, and these purchases add to your Azure costs. Azure Arc is a management tool for hybrid and multicloud resources, not a store.',
     },
     {
+      id: '8-09',
       question:
         'Which two tools can you use to estimate or compare costs before anything has been deployed to Azure? Select two.',
       options: [
@@ -123,6 +132,7 @@ export const chapter08: Chapter = {
         'The Pricing calculator estimates the cost of planned Azure services, and the TCO calculator compares on-premises costs with Azure costs. Cost Management analyzes actual spending on deployed resources, and Advisor gives recommendations for existing resources.',
     },
     {
+      id: '8-10',
       question:
         'Which three factors can influence the cost of using Azure resources? Select three.',
       options: [

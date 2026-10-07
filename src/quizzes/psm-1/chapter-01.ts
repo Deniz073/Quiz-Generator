@@ -6,6 +6,7 @@ export const chapter01: Chapter = {
   title: 'Scrum Definition & Theory',
   questions: [
     {
+      id: '1-01',
       question:
         'Which statement best describes Scrum according to the Scrum Guide?',
       options: [
@@ -19,6 +20,7 @@ export const chapter01: Chapter = {
         'The Scrum Guide defines Scrum as a lightweight framework for generating value through adaptive solutions to complex problems. It deliberately provides no detailed instructions; the rules of Scrum guide relationships and interactions instead.',
     },
     {
+      id: '1-02',
       question:
         'Why does the Scrum Guide describe the Scrum framework as "purposefully incomplete"?',
       options: [
@@ -32,6 +34,7 @@ export const chapter01: Chapter = {
         'Scrum only defines the parts required to implement Scrum theory; people fill in the rest with processes, techniques and methods. Leaving out elements of Scrum is not allowed, because that covers up problems and limits the benefits.',
     },
     {
+      id: '1-03',
       question:
         'A Scrum Team finds the Sprint Retrospective unproductive and decides to stop holding it while keeping all other events. According to the Scrum Guide, what is the consequence?',
       options: [
@@ -45,6 +48,7 @@ export const chapter01: Chapter = {
         'The Guide states that leaving out elements covers up problems and limits the benefits of Scrum, potentially rendering it useless, and that implementing only parts of Scrum does not result in Scrum. The Sprint Review inspects the outcome of the Sprint, not how the team can improve its own effectiveness.',
     },
     {
+      id: '1-04',
       question:
         'In a nutshell, Scrum requires a Scrum Master to foster an environment where which two things happen? Select two.',
       options: [
@@ -58,6 +62,7 @@ export const chapter01: Chapter = {
         'The four steps are: the Product Owner orders the work into a Product Backlog, the Scrum Team turns a selection into an Increment during a Sprint, the Scrum Team and stakeholders inspect and adjust, and repeat. Nobody assigns work to individuals; the Scrum Team is self-managing.',
     },
     {
+      id: '1-05',
       question: 'What is Scrum founded on?',
       options: [
         'Detailed upfront planning and command-and-control management',
@@ -70,6 +75,7 @@ export const chapter01: Chapter = {
         'Scrum is founded on empiricism and lean thinking. It does not rely on detailed upfront plans, because in complex work what will happen is unknown.',
     },
     {
+      id: '1-06',
       question:
         'Which two statements about empiricism and lean thinking are in line with the Scrum Guide? Select two.',
       options: [
@@ -83,6 +89,7 @@ export const chapter01: Chapter = {
         'Empiricism is knowledge from experience and observation; lean thinking reduces waste and focuses on the essentials. The Guide never promotes upfront analysis in place of inspection or maximizing utilization.',
     },
     {
+      id: '1-07',
       question:
         'What does Scrum use an iterative, incremental approach to optimize and control?',
       options: [
@@ -96,6 +103,7 @@ export const chapter01: Chapter = {
         'Scrum employs an iterative, incremental approach to optimize predictability and to control risk. Scope is not fixed upfront; it can be clarified and renegotiated with the Product Owner as more is learned.',
     },
     {
+      id: '1-08',
       question:
         'Which set lists the three empirical pillars of Scrum, as named in the Scrum Guide?',
       options: [
@@ -109,6 +117,7 @@ export const chapter01: Chapter = {
         'The Scrum events work because they implement the empirical pillars of transparency, inspection, and adaptation. Commitment is a Scrum value, and planning is not a pillar.',
     },
     {
+      id: '1-09',
       question:
         'Which two statements describe how the three pillars of Scrum depend on each other? Select two.',
       options: [
@@ -122,6 +131,7 @@ export const chapter01: Chapter = {
         'The Guide says transparency enables inspection, and inspection enables adaptation. Inspection without transparency is misleading and wasteful, so it cannot replace it.',
     },
     {
+      id: '1-10',
       question:
         'A Scrum Team inspects its work diligently at every event but never changes its product or process in response. What does the Scrum Guide say about this?',
       options: [
@@ -135,6 +145,7 @@ export const chapter01: Chapter = {
         'The Guide states that inspection without adaptation is considered pointless, and that Scrum events are designed to provoke change. "Misleading and wasteful" is what the Guide says about inspection without transparency.',
     },
     {
+      id: '1-11',
       question: 'How many events does Scrum define, and how many artifacts?',
       options: [
         'Five events, including the Sprint, and three artifacts',
@@ -147,6 +158,7 @@ export const chapter01: Chapter = {
         'Scrum provides five events: the Sprint, which is a container for the four others (Sprint Planning, Daily Scrum, Sprint Review, Sprint Retrospective). It has three artifacts: Product Backlog, Sprint Backlog and Increment.',
     },
     {
+      id: '1-12',
       question:
         'During the Sprint, the Developers learn through inspection that their current approach will not achieve the Sprint Goal. According to the Scrum Guide, when should the Scrum Team adapt?',
       options: [
@@ -160,6 +172,7 @@ export const chapter01: Chapter = {
         'The Guide says adjustments must be made as soon as possible to minimize further deviation, and that a Scrum Team is expected to adapt the moment it learns anything new. Waiting for an event or for approval from someone else delays adaptation.',
     },
     {
+      id: '1-13',
       question:
         'According to the Scrum Guide, adaptation becomes more difficult when:',
       options: [
@@ -173,6 +186,7 @@ export const chapter01: Chapter = {
         'The Guide says adaptation becomes more difficult when the people involved are not empowered or self-managing. Shorter Sprints actually create more learning cycles.',
     },
     {
+      id: '1-14',
       question:
         'The Scrum Guide uses the word "developers" for the people doing the work. How does the Guide explain this choice?',
       options: [
@@ -186,6 +200,7 @@ export const chapter01: Chapter = {
         'The Guide notes that Scrum is used in many domains of complex work and uses "developers" not to exclude but to simplify. If you get value from Scrum, consider yourself included.',
     },
     {
+      id: '1-15',
       question:
         'How does the Scrum Guide describe the relationship between Scrum and existing practices, techniques and methods?',
       options: [

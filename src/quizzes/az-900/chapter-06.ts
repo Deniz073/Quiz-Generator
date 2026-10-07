@@ -6,6 +6,7 @@ export const chapter06: Chapter = {
   title: 'Azure storage services',
   questions: [
     {
+      id: '6-01',
       question:
         'What does an Azure Storage account provide for your Azure Storage data?',
       options: [
@@ -19,6 +20,7 @@ export const chapter06: Chapter = {
         'A storage account is a unique namespace for your Azure Storage data, reachable from anywhere over HTTP or HTTPS. It is a logical container, not a dedicated server or a private network.',
     },
     {
+      id: '6-02',
       question:
         'How does locally redundant storage (LRS) protect your data, and what is its main limitation?',
       options: [
@@ -32,6 +34,7 @@ export const chapter06: Chapter = {
         'LRS replicates data three times inside one datacenter in the primary region. It is the cheapest option with the lowest durability (at least 11 nines), so Microsoft recommends ZRS, GRS or GZRS when you need more protection.',
     },
     {
+      id: '6-03',
       question:
         'An application needs high availability in the primary region. Reads and writes must keep working even if one datacenter (zone) becomes unavailable. Which redundancy option fits best?',
       options: [
@@ -45,6 +48,7 @@ export const chapter06: Chapter = {
         'ZRS replicates synchronously across three availability zones in the primary region, so data stays readable and writable when a zone fails. LRS keeps everything in one datacenter, and GRS has only one datacenter-level copy set in the primary region.',
     },
     {
+      id: '6-04',
       question:
         'A company wants its data replicated across three availability zones in the primary region and also copied to a secondary region to survive a regional disaster. Which redundancy option should it choose?',
       options: [
@@ -58,6 +62,7 @@ export const chapter06: Chapter = {
         'GZRS combines ZRS in the primary region with asynchronous replication to a secondary region. GRS also uses a second region, but its primary-region copies live in a single datacenter (LRS), so it gives no zone-level availability.',
     },
     {
+      id: '6-05',
       question:
         'An application must be able to read data from the secondary region at any time, even while the primary region is fully operational. What should you enable?',
       options: [
@@ -71,6 +76,7 @@ export const chapter06: Chapter = {
         'With GRS or GZRS, secondary-region data is normally not readable unless a failover happens. Read-access (RA-GRS or RA-GZRS) makes the secondary readable at all times.',
     },
     {
+      id: '6-06',
       question:
         'An administrator wants to choose which Azure region a GRS storage account replicates its data to. What is the situation?',
       options: [
@@ -84,6 +90,7 @@ export const chapter06: Chapter = {
         'The secondary region is the paired region of the primary region (Azure region pairs), typically hundreds of kilometers away. You cannot pick a different one.',
     },
     {
+      id: '6-07',
       question:
         'Which Azure Storage service is a highly scalable object store for unstructured text and binary data, for example for streaming video or serving images directly to a browser?',
       options: [
@@ -97,6 +104,7 @@ export const chapter06: Chapter = {
         'Blob Storage stores unstructured objects with no restrictions on data type and suits streaming, backup, archiving and serving files to browsers. Azure Files offers file shares and Queue Storage handles messages.',
     },
     {
+      id: '6-08',
       question:
         'Data in Blob Storage is rarely accessed, will be kept for at least 180 days and can tolerate flexible latency. Which access tier gives the lowest storage cost?',
       options: [
@@ -110,6 +118,7 @@ export const chapter06: Chapter = {
         'The Archive tier is meant for rarely accessed data kept at least 180 days, with the lowest storage cost. The Cool tier is for infrequently accessed data kept at least 30 days.',
     },
     {
+      id: '6-09',
       question:
         'Which statement about the Blob Storage Archive access tier is correct?',
       options: [
@@ -123,6 +132,7 @@ export const chapter06: Chapter = {
         'Archive data is stored offline: cheapest to store, most expensive to retrieve. Unlike Hot and Cool, Archive cannot be set at account level, only on individual blobs.',
     },
     {
+      id: '6-10',
       question:
         'Which access tier is optimized for data that is infrequently accessed and stored for at least 30 days, with slightly lower availability and higher access costs than the Hot tier?',
       options: [
@@ -136,6 +146,7 @@ export const chapter06: Chapter = {
         'The Cool tier targets infrequently used data kept at least 30 days and trades lower storage cost for a slightly lower availability SLA and higher access costs. Hot is for frequently used data.',
     },
     {
+      id: '6-11',
       question:
         'A company wants to lift and shift its on-premises file shares to Azure without changing applications that use the SMB protocol. Which Azure Storage service should it use?',
       options: [
@@ -149,6 +160,7 @@ export const chapter06: Chapter = {
         'Azure Files offers fully managed file shares accessible over SMB or NFS, so on-premises shares can migrate without compatibility concerns. Blob Storage is an object store, not a file share.',
     },
     {
+      id: '6-12',
       question:
         'Two application components must exchange messages reliably, and an Azure Function should process them. Which Azure Storage service is designed for this?',
       options: [
@@ -162,6 +174,7 @@ export const chapter06: Chapter = {
         'Queue Storage stores large numbers of messages (up to 64 KB each) for reliable messaging between application components and can be combined with Azure Functions.',
     },
     {
+      id: '6-13',
       question:
         'Which Azure Storage service provides block-level storage volumes for Azure virtual machines?',
       options: [
@@ -175,6 +188,7 @@ export const chapter06: Chapter = {
         'Azure Disks are managed, virtualized disks for VMs. Because they are virtualized they are more resilient and available than a physical disk, and you only provision the disk.',
     },
     {
+      id: '6-14',
       question:
         'A company wants a single hub in the Azure portal to discover, assess and migrate its on-premises servers, databases and web apps to Azure. Which service should it use?',
       options: [
@@ -188,6 +202,7 @@ export const chapter06: Chapter = {
         'Azure Migrate is the unified hub for assessing and migrating on-premises infrastructure, apps and data. AzCopy, Storage Explorer and File Sync only move files or blobs.',
     },
     {
+      id: '6-15',
       question:
         'A company must move many terabytes of data to Azure, but its network connection is too slow. Which service ships a physical storage device (up to 80 TB) that is uploaded to Azure once Microsoft receives it?',
       options: ['Azure Migrate', 'AzCopy', 'Azure Data Box', 'Azure File Sync'],
@@ -196,6 +211,7 @@ export const chapter06: Chapter = {
         'Azure Data Box is an offline, physical migration service: you order it in the Azure portal, fill it with data and ship it back for upload. Azure Migrate and AzCopy transfer over the network.',
     },
     {
+      id: '6-16',
       question:
         'A company wants to centralize its file shares in Azure Files while keeping the performance and compatibility of an on-premises Windows file server. Which tool should it use?',
       options: [
@@ -209,6 +225,7 @@ export const chapter06: Chapter = {
         'Azure File Sync centralizes file shares in Azure Files and keeps a Windows file server experience on-premises. AzCopy is a command-line copy tool and Storage Explorer is a GUI for managing blobs and files.',
     },
     {
+      id: '6-17',
       question:
         'An administrator wants a command-line tool to upload, download, copy and synchronize blobs and files to and from a storage account. Which tool should be used?',
       options: [
@@ -222,6 +239,7 @@ export const chapter06: Chapter = {
         'AzCopy is a command-line utility for copying blobs and files to, from and between storage accounts. Azure Storage Explorer does similar work but is a standalone GUI app.',
     },
     {
+      id: '6-18',
       question:
         'Which three Azure Storage redundancy options copy your data to a secondary region? Select three.',
       options: [
@@ -236,6 +254,7 @@ export const chapter06: Chapter = {
         'GRS, GZRS and their read-access variants replicate asynchronously to a secondary region. LRS and ZRS only keep copies within the primary region, in a single datacenter or across availability zones respectively.',
     },
     {
+      id: '6-19',
       question:
         'Which two statements about Azure Files are correct? Select two.',
       options: [
