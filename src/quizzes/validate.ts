@@ -5,7 +5,11 @@ import type { Question, Quiz } from './types'
 const SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
 
 /** Static route segments that would shadow a chapter page of the same name. */
-const RESERVED_CHAPTER_IDS: ReadonlyArray<string> = ['practice', 'exam']
+const RESERVED_CHAPTER_IDS: ReadonlyArray<string> = [
+  'practice',
+  'exam',
+  'study',
+]
 
 /** The quiz UI has hotkeys for options 1-6 / A-F. */
 export const MIN_OPTIONS = 2

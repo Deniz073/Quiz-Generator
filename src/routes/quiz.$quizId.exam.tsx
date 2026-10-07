@@ -1,7 +1,12 @@
+import { useState } from 'react'
 import { Link, createFileRoute, notFound } from '@tanstack/react-router'
+import type { ExamState } from '#/lib/exam-state'
+import type { ExamConfig, Quiz } from '#/quizzes/types'
+import { ExamResumePrompt } from '#/components/ExamResumePrompt'
+import { ExamRunner } from '#/components/ExamRunner'
 import { NotFound } from '#/components/NotFound'
-import { QuizRunner } from '#/components/QuizRunner'
-import { buildQuizPlan } from '#/lib/quiz-plan'
+import { clearExamSession, loadExamSession } from '#/lib/exam-session'
+import { examReducer, startExam } from '#/lib/exam-state'
 import { recordResult } from '#/lib/progress'
 import { getQuiz } from '#/quizzes'
 
@@ -33,16 +38,49 @@ function ExamPage() {
         &larr; {quiz.title}
       </Link>
       <h1 className="mt-3 mb-6 text-2xl font-bold">Mock exam</h1>
-      <QuizRunner
-        quizId={quizId}
-        mode="exam"
-        minutes={exam.minutes}
-        passPercent={exam.passPercent}
-        buildPlan={() => buildQuizPlan(quiz, exam.questionCount)}
-        onFinish={(score, total) =>
-          recordResult(quizId, { exam: true }, score, total)
-        }
-      />
+      <ExamStart quiz={quiz} exam={exam} />
     </div>
+  )
+}
+
+type Start =
+  // An unfinished exam with time left: the user decides what to do with it.
+  { kind: 'prompt'; saved: ExamState } | { kind: 'run'; state: ExamState }
+
+/** Decides between a new exam, the resume prompt and an expired saved exam. */
+function ExamStart({ quiz, exam }: { quiz: Quiz; exam: ExamConfig }) {
+  // The route renders on the client only (ssr: 'data-only'), so reading
+  // localStorage and shuffling during init can't cause a hydration mismatch.
+  const [start, setStart] = useState<Start>(() => {
+    const saved = loadExamSession(quiz)
+    if (!saved) return { kind: 'run', state: startExam(quiz, exam) }
+    if (saved.endsAt > Date.now()) return { kind: 'prompt', saved }
+    // Time ran out while away: submit what was picked. ExamRunner records the
+    // result and deletes the session.
+    return { kind: 'run', state: examReducer(saved, { type: 'submit' }) }
+  })
+
+  if (start.kind === 'prompt') {
+    return (
+      <ExamResumePrompt
+        state={start.saved}
+        onResume={() => setStart({ kind: 'run', state: start.saved })}
+        onDiscard={() => {
+          clearExamSession(quiz.id)
+          setStart({ kind: 'run', state: startExam(quiz, exam) })
+        }}
+      />
+    )
+  }
+
+  return (
+    <ExamRunner
+      quiz={quiz}
+      exam={exam}
+      initialState={start.state}
+      onFinish={(score, total) =>
+        recordResult(quiz.id, { exam: true }, score, total)
+      }
+    />
   )
 }

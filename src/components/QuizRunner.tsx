@@ -15,7 +15,6 @@ import {
   isSubmitted,
   quizReducer,
 } from '#/lib/quiz-state'
-import { useCountdown } from '#/lib/use-countdown'
 import { QuestionCard } from '#/components/QuestionCard'
 import { ResultsScreen } from '#/components/ResultsScreen'
 
@@ -32,28 +31,22 @@ type Props = {
   | { mode: 'chapter'; nextChapterId: string | undefined }
   // Mixed practice: immediate feedback across chapters.
   | { mode: 'practice' }
-  // Timed, no feedback until the results.
-  | { mode: 'exam'; minutes: number; passPercent: number }
+  // Practice again on a fixed subset of questions (e.g. the ones missed in a
+  // mock exam). Never recorded.
+  | { mode: 'subset' }
 )
 
 const RETRY_LABELS = {
   chapter: 'Retry chapter',
   practice: 'New practice round',
-  exam: 'New mock exam',
+  subset: 'Practice again',
 }
 
 export function QuizRunner(props: Props) {
   const { quizId, mode, buildPlan, onFinish } = props
 
-  // A full round of this mode. Only the exam is timed. Date.now() lives here,
-  // outside the reducer, which stays pure. It only runs on the client (see
-  // below), so the timestamp can't cause a hydration mismatch either.
-  const fullRound = (): Round => ({
-    exam: props.mode === 'exam',
-    subset: false,
-    endsAt:
-      props.mode === 'exam' ? Date.now() + props.minutes * 60_000 : undefined,
-  })
+  // A full round of this mode. Only "subset" rounds are never recorded.
+  const fullRound = (): Round => ({ subset: props.mode === 'subset' })
 
   // The route renders on the client only (ssr: 'data-only'), so shuffling
   // during init can't cause a hydration mismatch.
@@ -66,12 +59,6 @@ export function QuizRunner(props: Props) {
   const finished = item === undefined
   const { round } = state
 
-  // Stops ticking once the round is over (the timer is not shown on results).
-  const secondsLeft = useCountdown(finished ? undefined : round.endsAt)
-  useEffect(() => {
-    if (secondsLeft === 0) dispatch({ type: 'finish' })
-  }, [secondsLeft])
-
   // Save once per finished full round. The effect event keeps the latest
   // onFinish without making it a dependency (a new closure each render would
   // otherwise save the same result again).
@@ -83,19 +70,14 @@ export function QuizRunner(props: Props) {
   }, [finished, state.plan])
 
   // Enter checks a complete multi-answer selection, or moves on once answered.
-  // In exam mode it submits a complete pick and moves on.
   // requireReset: holding Enter fires once, so it can't submit and skip ahead.
   // While enabled, preventDefault (the default) stops the focused button from
   // also firing a native click. When disabled, Enter keeps its native meaning
   // (e.g. activating a focused option), so the reducer guards alone aren't enough.
-  useHotkey(
-    'Enter',
-    () => dispatch({ type: submitted || round.exam ? 'next' : 'check' }),
-    {
-      enabled: submitted || canCheck(state),
-      requireReset: true,
-    },
-  )
+  useHotkey('Enter', () => dispatch({ type: submitted ? 'next' : 'check' }), {
+    enabled: submitted || canCheck(state),
+    requireReset: true,
+  })
 
   // 1-6 / A-F pick (single answer) or toggle (multiple answer) the option
   // shown at that position.
@@ -129,7 +111,6 @@ export function QuizRunner(props: Props) {
         answers={answers}
         score={getScore(state)}
         retryLabel={RETRY_LABELS[mode]}
-        passPercent={props.mode === 'exam' ? props.passPercent : undefined}
         nextChapterId={
           props.mode === 'chapter' ? props.nextChapterId : undefined
         }
@@ -142,8 +123,8 @@ export function QuizRunner(props: Props) {
             plan: reshufflePlan(
               answers.filter((answer) => !answer.correct).map((a) => a.item),
             ),
-            // Always plain practice: feedback, no timer, nothing saved.
-            round: { exam: false, subset: true },
+            // Nothing saved: the score isn't comparable to a full run.
+            round: { subset: true },
           })
         }
       />
@@ -160,8 +141,6 @@ export function QuizRunner(props: Props) {
       total={state.plan.length}
       score={getScore(state)}
       isLast={state.current === state.plan.length - 1}
-      exam={round.exam}
-      secondsLeft={secondsLeft}
       flagged={isFlagged(state)}
       onToggle={(originalIndex) => dispatch({ type: 'toggle', originalIndex })}
       onCheck={() => dispatch({ type: 'check' })}

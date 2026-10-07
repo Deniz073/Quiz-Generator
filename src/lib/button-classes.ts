@@ -5,7 +5,7 @@ const variants = {
   primary:
     'bg-sky-600 text-white hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-sky-600',
   secondary:
-    'border border-slate-300 hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-800',
+    'border border-slate-300 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-transparent dark:border-slate-700 dark:hover:bg-slate-800',
 }
 
 /** Shared by <button> and router <Link> so both look identical. */

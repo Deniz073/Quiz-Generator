@@ -88,6 +88,7 @@ export function OptionButton({
       aria-checked={multiple ? chosen : undefined}
       aria-pressed={!multiple && changeable ? chosen : undefined}
       aria-disabled={answered || state === 'blocked'}
+      data-option=""
       onClick={onClick}
     >
       {multiple ? (

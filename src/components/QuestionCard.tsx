@@ -8,7 +8,9 @@ import { Feedback } from '#/components/Feedback'
 import { OptionButton } from '#/components/OptionButton'
 import { ProgressHeader } from '#/components/ProgressHeader'
 
-interface Props {
+export const tipClasses = 'hidden text-xs text-slate-500 sm:block'
+
+interface BodyProps {
   item: PlannedQuestion
   /**
    * Original indexes of the picked options. For multiple-answer questions this
@@ -17,68 +19,33 @@ interface Props {
   selected: ReadonlyArray<number>
   /** True once the answer is locked and feedback is shown. */
   submitted: boolean
-  index: number
-  total: number
-  score: number
-  isLast: boolean
-  /**
-   * Exam mode: no feedback, the pick stays changeable and "Next" submits it.
-   * Needs a complete selection (one pick, or the required number) to go on.
-   */
-  exam: boolean
-  /** Exam only: whole seconds left. */
-  secondsLeft: number | undefined
+  /** Exam: picks stay editable, so a single-answer pick shows as selected. */
+  changeable?: boolean
   flagged: boolean
   /** Practice single answer: locks the answer. Otherwise: toggles/replaces the pick. */
   onToggle: (originalIndex: number) => void
-  /** Practice multiple answers only: submits the current selection. */
-  onCheck: () => void
-  onNext: () => void
   onFlag: () => void
 }
 
-const tipClasses = 'hidden text-xs text-slate-500 sm:block'
-
-export function QuestionCard({
+/** Question text, flag button and options. Shared by practice and the exam. */
+export function QuestionBody({
   item,
   selected,
   submitted,
-  index,
-  total,
-  score,
-  isLast,
-  exam,
-  secondsLeft,
+  changeable = false,
   flagged,
   onToggle,
-  onCheck,
-  onNext,
   onFlag,
-}: Props) {
+}: BodyProps) {
   const { question, optionOrder } = item
   const multiple = isMultipleAnswer(question)
   const correctIndexes = getCorrectIndexes(question)
   const required = correctIndexes.length
   const selectionFull = selected.length >= required
-  const answeredCount = index + (submitted ? 1 : 0)
-  const keyTip = describeOptionKeys(optionOrder.length)
-  const nextRef = useRef<HTMLButtonElement>(null)
   const hintId = useId()
 
-  useEffect(() => {
-    if (submitted) nextRef.current?.focus()
-  }, [submitted])
-
   return (
-    <div>
-      <ProgressHeader
-        index={index}
-        total={total}
-        score={exam ? undefined : score}
-        answeredCount={answeredCount}
-        secondsLeft={secondsLeft}
-      />
-
+    <>
       <div className="mt-6 flex items-start justify-between gap-4">
         <h2 className="text-xl font-semibold leading-snug">
           {question.question}
@@ -125,7 +92,7 @@ export function QuestionCard({
               state={getOptionState({
                 multiple,
                 answered: submitted,
-                changeable: exam,
+                changeable,
                 chosen,
                 isAnswer: correctIndexes.includes(originalIndex),
                 selectionFull,
@@ -133,7 +100,7 @@ export function QuestionCard({
               multiple={multiple}
               chosen={chosen}
               answered={submitted}
-              changeable={exam}
+              changeable={changeable}
               letter={getOptionLetter(position)}
               text={question.options[originalIndex]}
               onClick={() => onToggle(originalIndex)}
@@ -141,6 +108,63 @@ export function QuestionCard({
           )
         })}
       </div>
+    </>
+  )
+}
+
+interface Props extends Omit<BodyProps, 'changeable'> {
+  index: number
+  total: number
+  score: number
+  isLast: boolean
+  /** Practice multiple answers only: submits the current selection. */
+  onCheck: () => void
+  onNext: () => void
+}
+
+/** One practice question with immediate feedback (the exam has its own view). */
+export function QuestionCard({
+  item,
+  selected,
+  submitted,
+  index,
+  total,
+  score,
+  isLast,
+  flagged,
+  onToggle,
+  onCheck,
+  onNext,
+  onFlag,
+}: Props) {
+  const { question, optionOrder } = item
+  const multiple = isMultipleAnswer(question)
+  const required = getCorrectIndexes(question).length
+  const answeredCount = index + (submitted ? 1 : 0)
+  const keyTip = describeOptionKeys(optionOrder.length)
+  const nextRef = useRef<HTMLButtonElement>(null)
+
+  useEffect(() => {
+    if (submitted) nextRef.current?.focus()
+  }, [submitted])
+
+  return (
+    <div>
+      <ProgressHeader
+        label={`Question ${index + 1} of ${total}`}
+        total={total}
+        score={score}
+        answeredCount={answeredCount}
+      />
+
+      <QuestionBody
+        item={item}
+        selected={selected}
+        submitted={submitted}
+        flagged={flagged}
+        onToggle={onToggle}
+        onFlag={onFlag}
+      />
 
       <div aria-live="polite">
         {submitted ? <Feedback question={question} chosen={selected} /> : null}
@@ -158,21 +182,6 @@ export function QuestionCard({
             className={buttonClasses('primary')}
           >
             {isLast ? 'See results' : 'Next question'}
-          </button>
-        </div>
-      ) : exam ? (
-        <div className="mt-5 flex items-center justify-between gap-3">
-          <p className={tipClasses}>
-            Tip: press {keyTip} to {multiple ? 'toggle' : 'choose'}, Enter for
-            next.
-          </p>
-          <button
-            type="button"
-            onClick={onNext}
-            disabled={selected.length !== required}
-            className={`ml-auto ${buttonClasses('primary')}`}
-          >
-            {isLast ? 'Finish exam' : 'Next question'}
           </button>
         </div>
       ) : multiple ? (

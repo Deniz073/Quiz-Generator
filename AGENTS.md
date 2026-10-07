@@ -73,7 +73,7 @@ export default quiz
 Violations throw at app load and fail `npm run validate:quizzes`, listing quiz > chapter > question.
 
 - Quiz `id` and chapter `id`s are URL-safe slugs (`a-z`, `0-9`, single hyphens). Quiz ids are unique across all quizzes; chapter ids unique within a quiz.
-- Chapter ids `practice` and `exam` are reserved (they are routes: `/quiz/<id>/practice`, `/quiz/<id>/exam`).
+- Chapter ids `practice`, `exam` and `study` are reserved (they are routes: `/quiz/<id>/practice`, `/quiz/<id>/exam`, `/quiz/<id>/study`).
 - Chapter `number`s are unique integers within a quiz.
 - `title`, `description`, `question`, `explanation` and every option are non-empty.
 - Each quiz has at least one chapter; each chapter at least one question.

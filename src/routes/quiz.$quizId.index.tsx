@@ -44,11 +44,12 @@ function QuizPage() {
           const count = chapter.questions.length
           const result = progress?.chapters[chapter.id]
           return (
-            <li key={chapter.id}>
+            <li key={chapter.id} className="flex items-stretch gap-3">
+              {/* Siblings, not nested: a link inside a link is invalid HTML. */}
               <Link
                 to="/quiz/$quizId/$chapterId"
                 params={{ quizId: quiz.id, chapterId: chapter.id }}
-                className={`flex items-center justify-between gap-4 ${cardLinkClasses}`}
+                className={`flex min-w-0 flex-1 items-center justify-between gap-4 ${cardLinkClasses}`}
               >
                 <span>
                   <span className="font-medium">
@@ -63,6 +64,15 @@ function QuizPage() {
                 <span className="shrink-0 text-sm text-slate-500">
                   {count} {count === 1 ? 'question' : 'questions'}
                 </span>
+              </Link>
+              <Link
+                to="/quiz/$quizId/study"
+                params={{ quizId: quiz.id }}
+                search={{ chapter: chapter.id }}
+                aria-label={`Study chapter ${chapter.number}: ${chapter.title}`}
+                className={`flex shrink-0 items-center text-sm font-medium text-slate-600 dark:text-slate-400 ${cardLinkClasses}`}
+              >
+                Study
               </Link>
             </li>
           )
@@ -97,6 +107,18 @@ function QuizPage() {
           </Link>
         </li>
       </ul>
+
+      <h2 className="mt-8 text-lg font-semibold">Study</h2>
+      <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
+        Flip through questions with their answers and explanations. Not scored.
+      </p>
+      <Link
+        to="/quiz/$quizId/study"
+        params={{ quizId: quiz.id }}
+        className={`mt-3 inline-block font-medium ${cardLinkClasses}`}
+      >
+        Study all questions
+      </Link>
 
       {quiz.exam ? (
         <>
