@@ -35,6 +35,7 @@ const quiz: Quiz = {
   id: 'my-quiz', // slug; match the folder name
   title: 'My Quiz',
   description: 'One-sentence description shown on the home page.',
+  // exam: { questionCount: 40, minutes: 60, passPercent: 70 }, // optional, see rules
   chapters: [
     {
       id: '1-basics', // slug, unique within the quiz
@@ -72,12 +73,14 @@ export default quiz
 Violations throw at app load and fail `npm run validate:quizzes`, listing quiz > chapter > question.
 
 - Quiz `id` and chapter `id`s are URL-safe slugs (`a-z`, `0-9`, single hyphens). Quiz ids are unique across all quizzes; chapter ids unique within a quiz.
+- Chapter ids `practice` and `exam` are reserved (they are routes: `/quiz/<id>/practice`, `/quiz/<id>/exam`).
 - Chapter `number`s are unique integers within a quiz.
 - `title`, `description`, `question`, `explanation` and every option are non-empty.
 - Each quiz has at least one chapter; each chapter at least one question.
 - 2-6 options per question (UI hotkeys cover 6); no duplicate option texts.
 - `correctIndex` is an integer within `0..options.length-1`.
 - `correctIndexes`: at least 2 unique, in-range entries, fewer than `options.length`. Never set both `correctIndex` and `correctIndexes`.
+- Optional `exam: { questionCount, minutes, passPercent }` enables a timed "Mock exam" for the quiz: `questionCount` is an integer from 1 to the quiz's total questions, `minutes` an integer >= 1, `passPercent` an integer 1-100.
 - `index.ts` must have a default export.
 
 ### Content guidelines

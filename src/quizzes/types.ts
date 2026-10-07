@@ -43,6 +43,16 @@ export interface Chapter {
   questions: Array<Question>
 }
 
+/** Settings for the timed "Mock exam" mode. */
+export interface ExamConfig {
+  /** Random questions drawn from all chapters: integer, 1 to the quiz's total. */
+  questionCount: number
+  /** Time limit in whole minutes (at least 1). */
+  minutes: number
+  /** Pass mark as a whole percentage, 1-100. */
+  passPercent: number
+}
+
 export interface Quiz {
   /** URL slug, unique across all quizzes, e.g. "az-900" (a-z, 0-9, hyphens). Should match the folder name. */
   id: string
@@ -50,4 +60,6 @@ export interface Quiz {
   description: string
   /** At least one chapter. */
   chapters: Array<Chapter>
+  /** Optional mock exam settings; enables the "Mock exam" mode for this quiz. */
+  exam?: ExamConfig
 }

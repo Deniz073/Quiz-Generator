@@ -4,6 +4,9 @@ import type { Question, Quiz } from './types'
 /** Lowercase letters/digits separated by single hyphens, e.g. "1-cloud-basics". */
 const SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
 
+/** Static route segments that would shadow a chapter page of the same name. */
+const RESERVED_CHAPTER_IDS: ReadonlyArray<string> = ['practice', 'exam']
+
 /** The quiz UI has hotkeys for options 1-6 / A-F. */
 export const MIN_OPTIONS = 2
 export const MAX_OPTIONS = 6
@@ -74,9 +77,39 @@ function validateQuestion(
   }
 }
 
+function validateExam(
+  quiz: Quiz,
+  quizWhere: string,
+  totalQuestions: number,
+  errors: Array<string>,
+) {
+  const { exam } = quiz
+  if (exam == null) return
+  const { questionCount, minutes, passPercent } = exam
+  if (
+    !Number.isInteger(questionCount) ||
+    questionCount < 1 ||
+    questionCount > totalQuestions
+  ) {
+    errors.push(
+      `${quizWhere}: exam.questionCount ${JSON.stringify(questionCount)} must be an integer from 1 to ${totalQuestions} (the quiz's total questions)`,
+    )
+  }
+  if (!Number.isInteger(minutes) || minutes < 1) {
+    errors.push(
+      `${quizWhere}: exam.minutes ${JSON.stringify(minutes)} must be an integer of at least 1`,
+    )
+  }
+  if (!Number.isInteger(passPercent) || passPercent < 1 || passPercent > 100) {
+    errors.push(
+      `${quizWhere}: exam.passPercent ${JSON.stringify(passPercent)} must be an integer from 1 to 100`,
+    )
+  }
+}
+
 /**
  * Checks everything the type system cannot: slugs, uniqueness, non-empty
- * text, option counts and answer indexes. Returns human-readable errors with
+ * text, option counts, answer indexes, reserved ids and exam settings. Returns human-readable errors with
  * quiz / chapter / question location; an empty array means valid.
  */
 export function validateQuizzes(quizzes: ReadonlyArray<Quiz>): Array<string> {
@@ -111,6 +144,11 @@ export function validateQuizzes(quizzes: ReadonlyArray<Quiz>): Array<string> {
       if (chapterIds.has(chapter.id)) {
         errors.push(`${chapterWhere}: duplicate chapter id within the quiz`)
       }
+      if (RESERVED_CHAPTER_IDS.includes(chapter.id)) {
+        errors.push(
+          `${chapterWhere}: chapter id is reserved (used by the ${chapter.id} route), pick another`,
+        )
+      }
       chapterIds.add(chapter.id)
       if (!Number.isInteger(chapter.number)) {
         errors.push(`${chapterWhere}: number must be an integer`)
@@ -136,6 +174,13 @@ export function validateQuizzes(quizzes: ReadonlyArray<Quiz>): Array<string> {
         )
       })
     }
+
+    validateExam(
+      quiz,
+      quizWhere,
+      quiz.chapters.reduce((sum, c) => sum + c.questions.length, 0),
+      errors,
+    )
   }
 
   return errors

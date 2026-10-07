@@ -13,6 +13,8 @@ interface OptionStateInput {
   multiple: boolean
   /** True once the answer is locked and feedback is shown. */
   answered: boolean
+  /** Exam mode: a single-answer pick stays changeable, so it shows as selected. */
+  changeable: boolean
   chosen: boolean
   isAnswer: boolean
   /** Multiple answers only: the required number of options is already picked. */
@@ -22,6 +24,7 @@ interface OptionStateInput {
 export function getOptionState({
   multiple,
   answered,
+  changeable,
   chosen,
   isAnswer,
   selectionFull,
@@ -33,7 +36,7 @@ export function getOptionState({
     }
     return chosen ? 'wrong' : 'dim'
   }
-  if (multiple && chosen) return 'selected'
+  if ((multiple || changeable) && chosen) return 'selected'
   if (multiple && selectionFull) return 'blocked'
   return 'idle'
 }

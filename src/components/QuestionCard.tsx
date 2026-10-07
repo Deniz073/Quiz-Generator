@@ -21,11 +21,20 @@ interface Props {
   total: number
   score: number
   isLast: boolean
-  /** Single answer: locks the answer. Multiple answers: toggles the option. */
+  /**
+   * Exam mode: no feedback, the pick stays changeable and "Next" submits it.
+   * Needs a complete selection (one pick, or the required number) to go on.
+   */
+  exam: boolean
+  /** Exam only: whole seconds left. */
+  secondsLeft: number | undefined
+  flagged: boolean
+  /** Practice single answer: locks the answer. Otherwise: toggles/replaces the pick. */
   onToggle: (originalIndex: number) => void
-  /** Multiple answers only: submits the current selection. */
+  /** Practice multiple answers only: submits the current selection. */
   onCheck: () => void
   onNext: () => void
+  onFlag: () => void
 }
 
 const tipClasses = 'hidden text-xs text-slate-500 sm:block'
@@ -38,9 +47,13 @@ export function QuestionCard({
   total,
   score,
   isLast,
+  exam,
+  secondsLeft,
+  flagged,
   onToggle,
   onCheck,
   onNext,
+  onFlag,
 }: Props) {
   const { question, optionOrder } = item
   const multiple = isMultipleAnswer(question)
@@ -61,13 +74,33 @@ export function QuestionCard({
       <ProgressHeader
         index={index}
         total={total}
-        score={score}
+        score={exam ? undefined : score}
         answeredCount={answeredCount}
+        secondsLeft={secondsLeft}
       />
 
-      <h2 className="mt-6 text-xl font-semibold leading-snug">
-        {question.question}
-      </h2>
+      <div className="mt-6 flex items-start justify-between gap-4">
+        <h2 className="text-xl font-semibold leading-snug">
+          {question.question}
+        </h2>
+        <button
+          type="button"
+          aria-pressed={flagged}
+          onClick={onFlag}
+          // Enter is the global "check / next" hotkey; keep it from hijacking
+          // this button so keyboard users can still toggle it with Enter.
+          onKeyDown={(event) => {
+            if (event.key === 'Enter') event.stopPropagation()
+          }}
+          className={`shrink-0 rounded-md border px-2.5 py-1 text-sm font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500 ${
+            flagged
+              ? 'border-amber-500 bg-amber-100 text-amber-900 dark:border-amber-500 dark:bg-amber-950 dark:text-amber-100'
+              : 'border-slate-300 text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800'
+          }`}
+        >
+          Flag for review
+        </button>
+      </div>
 
       {multiple ? (
         <p
@@ -92,6 +125,7 @@ export function QuestionCard({
               state={getOptionState({
                 multiple,
                 answered: submitted,
+                changeable: exam,
                 chosen,
                 isAnswer: correctIndexes.includes(originalIndex),
                 selectionFull,
@@ -99,6 +133,7 @@ export function QuestionCard({
               multiple={multiple}
               chosen={chosen}
               answered={submitted}
+              changeable={exam}
               letter={getOptionLetter(position)}
               text={question.options[originalIndex]}
               onClick={() => onToggle(originalIndex)}
@@ -123,6 +158,21 @@ export function QuestionCard({
             className={buttonClasses('primary')}
           >
             {isLast ? 'See results' : 'Next question'}
+          </button>
+        </div>
+      ) : exam ? (
+        <div className="mt-5 flex items-center justify-between gap-3">
+          <p className={tipClasses}>
+            Tip: press {keyTip} to {multiple ? 'toggle' : 'choose'}, Enter for
+            next.
+          </p>
+          <button
+            type="button"
+            onClick={onNext}
+            disabled={selected.length !== required}
+            className={`ml-auto ${buttonClasses('primary')}`}
+          >
+            {isLast ? 'Finish exam' : 'Next question'}
           </button>
         </div>
       ) : multiple ? (

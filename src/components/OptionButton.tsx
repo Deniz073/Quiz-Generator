@@ -62,6 +62,8 @@ interface Props {
   chosen: boolean
   /** True once the answer is locked and feedback is shown. */
   answered: boolean
+  /** Exam mode: a single-answer pick can still be changed, so expose its state. */
+  changeable: boolean
   letter: string
   text: string
   onClick: () => void
@@ -72,6 +74,7 @@ export function OptionButton({
   multiple,
   chosen,
   answered,
+  changeable,
   letter,
   text,
   onClick,
@@ -83,6 +86,7 @@ export function OptionButton({
       className={`${base} ${classes}`}
       role={multiple ? 'checkbox' : undefined}
       aria-checked={multiple ? chosen : undefined}
+      aria-pressed={!multiple && changeable ? chosen : undefined}
       aria-disabled={answered || state === 'blocked'}
       onClick={onClick}
     >

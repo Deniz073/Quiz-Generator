@@ -23,6 +23,7 @@ const psm1: Quiz = {
     chapter07,
     chapter08,
   ],
+  exam: { questionCount: 80, minutes: 60, passPercent: 85 },
 }
 
 export default psm1

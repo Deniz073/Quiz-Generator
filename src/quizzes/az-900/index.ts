@@ -31,6 +31,8 @@ const az900: Quiz = {
     chapter11,
     chapter12,
   ],
+  // Real exam: 45 minutes, ~40-60 questions, scaled pass score 700/1000.
+  exam: { questionCount: 45, minutes: 45, passPercent: 70 },
 }
 
 export default az900
