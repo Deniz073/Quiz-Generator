@@ -4,7 +4,6 @@ import { useBlocker } from '@tanstack/react-router'
 import type { PlannedQuestion } from '#/lib/quiz-plan'
 import type { ExamState } from '#/lib/exam-state'
 import type { ExamConfig, Quiz } from '#/quizzes/types'
-import { buttonClasses } from '#/lib/button-classes'
 import { clearExamSession, saveExamSession } from '#/lib/exam-session'
 import { examReducer, getAnswers, getScore, startExam } from '#/lib/exam-state'
 import { OPTION_KEYS } from '#/lib/option-keys'
@@ -12,6 +11,7 @@ import { reshufflePlan } from '#/lib/quiz-plan'
 import { useCountdown } from '#/lib/use-countdown'
 import { ExamQuestionView } from '#/components/ExamQuestionView'
 import { ExamReview } from '#/components/ExamReview'
+import { LeavePrompt } from '#/components/LeavePrompt'
 import { QuizRunner } from '#/components/QuizRunner'
 import { ResultsScreen } from '#/components/ResultsScreen'
 
@@ -174,29 +174,15 @@ function ExamSession({
 
   return (
     <>
-      {blocker.status === 'blocked' ? (
-        <div
-          role="alertdialog"
-          aria-labelledby="leave-exam-title"
-          className="sticky top-2 z-10 mb-6 rounded-lg border border-amber-500 bg-amber-50 p-4 text-amber-950 shadow-md dark:bg-amber-950 dark:text-amber-50"
-        >
-          <p id="leave-exam-title" className="font-semibold">
-            Leave the exam?
-          </p>
-          <p className="mt-1 text-sm">
-            Your progress is saved and you can resume it.
-          </p>
-          <div className="mt-3 flex flex-col gap-3 sm:flex-row">
-            <StayButton onClick={blocker.reset} />
-            <button
-              type="button"
-              onClick={blocker.proceed}
-              className={buttonClasses('secondary')}
-            >
-              Leave exam
-            </button>
-          </div>
-        </div>
+      {blocked ? (
+        <LeavePrompt
+          title="Leave the exam?"
+          description="Your progress is saved and you can resume it."
+          stayLabel="Stay on the exam"
+          leaveLabel="Leave exam"
+          onStay={blocker.reset}
+          onLeave={blocker.proceed}
+        />
       ) : null}
       {reviewing ? (
         <ExamReview
@@ -212,23 +198,5 @@ function ExamSession({
         />
       )}
     </>
-  )
-}
-
-/** Focused on mount: the safe choice, and keeps Enter from leaving by accident. */
-function StayButton({ onClick }: { onClick: () => void }) {
-  const ref = useRef<HTMLButtonElement>(null)
-  useEffect(() => {
-    ref.current?.focus()
-  }, [])
-  return (
-    <button
-      ref={ref}
-      type="button"
-      onClick={onClick}
-      className={buttonClasses('primary')}
-    >
-      Stay on the exam
-    </button>
   )
 }
