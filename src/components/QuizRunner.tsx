@@ -1,5 +1,6 @@
 import { useEffect, useEffectEvent, useReducer } from 'react'
 import { useHotkey, useHotkeys } from '@tanstack/react-hotkeys'
+import { useBlocker } from '@tanstack/react-router'
 import type { PlannedQuestion } from '#/lib/quiz-plan'
 import type { Round } from '#/lib/quiz-state'
 import { toggleFlag } from '#/lib/flags'
@@ -16,6 +17,7 @@ import {
   isSubmitted,
   quizReducer,
 } from '#/lib/quiz-state'
+import { LeavePrompt } from '#/components/LeavePrompt'
 import { QuestionCard } from '#/components/QuestionCard'
 import { ResultsScreen } from '#/components/ResultsScreen'
 import { useFlags } from '#/lib/use-flags'
@@ -49,6 +51,9 @@ const RETRY_LABELS = {
   flagged: 'Practice flagged again',
 }
 
+// Always block while a round is in progress; the blocker is disabled otherwise.
+const alwaysBlock = () => true
+
 export function QuizRunner(props: Props) {
   const { quizId, mode, buildPlan, onFinish, canRetry = true } = props
   // Undefined until loaded from localStorage; nothing shows as flagged then.
@@ -81,19 +86,36 @@ export function QuizRunner(props: Props) {
     if (finished) finishRound()
   }, [finished, state.plan])
 
+  // Warn before leaving a round with answers to lose: in-app navigation gets
+  // the inline prompt below, reload/close the browser's own prompt. Nothing is
+  // saved before the end, and nothing is lost before the first answer.
+  const inProgress = !finished && state.answers.length > 0
+  const blocker = useBlocker({
+    shouldBlockFn: alwaysBlock,
+    enableBeforeUnload: true,
+    disabled: !inProgress,
+    withResolver: true,
+  })
+  const blocked = blocker.status === 'blocked'
+  useEffect(() => {
+    // The round ended (or restarted) while the prompt was open: drop the
+    // pending navigation.
+    if (!inProgress && blocker.status === 'blocked') blocker.reset()
+  }, [inProgress, blocker])
+
   // Enter checks a complete multi-answer selection, or moves on once answered.
   // requireReset: holding Enter fires once, so it can't submit and skip ahead.
   // While enabled, preventDefault (the default) stops the focused button from
   // also firing a native click. When disabled, Enter keeps its native meaning
   // (e.g. activating a focused option), so the reducer guards alone aren't enough.
   useHotkey('Enter', () => dispatch({ type: submitted ? 'next' : 'check' }), {
-    enabled: submitted || canCheck(state),
+    enabled: !blocked && (submitted || canCheck(state)),
     requireReset: true,
   })
 
   // Left arrow goes back to review the previous question.
   useHotkey('ArrowLeft', () => dispatch({ type: 'previous' }), {
-    enabled: canGoBack(state),
+    enabled: !blocked && canGoBack(state),
   })
 
   // 1-6 / A-F pick (single answer) or toggle (multiple answer) the option
@@ -112,6 +134,7 @@ export function QuizRunner(props: Props) {
         },
         options: {
           enabled:
+            !blocked &&
             item !== undefined &&
             !submitted &&
             position < item.optionOrder.length,
@@ -156,24 +179,38 @@ export function QuizRunner(props: Props) {
   }
 
   return (
-    <QuestionCard
-      key={state.current}
-      item={item}
-      selected={getSelected(state)}
-      submitted={submitted}
-      index={state.current}
-      total={state.plan.length}
-      score={getScore(state)}
-      answeredCount={state.answers.length}
-      isLast={state.current === state.plan.length - 1}
-      flagged={flaggedIndexes.includes(state.current)}
-      onToggle={(originalIndex) => dispatch({ type: 'toggle', originalIndex })}
-      onCheck={() => dispatch({ type: 'check' })}
-      onNext={() => dispatch({ type: 'next' })}
-      onPrevious={
-        canGoBack(state) ? () => dispatch({ type: 'previous' }) : undefined
-      }
-      onFlag={() => toggleFlag(quizId, item.question)}
-    />
+    <>
+      {blocked ? (
+        <LeavePrompt
+          title="Leave this round?"
+          description="Your answers so far will be lost."
+          stayLabel="Stay on the round"
+          leaveLabel="Leave round"
+          onStay={blocker.reset}
+          onLeave={blocker.proceed}
+        />
+      ) : null}
+      <QuestionCard
+        key={state.current}
+        item={item}
+        selected={getSelected(state)}
+        submitted={submitted}
+        index={state.current}
+        total={state.plan.length}
+        score={getScore(state)}
+        answeredCount={state.answers.length}
+        isLast={state.current === state.plan.length - 1}
+        flagged={flaggedIndexes.includes(state.current)}
+        onToggle={(originalIndex) =>
+          dispatch({ type: 'toggle', originalIndex })
+        }
+        onCheck={() => dispatch({ type: 'check' })}
+        onNext={() => dispatch({ type: 'next' })}
+        onPrevious={
+          canGoBack(state) ? () => dispatch({ type: 'previous' }) : undefined
+        }
+        onFlag={() => toggleFlag(quizId, item.question)}
+      />
+    </>
   )
 }
