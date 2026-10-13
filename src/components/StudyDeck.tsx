@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useHotkey } from '@tanstack/react-hotkeys'
 import { buttonClasses } from '#/lib/button-classes'
+import { formatChapter } from '#/lib/chapter-label'
 import { shuffle } from '#/lib/shuffle'
 import { StudyCard } from '#/components/StudyCard'
 import type { Chapter, Question, Quiz } from '#/quizzes/types'
@@ -92,9 +93,7 @@ export function StudyDeck({ quiz, chapterId, shuffled, showAll }: Props) {
         <span>
           Card {index + 1} of {cards.length}
         </span>
-        <span>
-          Chapter {card.chapter.number}: {card.chapter.title}
-        </span>
+        <span>{formatChapter(card.chapter)}</span>
       </div>
 
       <div className="mt-6">

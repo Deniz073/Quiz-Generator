@@ -1,4 +1,5 @@
 import type { Chapter } from '#/quizzes/types'
+import { formatChapter } from '#/lib/chapter-label'
 
 const checkboxLabelClasses =
   'flex cursor-pointer items-center gap-2 py-1.5 text-sm font-medium'
@@ -37,7 +38,7 @@ export function StudyControls({
           <option value="">All chapters</option>
           {chapters.map((chapter) => (
             <option key={chapter.id} value={chapter.id}>
-              Chapter {chapter.number}: {chapter.title}
+              {formatChapter(chapter)}
             </option>
           ))}
         </select>

@@ -1,10 +1,10 @@
 import { useState } from 'react'
-import { Link, createFileRoute, notFound } from '@tanstack/react-router'
+import { createFileRoute } from '@tanstack/react-router'
 import { NotFound } from '#/components/NotFound'
-import { backLinkClasses } from '#/lib/button-classes'
+import { QuizPageHeader } from '#/components/QuizPageHeader'
 import { StudyControls } from '#/components/StudyControls'
 import { StudyDeck } from '#/components/StudyDeck'
-import { getQuiz } from '#/quizzes'
+import { requireQuiz } from '#/lib/quiz-route'
 
 export const Route = createFileRoute('/quiz/$quizId/study')({
   // Invalid or missing values fall back to all chapters, in order. Booleans
@@ -28,7 +28,7 @@ export const Route = createFileRoute('/quiz/$quizId/study')({
   // still runs on the server, so unknown ids get a real 404.
   ssr: 'data-only',
   loader: ({ params }) => {
-    if (!getQuiz(params.quizId)) throw notFound()
+    requireQuiz(params.quizId)
   },
   component: StudyPage,
   notFoundComponent: () => <NotFound message="Quiz not found." />,
@@ -40,8 +40,7 @@ function StudyPage() {
   const navigate = Route.useNavigate()
   // Kept here, not in the deck, so it survives a chapter or shuffle change.
   const [showAll, setShowAll] = useState(false)
-  const quiz = getQuiz(quizId)
-  if (!quiz) return null
+  const quiz = requireQuiz(quizId)
 
   // An unknown chapter id (e.g. a stale link) falls back to all chapters.
   const chapterId = quiz.chapters.some((c) => c.id === chapter)
@@ -51,10 +50,7 @@ function StudyPage() {
 
   return (
     <div>
-      <Link to="/quiz/$quizId" params={{ quizId }} className={backLinkClasses}>
-        &larr; {quiz.title}
-      </Link>
-      <h1 className="mt-3 mb-4 text-2xl font-bold">Study</h1>
+      <QuizPageHeader quiz={quiz} title="Study" className="mb-4" />
       <StudyControls
         chapters={quiz.chapters}
         chapterId={chapterId}

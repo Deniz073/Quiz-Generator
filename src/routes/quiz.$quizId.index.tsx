@@ -1,18 +1,20 @@
-import { Link, createFileRoute, notFound } from '@tanstack/react-router'
+import { Link, createFileRoute } from '@tanstack/react-router'
 import { NotFound } from '#/components/NotFound'
 import { backLinkClasses } from '#/lib/button-classes'
 import { getFlaggedQuestions } from '#/lib/flags'
+import { formatChapter } from '#/lib/chapter-label'
 import { formatResult } from '#/lib/progress'
+import { requireQuiz } from '#/lib/quiz-route'
 import { useFlags } from '#/lib/use-flags'
 import { useQuizProgress } from '#/lib/use-progress'
-import { countQuestions, getQuiz } from '#/quizzes'
+import { countQuestions } from '#/quizzes'
 
 const cardLinkClasses =
   'rounded-lg border border-slate-200 bg-white px-4 py-3 transition-colors hover:border-sky-500 dark:border-slate-800 dark:bg-slate-900 dark:hover:border-sky-400'
 
 export const Route = createFileRoute('/quiz/$quizId/')({
   loader: ({ params }) => {
-    if (!getQuiz(params.quizId)) throw notFound()
+    requireQuiz(params.quizId)
   },
   component: QuizPage,
   notFoundComponent: () => <NotFound message="Quiz not found." />,
@@ -20,11 +22,10 @@ export const Route = createFileRoute('/quiz/$quizId/')({
 
 function QuizPage() {
   const { quizId } = Route.useParams()
-  const quiz = getQuiz(quizId)
+  const quiz = requireQuiz(quizId)
   // Empty on the server and during hydration, then filled in from localStorage.
   const progress = useQuizProgress(quizId)
   const flags = useFlags(quizId)
-  if (!quiz) return null
 
   const countFlagged = (chapterId?: string) =>
     flags ? getFlaggedQuestions(quiz, flags, chapterId).length : 0
@@ -58,9 +59,7 @@ function QuizPage() {
                 className={`flex min-w-0 flex-1 flex-col gap-0.5 sm:flex-row sm:items-center sm:justify-between sm:gap-4 ${cardLinkClasses}`}
               >
                 <span>
-                  <span className="font-medium">
-                    Chapter {chapter.number} &mdash; {chapter.title}
-                  </span>
+                  <span className="font-medium">{formatChapter(chapter)}</span>
                   {result ? (
                     <span className="mt-0.5 block text-sm text-slate-600 dark:text-slate-400">
                       {formatResult(result)}

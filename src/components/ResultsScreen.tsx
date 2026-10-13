@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link } from '@tanstack/react-router'
 import type { Answer } from '#/lib/quiz-state'
 import { buttonClasses } from '#/lib/button-classes'
+import { formatChapter } from '#/lib/chapter-label'
 import { getCorrectIndexes } from '#/quizzes/question'
 import { AnswerList } from '#/components/AnswerList'
 import { FilterButton } from '#/components/FilterButton'
@@ -173,7 +174,7 @@ export function ResultsScreen({
                     ) : null}
                     {chapter ? (
                       <span className="text-slate-600 dark:text-slate-400">
-                        Chapter {chapter.number}: {chapter.title}
+                        {formatChapter(chapter)}
                       </span>
                     ) : null}
                   </div>

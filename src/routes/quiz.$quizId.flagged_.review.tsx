@@ -1,16 +1,19 @@
-import { Link, createFileRoute, notFound } from '@tanstack/react-router'
+import { Link, createFileRoute } from '@tanstack/react-router'
 import { AnswerList } from '#/components/AnswerList'
 import { NotFound } from '#/components/NotFound'
-import { backLinkClasses, buttonClasses } from '#/lib/button-classes'
+import { QuizPageHeader } from '#/components/QuizPageHeader'
+import { buttonClasses } from '#/lib/button-classes'
+import { formatChapter } from '#/lib/chapter-label'
+import { getFlaggedQuestions } from '#/lib/flags'
+import { requireQuiz } from '#/lib/quiz-route'
 import { useFlags } from '#/lib/use-flags'
-import { getQuiz } from '#/quizzes'
 import { getCorrectIndexes } from '#/quizzes/question'
 
 // `flagged_` keeps this out of the flagged practice route's layout: the URL is
 // /quiz/<id>/flagged/review, but that route renders on its own.
 export const Route = createFileRoute('/quiz/$quizId/flagged_/review')({
   loader: ({ params }) => {
-    if (!getQuiz(params.quizId)) throw notFound()
+    requireQuiz(params.quizId)
   },
   component: FlaggedReviewPage,
   notFoundComponent: () => <NotFound message="Quiz not found." />,
@@ -19,19 +22,16 @@ export const Route = createFileRoute('/quiz/$quizId/flagged_/review')({
 /** Read-only list of the flagged questions with answers and explanations. */
 function FlaggedReviewPage() {
   const { quizId } = Route.useParams()
-  const quiz = getQuiz(quizId)
+  const quiz = requireQuiz(quizId)
   // Undefined on the server and during hydration, then filled in from
   // localStorage. Nothing is claimed about the flags until then.
   const flags = useFlags(quizId)
-  if (!quiz) return null
 
   const groups = flags
     ? quiz.chapters
         .map((chapter) => ({
           chapter,
-          questions: chapter.questions.filter((question) =>
-            flags.has(question.id),
-          ),
+          questions: getFlaggedQuestions(quiz, flags, chapter.id),
         }))
         .filter(({ questions }) => questions.length > 0)
     : undefined
@@ -42,12 +42,11 @@ function FlaggedReviewPage() {
 
   return (
     <div>
-      <Link to="/quiz/$quizId" params={{ quizId }} className={backLinkClasses}>
-        &larr; {quiz.title}
-      </Link>
-      <h1 className="mt-3 text-2xl font-bold tracking-tight">
-        Review flagged questions
-      </h1>
+      <QuizPageHeader
+        quiz={quiz}
+        title="Review flagged questions"
+        className=""
+      />
 
       {count === 0 ? (
         <p className="mt-4 text-slate-600 dark:text-slate-400">
@@ -75,7 +74,7 @@ function FlaggedReviewPage() {
           {groups.map(({ chapter, questions }) => (
             <section key={chapter.id} className="mt-8">
               <h2 className="text-lg font-semibold">
-                Chapter {chapter.number} &mdash; {chapter.title}
+                {formatChapter(chapter)}
               </h2>
               <ol className="mt-3 flex flex-col gap-4">
                 {questions.map((question) => {

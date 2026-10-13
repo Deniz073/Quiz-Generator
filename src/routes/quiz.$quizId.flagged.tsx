@@ -1,13 +1,14 @@
 import { useState } from 'react'
-import { Link, createFileRoute, notFound } from '@tanstack/react-router'
+import { createFileRoute } from '@tanstack/react-router'
 import type { Quiz } from '#/quizzes/types'
 import { NotFound } from '#/components/NotFound'
-import { backLinkClasses } from '#/lib/button-classes'
+import { QuizPageHeader } from '#/components/QuizPageHeader'
 import { QuizRunner } from '#/components/QuizRunner'
+import { formatChapter } from '#/lib/chapter-label'
 import { getFlaggedQuestions, getFlagsSnapshot } from '#/lib/flags'
 import { buildShuffledPlan } from '#/lib/quiz-plan'
+import { requireQuiz } from '#/lib/quiz-route'
 import { useFlags } from '#/lib/use-flags'
-import { getQuiz } from '#/quizzes'
 
 export const Route = createFileRoute('/quiz/$quizId/flagged')({
   // An invalid, missing or unknown chapter falls back to the whole quiz.
@@ -26,7 +27,7 @@ export const Route = createFileRoute('/quiz/$quizId/flagged')({
   // real 404.
   ssr: 'data-only',
   loader: ({ params }) => {
-    if (!getQuiz(params.quizId)) throw notFound()
+    requireQuiz(params.quizId)
   },
   component: FlaggedPage,
   notFoundComponent: () => <NotFound message="Quiz not found." />,
@@ -35,24 +36,25 @@ export const Route = createFileRoute('/quiz/$quizId/flagged')({
 function FlaggedPage() {
   const { quizId } = Route.useParams()
   const { chapter: chapterParam } = Route.useSearch()
-  const quiz = getQuiz(quizId)
-  if (!quiz) return null
+  const quiz = requireQuiz(quizId)
 
   const chapter = quiz.chapters.find((c) => c.id === chapterParam)
 
   return (
     <div>
-      <Link to="/quiz/$quizId" params={{ quizId }} className={backLinkClasses}>
-        &larr; {quiz.title}
-      </Link>
-      <h1 className="mt-3 mb-6 text-2xl font-bold">
-        Flagged questions
-        {chapter ? (
-          <span className="mt-1 block text-lg font-medium text-slate-600 dark:text-slate-400">
-            Chapter {chapter.number} &mdash; {chapter.title}
-          </span>
-        ) : null}
-      </h1>
+      <QuizPageHeader
+        quiz={quiz}
+        title={
+          <>
+            Flagged questions
+            {chapter ? (
+              <span className="mt-1 block text-lg font-medium text-slate-600 dark:text-slate-400">
+                {formatChapter(chapter)}
+              </span>
+            ) : null}
+          </>
+        }
+      />
       {/* key resets the round when the scope changes. Not recorded in progress. */}
       <FlaggedRound
         key={chapter?.id ?? 'all'}
