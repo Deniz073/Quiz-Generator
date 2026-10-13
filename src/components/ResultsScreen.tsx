@@ -47,7 +47,7 @@ export function ResultsScreen({
         <p className="text-sm font-medium text-slate-600 dark:text-slate-400">
           Your result
         </p>
-        <p className="mt-1 text-4xl font-bold">
+        <p className="mt-1 text-4xl font-bold tabular-nums">
           {score} / {total}
         </p>
         <p className="mt-1 text-lg text-slate-600 dark:text-slate-400">
@@ -61,7 +61,7 @@ export function ResultsScreen({
                 : 'text-red-700 dark:text-red-400'
             }`}
           >
-            {passed ? 'PASSED' : 'FAILED'}
+            {passed ? 'PASSED' : 'FAILED'}{' '}
             <span className="ml-2 text-sm font-medium text-slate-600 dark:text-slate-400">
               Pass mark {passPercent}%
             </span>
@@ -171,7 +171,7 @@ export function ResultsScreen({
                       </span>
                     ) : null}
                     {chapter ? (
-                      <span className="text-slate-500">
+                      <span className="text-slate-600 dark:text-slate-400">
                         Chapter {chapter.number}: {chapter.title}
                       </span>
                     ) : null}

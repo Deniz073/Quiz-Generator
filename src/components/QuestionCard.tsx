@@ -8,7 +8,8 @@ import { Feedback } from '#/components/Feedback'
 import { OptionButton } from '#/components/OptionButton'
 import { ProgressHeader } from '#/components/ProgressHeader'
 
-export const tipClasses = 'hidden text-xs text-slate-500 sm:block'
+export const tipClasses =
+  'hidden text-xs text-slate-600 dark:text-slate-400 sm:block'
 
 interface BodyProps {
   item: PlannedQuestion
@@ -46,8 +47,8 @@ export function QuestionBody({
 
   return (
     <>
-      <div className="mt-6 flex items-start justify-between gap-4">
-        <h2 className="text-xl font-semibold leading-snug">
+      <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
+        <h2 className="text-xl font-semibold leading-snug sm:text-2xl">
           {question.question}
         </h2>
         <button
@@ -59,7 +60,7 @@ export function QuestionBody({
           onKeyDown={(event) => {
             if (event.key === 'Enter') event.stopPropagation()
           }}
-          className={`shrink-0 rounded-md border px-2.5 py-1 text-sm font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500 ${
+          className={`self-start rounded-md border px-3 py-2 text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500 sm:shrink-0 ${
             flagged
               ? 'border-amber-500 bg-amber-100 text-amber-900 dark:border-amber-500 dark:bg-amber-950 dark:text-amber-100'
               : 'border-slate-300 text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800'
@@ -148,9 +149,30 @@ export function QuestionCard({
   const required = getCorrectIndexes(question).length
   const keyTip = describeOptionKeys(optionOrder.length)
   const nextRef = useRef<HTMLButtonElement>(null)
+  const wasSubmitted = useRef(submitted)
 
   useEffect(() => {
-    if (submitted) nextRef.current?.focus()
+    const justSubmitted = submitted && !wasSubmitted.current
+    wasSubmitted.current = submitted
+    const next = nextRef.current
+    if (!submitted || !next) return
+    if (!justSubmitted) {
+      // Opened on an answered question (Previous): focus it as before, and
+      // leave the scroll position to the browser.
+      next.focus()
+      return
+    }
+    // The answer was just locked in. focus() alone scrolls the bare minimum
+    // (or nothing on some mobile browsers), leaving the button on or past the
+    // viewport edge. Bring it, and the feedback above it, properly into view.
+    next.focus({ preventScroll: true })
+    const reduceMotion = window.matchMedia(
+      '(prefers-reduced-motion: reduce)',
+    ).matches
+    next.scrollIntoView({
+      block: 'nearest',
+      behavior: reduceMotion ? 'auto' : 'smooth',
+    })
   }, [submitted])
 
   const previousButton = onPrevious ? (
@@ -188,14 +210,15 @@ export function QuestionCard({
       {submitted ? (
         <div className="mt-5 flex items-center justify-end gap-3">
           {previousButton}
-          <span className="hidden text-xs text-slate-500 sm:inline">
+          <span className="hidden text-xs text-slate-600 dark:text-slate-400 sm:inline">
             Press Enter
           </span>
           <button
             ref={nextRef}
             type="button"
             onClick={onNext}
-            className={buttonClasses('primary')}
+            // Breathing room below the button when it is scrolled into view.
+            className={`scroll-mb-6 ${buttonClasses('primary')}`}
           >
             {isLast ? 'See results' : 'Next question'}
           </button>

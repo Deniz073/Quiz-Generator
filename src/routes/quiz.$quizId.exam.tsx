@@ -5,6 +5,7 @@ import type { ExamConfig, Quiz } from '#/quizzes/types'
 import { ExamResumePrompt } from '#/components/ExamResumePrompt'
 import { ExamRunner } from '#/components/ExamRunner'
 import { NotFound } from '#/components/NotFound'
+import { backLinkClasses } from '#/lib/button-classes'
 import { clearExamSession, loadExamSession } from '#/lib/exam-session'
 import { examReducer, startExam } from '#/lib/exam-state'
 import { recordResult } from '#/lib/progress'
@@ -30,11 +31,7 @@ function ExamPage() {
 
   return (
     <div>
-      <Link
-        to="/quiz/$quizId"
-        params={{ quizId }}
-        className="text-sm text-sky-700 hover:underline dark:text-sky-400"
-      >
+      <Link to="/quiz/$quizId" params={{ quizId }} className={backLinkClasses}>
         &larr; {quiz.title}
       </Link>
       <h1 className="mt-3 mb-6 text-2xl font-bold">Mock exam</h1>

@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link, createFileRoute, notFound } from '@tanstack/react-router'
 import { NotFound } from '#/components/NotFound'
+import { backLinkClasses } from '#/lib/button-classes'
 import { StudyControls } from '#/components/StudyControls'
 import { StudyDeck } from '#/components/StudyDeck'
 import { getQuiz } from '#/quizzes'
@@ -50,11 +51,7 @@ function StudyPage() {
 
   return (
     <div>
-      <Link
-        to="/quiz/$quizId"
-        params={{ quizId }}
-        className="text-sm text-sky-700 hover:underline dark:text-sky-400"
-      >
+      <Link to="/quiz/$quizId" params={{ quizId }} className={backLinkClasses}>
         &larr; {quiz.title}
       </Link>
       <h1 className="mt-3 mb-4 text-2xl font-bold">Study</h1>

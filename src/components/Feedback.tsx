@@ -17,22 +17,22 @@ export function Feedback({ question, chosen }: Props) {
   const correctCount = chosen.filter((i) => correctIndexes.includes(i)).length
 
   return (
-    <div
-      className={`mt-5 rounded-lg border px-4 py-3 ${
-        isCorrect
-          ? 'border-emerald-300 bg-emerald-50 text-emerald-900 dark:border-emerald-800 dark:bg-emerald-950 dark:text-emerald-100'
-          : 'border-red-300 bg-red-50 text-red-900 dark:border-red-800 dark:bg-red-950 dark:text-red-100'
-      }`}
-    >
-      <p className="font-semibold">
+    <div className="mt-5 rounded-lg border border-slate-200 bg-white px-4 py-3 dark:border-slate-800 dark:bg-slate-900">
+      <p
+        className={`font-semibold ${
+          isCorrect
+            ? 'text-emerald-700 dark:text-emerald-400'
+            : 'text-red-700 dark:text-red-400'
+        }`}
+      >
         {isCorrect ? 'Correct!' : 'Incorrect'}
         {isMultipleAnswer(question) && !isCorrect ? (
-          <span className="ml-2 text-sm font-normal">
+          <span className="ml-2 text-sm font-normal text-slate-600 dark:text-slate-400">
             ({correctCount} of {correctIndexes.length} correct)
           </span>
         ) : null}
       </p>
-      <p className="mt-1 text-sm">{question.explanation}</p>
+      <p className="mt-1">{question.explanation}</p>
     </div>
   )
 }

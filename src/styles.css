@@ -1,5 +1,21 @@
 @import 'tailwindcss';
 
+/*
+ * `dark:` follows the system unless the user chose a theme with the toggle,
+ * which puts `light` or `dark` on <html> (see src/lib/theme.ts).
+ */
+@custom-variant dark {
+  @media (prefers-color-scheme: dark) {
+    &:where(:not(.light, .light *)) {
+      @slot;
+    }
+  }
+
+  &:where(.dark, .dark *) {
+    @slot;
+  }
+}
+
 * {
   box-sizing: border-box;
 }
@@ -12,8 +28,44 @@ body,
 
 html {
   color-scheme: light dark;
+  -webkit-text-size-adjust: 100%;
+  accent-color: var(--color-sky-600);
+  scrollbar-color: var(--color-slate-400) transparent;
+}
+
+html.light {
+  color-scheme: light;
+}
+
+html.dark {
+  color-scheme: dark;
 }
 
 body {
   margin: 0;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+h1,
+h2,
+h3 {
+  text-wrap: balance;
+}
+
+p,
+li {
+  text-wrap: pretty;
+}
+
+/* One focus ring for every control, including plain links. */
+:focus-visible {
+  outline: 2px solid var(--color-sky-500);
+  outline-offset: 2px;
+}
+
+::selection {
+  background: color-mix(in oklab, var(--color-sky-500) 30%, transparent);
 }

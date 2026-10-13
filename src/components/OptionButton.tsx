@@ -15,12 +15,12 @@ const base =
 const correctClasses =
   'border-emerald-500 bg-emerald-50 text-emerald-900 dark:border-emerald-500 dark:bg-emerald-950 dark:text-emerald-100'
 const unavailableClasses =
-  'border-slate-200 bg-white text-slate-500 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-500'
+  'border-slate-200 bg-white text-slate-600 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400'
 
 const OPTION_STYLES: Record<OptionState, OptionStyle> = {
   idle: {
     classes:
-      'cursor-pointer border-slate-300 bg-white hover:border-sky-500 hover:bg-sky-50 dark:border-slate-700 dark:bg-slate-900 dark:hover:border-sky-400 dark:hover:bg-slate-800',
+      'cursor-pointer border-slate-300 bg-white hover:border-sky-500 hover:bg-sky-50 active:bg-sky-100 dark:border-slate-700 dark:bg-slate-900 dark:hover:border-sky-400 dark:hover:bg-slate-800 dark:active:bg-slate-700',
   },
   selected: {
     classes:

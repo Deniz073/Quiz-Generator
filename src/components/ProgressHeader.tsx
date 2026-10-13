@@ -20,7 +20,14 @@ export function ProgressHeader({
   secondsLeft,
 }: Props) {
   return (
-    <>
+    <div
+      className={
+        // The timed exam keeps the clock in view while a long question scrolls.
+        secondsLeft !== undefined
+          ? 'sticky top-0 z-[5] -mx-4 bg-slate-50 px-4 pt-2 pb-3 dark:bg-slate-950'
+          : undefined
+      }
+    >
       <div className="flex items-center justify-between text-sm font-medium text-slate-600 dark:text-slate-400">
         <span>{label}</span>
         {secondsLeft !== undefined ? (
@@ -29,7 +36,9 @@ export function ProgressHeader({
           <span
             role="timer"
             className={`tabular-nums ${
-              secondsLeft <= 60 ? 'text-red-700 dark:text-red-400' : ''
+              secondsLeft <= 60
+                ? 'font-semibold text-red-700 dark:text-red-400'
+                : ''
             }`}
           >
             Time left: {formatSeconds(secondsLeft)}
@@ -49,10 +58,10 @@ export function ProgressHeader({
         aria-label="Quiz progress"
       >
         <div
-          className="h-full bg-sky-500 transition-all"
+          className="h-full bg-sky-500 transition-[width] duration-300 motion-reduce:transition-none"
           style={{ width: `${(answeredCount / total) * 100}%` }}
         />
       </div>
-    </>
+    </div>
   )
 }

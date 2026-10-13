@@ -53,7 +53,7 @@ export function DataBackup() {
   }
 
   return (
-    <section className="mt-10">
+    <section className="mt-12 border-t border-slate-200 pt-6 dark:border-slate-800">
       <h2 className="text-lg font-semibold">Your data</h2>
       <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
         Progress and flagged questions are saved in this browser only. Export
@@ -92,7 +92,7 @@ export function DataBackup() {
           role="status"
           className={`mt-2 text-sm ${
             status.kind === 'error'
-              ? 'text-red-600 dark:text-red-400'
+              ? 'text-red-700 dark:text-red-400'
               : 'text-slate-600 dark:text-slate-400'
           }`}
         >

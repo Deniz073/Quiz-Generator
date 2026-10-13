@@ -1,5 +1,6 @@
 import { Link, createFileRoute, notFound } from '@tanstack/react-router'
 import { NotFound } from '#/components/NotFound'
+import { backLinkClasses } from '#/lib/button-classes'
 import { QuizRunner } from '#/components/QuizRunner'
 import { buildShuffledPlan } from '#/lib/quiz-plan'
 import { recordResult } from '#/lib/progress'
@@ -30,11 +31,7 @@ function ChapterPage() {
 
   return (
     <div>
-      <Link
-        to="/quiz/$quizId"
-        params={{ quizId }}
-        className="text-sm text-sky-700 hover:underline dark:text-sky-400"
-      >
+      <Link to="/quiz/$quizId" params={{ quizId }} className={backLinkClasses}>
         &larr; {quiz.title}
       </Link>
       <h1 className="mt-3 mb-6 text-2xl font-bold">

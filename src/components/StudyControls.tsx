@@ -1,6 +1,7 @@
 import type { Chapter } from '#/quizzes/types'
 
-const checkboxLabelClasses = 'flex items-center gap-2 text-sm font-medium'
+const checkboxLabelClasses =
+  'flex cursor-pointer items-center gap-2 py-1.5 text-sm font-medium'
 const checkboxClasses =
   'h-4 w-4 accent-sky-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500'
 

@@ -135,7 +135,7 @@ export function StudyDeck({ quiz, chapterId, shuffled, showAll }: Props) {
           Next
         </button>
       </div>
-      <p className="mt-3 hidden text-center text-xs text-slate-500 sm:block">
+      <p className="mt-3 hidden text-center text-xs text-slate-600 dark:text-slate-400 sm:block">
         Tip: press &larr; or &rarr; to move, Space or Enter to show or hide the
         answer.
       </p>

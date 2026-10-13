@@ -8,7 +8,7 @@ const OPTION_CLASSES = {
   neutral: 'border-slate-300 bg-white dark:border-slate-700 dark:bg-slate-900',
   correct:
     'border-emerald-500 bg-emerald-50 text-emerald-900 dark:border-emerald-500 dark:bg-emerald-950 dark:text-emerald-100',
-  dim: 'border-slate-200 bg-white text-slate-500 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-500',
+  dim: 'border-slate-200 bg-white text-slate-600 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400',
 }
 
 interface Props {
@@ -26,7 +26,7 @@ export function StudyCard({ question, revealed }: Props) {
 
   return (
     <div>
-      <h2 className="text-xl font-semibold leading-snug">
+      <h2 className="text-xl font-semibold leading-snug sm:text-2xl">
         {question.question}
       </h2>
 
@@ -73,7 +73,7 @@ export function StudyCard({ question, revealed }: Props) {
                 : 'Correct answers'}
               : {answerLetters}
             </p>
-            <p className="mt-1 text-sm">{question.explanation}</p>
+            <p className="mt-1">{question.explanation}</p>
           </div>
         ) : null}
       </div>
