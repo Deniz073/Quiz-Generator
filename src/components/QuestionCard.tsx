@@ -127,6 +127,21 @@ interface Props extends Omit<BodyProps, 'changeable'> {
   onPrevious: (() => void) | undefined
 }
 
+/**
+ * Scrolls the element in only if part of it is outside the viewport, smoothly
+ * unless the user prefers reduced motion. The element's `scroll-margin` keeps
+ * it off the edge.
+ */
+function scrollIntoViewIfNeeded(element: HTMLElement) {
+  const reduceMotion = window.matchMedia(
+    '(prefers-reduced-motion: reduce)',
+  ).matches
+  element.scrollIntoView({
+    block: 'nearest',
+    behavior: reduceMotion ? 'auto' : 'smooth',
+  })
+}
+
 /** One practice question with immediate feedback (the exam has its own view). */
 export function QuestionCard({
   item,
@@ -166,14 +181,17 @@ export function QuestionCard({
     // (or nothing on some mobile browsers), leaving the button on or past the
     // viewport edge. Bring it, and the feedback above it, properly into view.
     next.focus({ preventScroll: true })
-    const reduceMotion = window.matchMedia(
-      '(prefers-reduced-motion: reduce)',
-    ).matches
-    next.scrollIntoView({
-      block: 'nearest',
-      behavior: reduceMotion ? 'auto' : 'smooth',
-    })
+    scrollIntoViewIfNeeded(next)
   }, [submitted])
+
+  // The selection just became complete: bring "Check answer" into view. Focus
+  // stays where it is, so the user can still change the selection.
+  const checkRef = useRef<HTMLButtonElement>(null)
+  const readyToCheck = multiple && !submitted && selected.length === required
+  useEffect(() => {
+    if (readyToCheck && checkRef.current)
+      scrollIntoViewIfNeeded(checkRef.current)
+  }, [readyToCheck])
 
   const previousButton = onPrevious ? (
     <button
@@ -230,10 +248,11 @@ export function QuestionCard({
             Tip: press {keyTip} to toggle, Enter to check.
           </p>
           <button
+            ref={checkRef}
             type="button"
             onClick={onCheck}
             disabled={selected.length !== required}
-            className={`ml-auto ${buttonClasses('primary')}`}
+            className={`ml-auto scroll-mb-6 ${buttonClasses('primary')}`}
           >
             Check answer
           </button>
