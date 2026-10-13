@@ -3,7 +3,6 @@ import { NotFound } from '#/components/NotFound'
 import { backLinkClasses } from '#/lib/button-classes'
 import { QuizRunner } from '#/components/QuizRunner'
 import { buildShuffledPlan } from '#/lib/quiz-plan'
-import { recordResult } from '#/lib/progress'
 import { getChapter, getQuiz } from '#/quizzes'
 
 export const Route = createFileRoute('/quiz/$quizId/$chapterId')({
@@ -44,9 +43,7 @@ function ChapterPage() {
         mode="chapter"
         buildPlan={() => buildShuffledPlan(chapter.questions)}
         nextChapterId={nextChapter?.id}
-        onFinish={(score, total) =>
-          recordResult(quizId, { chapterId: chapter.id }, score, total)
-        }
+        record={{ chapterId: chapter.id }}
       />
     </div>
   )

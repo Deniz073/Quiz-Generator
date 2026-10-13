@@ -1,10 +1,10 @@
 import { useEffect, useEffectEvent, useReducer } from 'react'
-import { useHotkey, useHotkeys } from '@tanstack/react-hotkeys'
-import { useBlocker } from '@tanstack/react-router'
+import { useHotkey } from '@tanstack/react-hotkeys'
 import type { PlannedQuestion } from '#/lib/quiz-plan'
+import type { ProgressTarget } from '#/lib/progress'
 import type { Round } from '#/lib/quiz-state'
 import { toggleFlag } from '#/lib/flags'
-import { OPTION_KEYS } from '#/lib/option-keys'
+import { recordResult } from '#/lib/progress'
 import { reshufflePlan } from '#/lib/quiz-plan'
 import {
   canCheck,
@@ -21,16 +21,18 @@ import { LeavePrompt } from '#/components/LeavePrompt'
 import { QuestionCard } from '#/components/QuestionCard'
 import { ResultsScreen } from '#/components/ResultsScreen'
 import { useFlags } from '#/lib/use-flags'
+import { useLeaveGuard } from '#/lib/use-leave-guard'
+import { useOptionHotkeys } from '#/lib/use-option-hotkeys'
 
 type Props = {
   quizId: string
   /** Builds the plan of a full round (also used for "retry" / "new round"). */
   buildPlan: () => Array<PlannedQuestion>
   /**
-   * Called once when a full round finishes (not for "retry incorrect" rounds).
-   * Used to save progress; omit for modes that are not recorded.
+   * Where to save the result when a full round finishes (never for "retry
+   * incorrect" rounds). Omit for modes that are not recorded.
    */
-  onFinish?: (score: number, total: number) => void
+  record?: ProgressTarget
   /** False hides the "retry" button, e.g. when `buildPlan` would be empty. */
   canRetry?: boolean
 } & (
@@ -51,11 +53,8 @@ const RETRY_LABELS = {
   flagged: 'Practice flagged again',
 }
 
-// Always block while a round is in progress; the blocker is disabled otherwise.
-const alwaysBlock = () => true
-
 export function QuizRunner(props: Props) {
-  const { quizId, mode, buildPlan, onFinish, canRetry = true } = props
+  const { quizId, mode, buildPlan, record, canRetry = true } = props
   // Undefined until loaded from localStorage; nothing shows as flagged then.
   const flags = useFlags(quizId)
 
@@ -76,11 +75,13 @@ export function QuizRunner(props: Props) {
     flags?.has(planned.question.id) ? [index] : [],
   )
 
-  // Save once per finished full round. The effect event keeps the latest
-  // onFinish without making it a dependency (a new closure each render would
-  // otherwise save the same result again).
+  // Save once per finished full round. The effect event reads the latest
+  // props and state without making them dependencies (which would save the
+  // same result again).
   const finishRound = useEffectEvent(() => {
-    if (!round.subset) onFinish?.(getScore(state), state.plan.length)
+    if (record && !round.subset) {
+      recordResult(quizId, record, getScore(state), state.plan.length)
+    }
   })
   useEffect(() => {
     if (finished) finishRound()
@@ -89,19 +90,9 @@ export function QuizRunner(props: Props) {
   // Warn before leaving a round with answers to lose: in-app navigation gets
   // the inline prompt below, reload/close the browser's own prompt. Nothing is
   // saved before the end, and nothing is lost before the first answer.
-  const inProgress = !finished && state.answers.length > 0
-  const blocker = useBlocker({
-    shouldBlockFn: alwaysBlock,
-    enableBeforeUnload: true,
-    disabled: !inProgress,
-    withResolver: true,
-  })
-  const blocked = blocker.status === 'blocked'
-  useEffect(() => {
-    // The round ended (or restarted) while the prompt was open: drop the
-    // pending navigation.
-    if (!inProgress && blocker.status === 'blocked') blocker.reset()
-  }, [inProgress, blocker])
+  const { blocked, stay, leave } = useLeaveGuard(
+    !finished && state.answers.length > 0,
+  )
 
   // Enter checks a complete multi-answer selection, or moves on once answered.
   // requireReset: holding Enter fires once, so it can't submit and skip ahead.
@@ -118,30 +109,11 @@ export function QuizRunner(props: Props) {
     enabled: !blocked && canGoBack(state),
   })
 
-  // 1-6 / A-F pick (single answer) or toggle (multiple answer) the option
-  // shown at that position.
-  useHotkeys(
-    OPTION_KEYS.flatMap(({ digit, letter }, position) =>
-      [digit, letter].map((hotkey) => ({
-        hotkey,
-        callback: () => {
-          if (item) {
-            dispatch({
-              type: 'toggle',
-              originalIndex: item.optionOrder[position],
-            })
-          }
-        },
-        options: {
-          enabled:
-            !blocked &&
-            item !== undefined &&
-            !submitted &&
-            position < item.optionOrder.length,
-        },
-      })),
-    ),
-  )
+  useOptionHotkeys({
+    optionOrder: item?.optionOrder,
+    enabled: !blocked && !submitted,
+    onPick: (originalIndex) => dispatch({ type: 'toggle', originalIndex }),
+  })
 
   if (finished) {
     const answers = getAnswers(state, flaggedIndexes)
@@ -186,8 +158,8 @@ export function QuizRunner(props: Props) {
           description="Your answers so far will be lost."
           stayLabel="Stay on the round"
           leaveLabel="Leave round"
-          onStay={blocker.reset}
-          onLeave={blocker.proceed}
+          onStay={stay}
+          onLeave={leave}
         />
       ) : null}
       <QuestionCard
