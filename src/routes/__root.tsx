@@ -12,6 +12,15 @@ import { ThemeToggle } from '#/components/ThemeToggle'
 import { THEME_COLORS, THEME_INIT_SCRIPT } from '#/lib/theme'
 import appCss from '../styles.css?url'
 
+const TITLE = 'Quiz Generator'
+const DESCRIPTION =
+  'Practice quizzes chapter by chapter, study with explanations, or take a timed mock exam.'
+
+// Link previews need an absolute image URL. Set VITE_SITE_URL (e.g.
+// https://quiz.example.com) at build time; without it the path stays relative.
+const SITE_URL = (import.meta.env.VITE_SITE_URL ?? '').replace(/\/+$/, '')
+const OG_IMAGE = `${SITE_URL}/og.png`
+
 export const Route = createRootRoute({
   head: () => ({
     meta: [
@@ -23,10 +32,23 @@ export const Route = createRootRoute({
         content: 'width=device-width, initial-scale=1',
       },
       {
-        title: 'Quiz Generator',
+        title: TITLE,
       },
+      { name: 'description', content: DESCRIPTION },
+      { property: 'og:type', content: 'website' },
+      { property: 'og:site_name', content: TITLE },
+      { property: 'og:title', content: TITLE },
+      { property: 'og:description', content: DESCRIPTION },
+      { property: 'og:image', content: OG_IMAGE },
+      { property: 'og:image:width', content: '1200' },
+      { property: 'og:image:height', content: '630' },
+      { property: 'og:image:alt', content: TITLE },
+      { name: 'twitter:card', content: 'summary_large_image' },
     ],
     links: [
+      { rel: 'icon', href: '/favicon.svg', type: 'image/svg+xml' },
+      { rel: 'icon', href: '/favicon.ico', sizes: '32x32' },
+      { rel: 'apple-touch-icon', href: '/apple-touch-icon.png' },
       {
         rel: 'stylesheet',
         href: appCss,

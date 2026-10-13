@@ -86,3 +86,6 @@ needs to change: quizzes are auto-discovered and appear on the home page.
 ## Deploy
 
 Includes a `vercel.json`; import the repo in Vercel and deploy (Nitro output).
+
+Set `VITE_SITE_URL` (e.g. `https://quiz.example.com`) as a build-time env var so
+the `og:image` link preview URL is absolute; without it the tag stays relative.
