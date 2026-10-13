@@ -6,16 +6,17 @@
  * The mock exam keeps its own in-exam flags (see ./exam-state).
  */
 
+import { STORAGE_KEYS } from '#/lib/storage-keys'
 import { getQuiz } from '#/quizzes'
 import type { Question, Quiz } from '#/quizzes/types'
 
-const STORAGE_KEY = 'quiz-generator:flags:v2'
+const STORAGE_KEY = STORAGE_KEYS.flags
 /**
  * v1 stored question texts (questions had no id). Read only while there is no
  * v2 value, then converted to ids; left in place so an older app version still
  * finds its flags.
  */
-const LEGACY_STORAGE_KEY = 'quiz-generator:flags:v1'
+const LEGACY_STORAGE_KEY = STORAGE_KEYS.flagsLegacy
 
 /** Keyed by quiz id: flagged question ids. */
 export type Flags = Partial<Record<string, ReadonlyArray<string>>>

@@ -1,6 +1,7 @@
 import type { PlannedQuestion } from '#/lib/quiz-plan'
 import type { ExamState } from '#/lib/exam-state'
 import type { Quiz } from '#/quizzes/types'
+import { examSessionKey } from '#/lib/storage-keys'
 import { isValidPick } from '#/quizzes/question'
 
 /*
@@ -12,8 +13,6 @@ import { isValidPick } from '#/quizzes/question'
  * here throws: reads fall back to "no session", writes are best effort. Bump
  * the key's version if the shape ever changes incompatibly.
  */
-
-const KEY_PREFIX = 'quiz-generator:exam-session:v1:'
 
 interface StoredQuestion {
   chapterId: string
@@ -32,10 +31,6 @@ interface StoredSession {
   questions: Array<StoredQuestion>
   picks: Array<Array<number>>
   flagged: Array<number>
-}
-
-function storageKey(quizId: string): string {
-  return `${KEY_PREFIX}${quizId}`
 }
 
 /** Best effort, every time the exam changes. Never throws. */
@@ -57,7 +52,7 @@ export function saveExamSession(quiz: Quiz, state: ExamState): void {
     flagged: [...state.flagged],
   }
   try {
-    localStorage.setItem(storageKey(quiz.id), JSON.stringify(session))
+    localStorage.setItem(examSessionKey(quiz.id), JSON.stringify(session))
   } catch (error) {
     console.warn('Could not save the exam session', error)
   }
@@ -65,7 +60,7 @@ export function saveExamSession(quiz: Quiz, state: ExamState): void {
 
 export function clearExamSession(quizId: string): void {
   try {
-    localStorage.removeItem(storageKey(quizId))
+    localStorage.removeItem(examSessionKey(quizId))
   } catch {
     // Unavailable storage: nothing to clear.
   }
@@ -79,7 +74,7 @@ export function clearExamSession(quizId: string): void {
 export function loadExamSession(quiz: Quiz): ExamState | undefined {
   let raw: string | null
   try {
-    raw = localStorage.getItem(storageKey(quiz.id))
+    raw = localStorage.getItem(examSessionKey(quiz.id))
   } catch {
     return undefined
   }

@@ -1,14 +1,14 @@
 /*
  * Export and import of the saved data (progress, flags) as a JSON file, e.g. to
- * move it to another browser. Every localStorage key of the app is copied as
- * its raw string, so the stores (./progress, ./flags) keep doing their own
- * parsing and migration, and keys added later are included automatically.
- * Unfinished mock exams (./exam-session) are left out: they are short-lived
- * and run against a deadline.
+ * move it to another browser. Every key ./storage-keys says is backed up is
+ * copied as its raw string, so the stores (./progress, ./flags) keep doing
+ * their own parsing and migration, and keys added later are included
+ * automatically. Device-local keys (the theme, unfinished exams) are neither
+ * exported nor replaced by an import.
  */
 
-const KEY_PREFIX = 'quiz-generator:'
-const EXCLUDED_PREFIX = 'quiz-generator:exam-session:'
+import { isBackedUpKey, isDeviceLocalKey } from '#/lib/storage-keys'
+
 const FORMAT = 'quiz-generator-backup'
 const VERSION = 1
 
@@ -18,10 +18,6 @@ interface Backup {
   exportedAt: string
   /** localStorage key to its raw stored string. */
   data: Record<string, string>
-}
-
-function isBackedUpKey(key: string): boolean {
-  return key.startsWith(KEY_PREFIX) && !key.startsWith(EXCLUDED_PREFIX)
 }
 
 function readBackedUpData(): Record<string, string> {
@@ -79,7 +75,11 @@ export function parseBackup(
   if (!('version' in backup) || backup.version !== VERSION) {
     return { error: 'The backup was made by an unsupported app version.' }
   }
-  const entries = Object.entries(backup.data)
+  // Device-local keys in a file (e.g. the theme, which older versions
+  // exported) are ignored rather than imported or rejected.
+  const entries = Object.entries(backup.data).filter(
+    ([key]) => !isDeviceLocalKey(key),
+  )
   const valid = entries.every(([key, value]) => {
     if (!isBackedUpKey(key) || typeof value !== 'string') return false
     try {

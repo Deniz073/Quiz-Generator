@@ -7,9 +7,11 @@
  * then only lasts until the page is closed).
  */
 
+import { STORAGE_KEYS } from '#/lib/storage-keys'
+
 export type Theme = 'light' | 'dark'
 
-const STORAGE_KEY = 'quiz-generator:theme:v1'
+const STORAGE_KEY = STORAGE_KEYS.theme
 const DARK_QUERY = '(prefers-color-scheme: dark)'
 
 /** Background colours of the two themes, for the theme-color meta tags. */

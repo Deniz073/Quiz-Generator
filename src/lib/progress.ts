@@ -5,7 +5,9 @@
  * throw. Bump the key's version if the shape ever changes incompatibly.
  */
 
-const STORAGE_KEY = 'quiz-generator:progress:v1'
+import { STORAGE_KEYS } from '#/lib/storage-keys'
+
+const STORAGE_KEY = STORAGE_KEYS.progress
 
 export interface Attempt {
   score: number
