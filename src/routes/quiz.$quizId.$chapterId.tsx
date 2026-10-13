@@ -1,9 +1,10 @@
-import { Link, createFileRoute, notFound } from '@tanstack/react-router'
+import { createFileRoute } from '@tanstack/react-router'
 import { NotFound } from '#/components/NotFound'
-import { backLinkClasses } from '#/lib/button-classes'
+import { QuizPageHeader } from '#/components/QuizPageHeader'
 import { QuizRunner } from '#/components/QuizRunner'
+import { formatChapter } from '#/lib/chapter-label'
 import { buildShuffledPlan } from '#/lib/quiz-plan'
-import { getChapter, getQuiz } from '#/quizzes'
+import { requireChapter } from '#/lib/quiz-route'
 
 export const Route = createFileRoute('/quiz/$quizId/$chapterId')({
   // The runner shuffles questions with Math.random, which can't match between
@@ -11,7 +12,7 @@ export const Route = createFileRoute('/quiz/$quizId/$chapterId')({
   // still runs on the server, so unknown ids get a real 404.
   ssr: 'data-only',
   loader: ({ params }) => {
-    if (!getChapter(params.quizId, params.chapterId)) throw notFound()
+    requireChapter(params.quizId, params.chapterId)
   },
   component: ChapterPage,
   notFoundComponent: () => <NotFound message="Chapter not found." />,
@@ -19,9 +20,7 @@ export const Route = createFileRoute('/quiz/$quizId/$chapterId')({
 
 function ChapterPage() {
   const { quizId, chapterId } = Route.useParams()
-  const quiz = getQuiz(quizId)
-  const chapter = getChapter(quizId, chapterId)
-  if (!quiz || !chapter) return null
+  const { quiz, chapter } = requireChapter(quizId, chapterId)
 
   const index = quiz.chapters.findIndex((c) => c.id === chapter.id)
   const nextChapter = quiz.chapters
@@ -30,12 +29,7 @@ function ChapterPage() {
 
   return (
     <div>
-      <Link to="/quiz/$quizId" params={{ quizId }} className={backLinkClasses}>
-        &larr; {quiz.title}
-      </Link>
-      <h1 className="mt-3 mb-6 text-2xl font-bold">
-        Chapter {chapter.number} &mdash; {chapter.title}
-      </h1>
+      <QuizPageHeader quiz={quiz} title={formatChapter(chapter)} />
       {/* key resets runner state when navigating to another chapter */}
       <QuizRunner
         key={chapter.id}

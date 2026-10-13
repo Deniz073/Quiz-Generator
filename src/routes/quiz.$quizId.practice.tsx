@@ -1,9 +1,9 @@
-import { Link, createFileRoute, notFound } from '@tanstack/react-router'
+import { createFileRoute } from '@tanstack/react-router'
 import { NotFound } from '#/components/NotFound'
-import { backLinkClasses } from '#/lib/button-classes'
+import { QuizPageHeader } from '#/components/QuizPageHeader'
 import { QuizRunner } from '#/components/QuizRunner'
 import { buildQuizPlan } from '#/lib/quiz-plan'
-import { getQuiz } from '#/quizzes'
+import { requireQuiz } from '#/lib/quiz-route'
 
 // Numbers, not '20': the router parses search values as JSON, so `?count=20`
 // arrives as a number and stays a clean URL.
@@ -25,7 +25,7 @@ export const Route = createFileRoute('/quiz/$quizId/practice')({
   // chapter route. The loader still runs on the server for a real 404.
   ssr: 'data-only',
   loader: ({ params }) => {
-    if (!getQuiz(params.quizId)) throw notFound()
+    requireQuiz(params.quizId)
   },
   component: PracticePage,
   notFoundComponent: () => <NotFound message="Quiz not found." />,
@@ -34,17 +34,13 @@ export const Route = createFileRoute('/quiz/$quizId/practice')({
 function PracticePage() {
   const { quizId } = Route.useParams()
   const { count } = Route.useSearch()
-  const quiz = getQuiz(quizId)
-  if (!quiz) return null
+  const quiz = requireQuiz(quizId)
 
   const limit = count === 'all' ? undefined : count
 
   return (
     <div>
-      <Link to="/quiz/$quizId" params={{ quizId }} className={backLinkClasses}>
-        &larr; {quiz.title}
-      </Link>
-      <h1 className="mt-3 mb-6 text-2xl font-bold">Mixed practice</h1>
+      <QuizPageHeader quiz={quiz} title="Mixed practice" />
       {/* key resets runner state when the size changes. Not recorded in progress. */}
       <QuizRunner
         key={count}
