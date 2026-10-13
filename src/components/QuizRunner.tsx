@@ -7,6 +7,7 @@ import { OPTION_KEYS } from '#/lib/option-keys'
 import { reshufflePlan } from '#/lib/quiz-plan'
 import {
   canCheck,
+  canGoBack,
   createInitialState,
   getAnswers,
   getCurrentItem,
@@ -90,6 +91,11 @@ export function QuizRunner(props: Props) {
     requireReset: true,
   })
 
+  // Left arrow goes back to review the previous question.
+  useHotkey('ArrowLeft', () => dispatch({ type: 'previous' }), {
+    enabled: canGoBack(state),
+  })
+
   // 1-6 / A-F pick (single answer) or toggle (multiple answer) the option
   // shown at that position.
   useHotkeys(
@@ -158,11 +164,15 @@ export function QuizRunner(props: Props) {
       index={state.current}
       total={state.plan.length}
       score={getScore(state)}
+      answeredCount={state.answers.length}
       isLast={state.current === state.plan.length - 1}
       flagged={flaggedIndexes.includes(state.current)}
       onToggle={(originalIndex) => dispatch({ type: 'toggle', originalIndex })}
       onCheck={() => dispatch({ type: 'check' })}
       onNext={() => dispatch({ type: 'next' })}
+      onPrevious={
+        canGoBack(state) ? () => dispatch({ type: 'previous' }) : undefined
+      }
       onFlag={() => toggleFlag(quizId, item.question)}
     />
   )

@@ -116,10 +116,14 @@ interface Props extends Omit<BodyProps, 'changeable'> {
   index: number
   total: number
   score: number
+  /** Questions answered so far, which can be ahead of `index` when reviewing. */
+  answeredCount: number
   isLast: boolean
   /** Practice multiple answers only: submits the current selection. */
   onCheck: () => void
   onNext: () => void
+  /** Undefined on the first question. */
+  onPrevious: (() => void) | undefined
 }
 
 /** One practice question with immediate feedback (the exam has its own view). */
@@ -130,23 +134,34 @@ export function QuestionCard({
   index,
   total,
   score,
+  answeredCount,
   isLast,
   flagged,
   onToggle,
   onCheck,
   onNext,
+  onPrevious,
   onFlag,
 }: Props) {
   const { question, optionOrder } = item
   const multiple = isMultipleAnswer(question)
   const required = getCorrectIndexes(question).length
-  const answeredCount = index + (submitted ? 1 : 0)
   const keyTip = describeOptionKeys(optionOrder.length)
   const nextRef = useRef<HTMLButtonElement>(null)
 
   useEffect(() => {
     if (submitted) nextRef.current?.focus()
   }, [submitted])
+
+  const previousButton = onPrevious ? (
+    <button
+      type="button"
+      onClick={onPrevious}
+      className={`mr-auto ${buttonClasses('secondary')}`}
+    >
+      Previous
+    </button>
+  ) : null
 
   return (
     <div>
@@ -172,6 +187,7 @@ export function QuestionCard({
 
       {submitted ? (
         <div className="mt-5 flex items-center justify-end gap-3">
+          {previousButton}
           <span className="hidden text-xs text-slate-500 sm:inline">
             Press Enter
           </span>
@@ -186,6 +202,7 @@ export function QuestionCard({
         </div>
       ) : multiple ? (
         <div className="mt-5 flex items-center justify-between gap-3">
+          {previousButton}
           <p className={tipClasses}>
             Tip: press {keyTip} to toggle, Enter to check.
           </p>
@@ -199,7 +216,10 @@ export function QuestionCard({
           </button>
         </div>
       ) : (
-        <p className={`mt-5 ${tipClasses}`}>Tip: press {keyTip} to answer.</p>
+        <div className="mt-5 flex items-center justify-between gap-3">
+          {previousButton}
+          <p className={tipClasses}>Tip: press {keyTip} to answer.</p>
+        </div>
       )}
     </div>
   )

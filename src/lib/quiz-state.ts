@@ -39,6 +39,8 @@ export type QuizAction =
   | { type: 'check' }
   /** Moves past the answered question. */
   | { type: 'next' }
+  /** Goes back to review an earlier (already answered) question. */
+  | { type: 'previous' }
   /** The plan is passed in so the reducer stays pure (shuffling is random). */
   | { type: 'retry'; plan: ReadonlyArray<PlannedQuestion>; round: Round }
 
@@ -86,10 +88,20 @@ export function quizReducer(state: QuizState, action: QuizAction): QuizState {
       return { ...state, draft: [], answers: [...state.answers, state.draft] }
     case 'next':
       if (!isSubmitted(state)) return state
-      return { ...state, current: state.current + 1, draft: [] }
+      // The draft belongs to the first unanswered question; keep it when
+      // stepping forward through already answered ones.
+      return { ...state, current: state.current + 1 }
+    case 'previous':
+      if (state.current === 0) return state
+      return { ...state, current: state.current - 1 }
     case 'retry':
       return createInitialState(action.plan, action.round)
   }
+}
+
+/** Answers are read-only once submitted, so going back only reviews them. */
+export function canGoBack(state: QuizState): boolean {
+  return state.current > 0
 }
 
 /** Undefined once every question has been answered and moved past. */
