@@ -3,6 +3,7 @@ import { Link } from '@tanstack/react-router'
 import type { Answer } from '#/lib/quiz-state'
 import { buttonClasses } from '#/lib/button-classes'
 import { getCorrectIndexes } from '#/quizzes/question'
+import { AnswerList } from '#/components/AnswerList'
 import { FilterButton } from '#/components/FilterButton'
 
 type ReviewFilter = 'incorrect' | 'all' | 'flagged'
@@ -206,31 +207,6 @@ export function ResultsScreen({
           },
         )}
       </ol>
-    </div>
-  )
-}
-
-function AnswerList({
-  label,
-  labelClass,
-  texts,
-}: {
-  label: string
-  labelClass: string
-  texts: Array<string>
-}) {
-  return (
-    <div className="mt-2 text-sm first-of-type:mt-3">
-      <span className={`font-semibold ${labelClass}`}>{label}:</span>
-      {texts.length === 1 ? (
-        <span> {texts[0]}</span>
-      ) : (
-        <ul className="mt-1 list-disc pl-5">
-          {texts.map((text) => (
-            <li key={text}>{text}</li>
-          ))}
-        </ul>
-      )}
     </div>
   )
 }

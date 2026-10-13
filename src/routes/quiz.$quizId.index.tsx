@@ -154,13 +154,22 @@ function QuizPage() {
               : 'Use \u201cFlag for review\u201d during a chapter or practice round to collect questions here.'}
           </p>
           {totalFlagged > 0 ? (
-            <Link
-              to="/quiz/$quizId/flagged"
-              params={{ quizId: quiz.id }}
-              className={`mt-3 inline-block font-medium ${cardLinkClasses}`}
-            >
-              Practice all {totalFlagged} flagged
-            </Link>
+            <div className="mt-3 flex flex-wrap gap-3">
+              <Link
+                to="/quiz/$quizId/flagged"
+                params={{ quizId: quiz.id }}
+                className={`font-medium ${cardLinkClasses}`}
+              >
+                Practice all {totalFlagged} flagged
+              </Link>
+              <Link
+                to="/quiz/$quizId/flagged/review"
+                params={{ quizId: quiz.id }}
+                className={`font-medium ${cardLinkClasses}`}
+              >
+                Review all {totalFlagged} flagged
+              </Link>
+            </div>
           ) : null}
         </section>
 
