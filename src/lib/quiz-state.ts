@@ -3,6 +3,7 @@ import {
   getCorrectIndexes,
   isAnswerCorrect,
   isMultipleAnswer,
+  togglePick,
 } from '#/quizzes/question'
 
 /**
@@ -67,21 +68,14 @@ export function quizReducer(state: QuizState, action: QuizAction): QuizState {
   switch (action.type) {
     case 'toggle': {
       if (!item || isSubmitted(state)) return state
-      const { originalIndex } = action
-      if (!isMultipleAnswer(item.question)) {
-        return { ...state, answers: [...state.answers, [originalIndex]] }
+      const { question } = item
+      if (!isMultipleAnswer(question)) {
+        // A single answer is locked in by the pick itself.
+        const pick = togglePick(question, [], action.originalIndex)
+        return { ...state, answers: [...state.answers, pick] }
       }
-      if (state.draft.includes(originalIndex)) {
-        return {
-          ...state,
-          draft: state.draft.filter((i) => i !== originalIndex),
-        }
-      }
-      // Ignore further picks once the required number is reached.
-      if (state.draft.length >= getCorrectIndexes(item.question).length) {
-        return state
-      }
-      return { ...state, draft: [...state.draft, originalIndex] }
+      const draft = togglePick(question, state.draft, action.originalIndex)
+      return draft === state.draft ? state : { ...state, draft }
     }
     case 'check':
       if (!canCheck(state)) return state

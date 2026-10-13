@@ -1,7 +1,7 @@
 import type { PlannedQuestion } from '#/lib/quiz-plan'
 import type { ExamState } from '#/lib/exam-state'
 import type { Quiz } from '#/quizzes/types'
-import { getCorrectIndexes } from '#/quizzes/question'
+import { isValidPick } from '#/quizzes/question'
 
 /*
  * The unfinished mock exam of a quiz, kept in localStorage so a reload or an
@@ -168,13 +168,7 @@ function parseSession(raw: string, quiz: Quiz): ExamState | undefined {
     seen.add(item.question)
 
     const pick: unknown = picks[position]
-    const optionCount = item.question.options.length
-    if (
-      !isIndexArray(pick) ||
-      new Set(pick).size !== pick.length ||
-      pick.length > getCorrectIndexes(item.question).length ||
-      pick.some((i) => i < 0 || i >= optionCount)
-    ) {
+    if (!isIndexArray(pick) || !isValidPick(item.question, pick)) {
       return undefined
     }
     plan.push(item)

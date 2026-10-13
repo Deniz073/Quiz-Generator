@@ -3,7 +3,7 @@ import type { Answer } from '#/lib/quiz-state'
 import type { ExamConfig, Quiz } from '#/quizzes/types'
 import { buildQuizPlan } from '#/lib/quiz-plan'
 import { buildAnswers } from '#/lib/quiz-state'
-import { getCorrectIndexes, isMultipleAnswer } from '#/quizzes/question'
+import { getCorrectIndexes, togglePick } from '#/quizzes/question'
 
 /*
  * Mock exam state. Unlike practice there is no feedback: every pick stays
@@ -84,19 +84,9 @@ export function examReducer(state: ExamState, action: ExamAction): ExamState {
     case 'toggle': {
       const item = state.plan.at(state.current)
       if (!item || state.reviewing) return state
-      const { originalIndex } = action
       const pick = state.picks[state.current]
-      let updated: ReadonlyArray<number>
-      if (!isMultipleAnswer(item.question)) {
-        updated = [originalIndex]
-      } else if (pick.includes(originalIndex)) {
-        updated = pick.filter((i) => i !== originalIndex)
-      } else if (pick.length >= getCorrectIndexes(item.question).length) {
-        // Ignore further picks once the required number is reached.
-        return state
-      } else {
-        updated = [...pick, originalIndex]
-      }
+      const updated = togglePick(item.question, pick, action.originalIndex)
+      if (updated === pick) return state
       return {
         ...state,
         picks: state.picks.map((existing, i) =>
