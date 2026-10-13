@@ -6,6 +6,7 @@
  * The mock exam keeps its own in-exam flags (see ./exam-state).
  */
 
+import { createBrowserStore } from '#/lib/browser-store'
 import { STORAGE_KEYS } from '#/lib/storage-keys'
 import { getQuiz } from '#/quizzes'
 import type { Question, Quiz } from '#/quizzes/types'
@@ -74,66 +75,25 @@ function migrateLegacyFlags(legacy: Flags): Flags {
 
 // --- Storage and subscriptions ---------------------------------------------
 
-function readRaw(key: string): string | null {
-  try {
-    return localStorage.getItem(key)
-  } catch {
-    // Unavailable (e.g. blocked storage) or on the server.
-    return null
-  }
-}
+const store = createBrowserStore<Flags, null>({
+  keys: [STORAGE_KEY, LEGACY_STORAGE_KEY],
+  parse: ([raw, legacyRaw]) =>
+    raw !== null
+      ? parseFlags(raw)
+      : legacyRaw !== null
+        ? migrateLegacyFlags(parseFlags(legacyRaw))
+        : EMPTY,
+  // Not loaded yet: nothing is claimed about the flags until the client reads
+  // them.
+  serverSnapshot: null,
+})
 
-let cachedRaw: string | null | undefined
-let cachedLegacyRaw: string | null | undefined
-let cachedFlags: Flags = EMPTY
-
-/** Snapshot for useSyncExternalStore; same object until the stored strings change. */
-export function getFlagsSnapshot(): Flags {
-  const raw = readRaw(STORAGE_KEY)
-  const legacyRaw = raw === null ? readRaw(LEGACY_STORAGE_KEY) : null
-  if (raw !== cachedRaw || legacyRaw !== cachedLegacyRaw) {
-    cachedRaw = raw
-    cachedLegacyRaw = legacyRaw
-    cachedFlags =
-      raw !== null
-        ? parseFlags(raw)
-        : legacyRaw !== null
-          ? migrateLegacyFlags(parseFlags(legacyRaw))
-          : EMPTY
-  }
-  return cachedFlags
-}
-
-/** What the server (and the first client render) sees: not loaded yet. */
-export function getServerFlagsSnapshot(): null {
-  return null
-}
-
-const listeners = new Set<() => void>()
-
-function notify() {
-  listeners.forEach((listener) => listener())
-}
-
-export function subscribeFlags(listener: () => void): () => void {
-  if (listeners.size === 0) window.addEventListener('storage', onStorage)
-  listeners.add(listener)
-  return () => {
-    listeners.delete(listener)
-    if (listeners.size === 0) window.removeEventListener('storage', onStorage)
-  }
-}
-
-/** Another tab changed (or cleared) the data. */
-function onStorage(event: StorageEvent) {
-  if (
-    event.key === null ||
-    event.key === STORAGE_KEY ||
-    event.key === LEGACY_STORAGE_KEY
-  ) {
-    notify()
-  }
-}
+/** Only the first call after a change parses; null on the server. */
+export const {
+  getSnapshot: getFlagsSnapshot,
+  getServerSnapshot: getServerFlagsSnapshot,
+  subscribe: subscribeFlags,
+} = store
 
 // --- Reading and writing ----------------------------------------------------
 
@@ -145,16 +105,7 @@ export function toggleFlag(quizId: string, question: Question): void {
     ? current.filter((id) => id !== question.id)
     : [...current, question.id]
 
-  try {
-    localStorage.setItem(
-      STORAGE_KEY,
-      JSON.stringify({ ...flags, [quizId]: updated }),
-    )
-  } catch (error) {
-    console.warn('Could not save flagged question', error)
-    return
-  }
-  notify()
+  store.write(STORAGE_KEY, JSON.stringify({ ...flags, [quizId]: updated }))
 }
 
 /** Questions of a quiz (or of one of its chapters) that are flagged. */

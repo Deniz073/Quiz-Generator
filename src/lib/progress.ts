@@ -5,6 +5,7 @@
  * throw. Bump the key's version if the shape ever changes incompatibly.
  */
 
+import { createBrowserStore } from '#/lib/browser-store'
 import { STORAGE_KEYS } from '#/lib/storage-keys'
 
 const STORAGE_KEY = STORAGE_KEYS.progress
@@ -36,7 +37,18 @@ export type ProgressTarget = { chapterId: string } | { exam: true }
 const EMPTY: Progress = Object.freeze({})
 
 export function toPercent(attempt: Pick<Attempt, 'score' | 'total'>): number {
-  return Math.round((attempt.score / attempt.total) * 100)
+  return attempt.total === 0
+    ? 0
+    : Math.round((attempt.score / attempt.total) * 100)
+}
+
+/** Whether `score` of `total` reaches the pass mark (a percentage). */
+export function isPassed(
+  score: number,
+  total: number,
+  passPercent: number,
+): boolean {
+  return score * 100 >= passPercent * total
 }
 
 /** e.g. "Best 12/14 (86%) · Last 10/14". */
@@ -112,55 +124,21 @@ function parseProgress(raw: string | null): Progress {
 
 // --- Storage and subscriptions ---------------------------------------------
 
-function readRaw(): string | null {
-  try {
-    return localStorage.getItem(STORAGE_KEY)
-  } catch {
-    // Unavailable (e.g. blocked storage) or on the server.
-    return null
-  }
-}
-
-let cachedRaw: string | null | undefined
-let cachedProgress: Progress = EMPTY
+const store = createBrowserStore({
+  keys: [STORAGE_KEY],
+  parse: ([raw]) => parseProgress(raw),
+  serverSnapshot: EMPTY,
+})
 
 /**
- * Snapshot for useSyncExternalStore. Returns the same object until the stored
- * string changes, so React doesn't see a new value on every call.
+ * Snapshot for useSyncExternalStore. The server and the first client render
+ * (hydration) see no saved progress.
  */
-export function getProgressSnapshot(): Progress {
-  const raw = readRaw()
-  if (raw !== cachedRaw) {
-    cachedRaw = raw
-    cachedProgress = parseProgress(raw)
-  }
-  return cachedProgress
-}
-
-/** What the server (and the first client render) sees: no saved progress. */
-export function getServerProgressSnapshot(): Progress {
-  return EMPTY
-}
-
-const listeners = new Set<() => void>()
-
-function notify() {
-  listeners.forEach((listener) => listener())
-}
-
-export function subscribeProgress(listener: () => void): () => void {
-  if (listeners.size === 0) window.addEventListener('storage', onStorage)
-  listeners.add(listener)
-  return () => {
-    listeners.delete(listener)
-    if (listeners.size === 0) window.removeEventListener('storage', onStorage)
-  }
-}
-
-/** Another tab changed (or cleared) the data. */
-function onStorage(event: StorageEvent) {
-  if (event.key === null || event.key === STORAGE_KEY) notify()
-}
+export const {
+  getSnapshot: getProgressSnapshot,
+  getServerSnapshot: getServerProgressSnapshot,
+  subscribe: subscribeProgress,
+} = store
 
 // --- Recording --------------------------------------------------------------
 
@@ -205,14 +183,5 @@ export function recordResult(
           },
         }
 
-  try {
-    localStorage.setItem(
-      STORAGE_KEY,
-      JSON.stringify({ ...progress, [quizId]: updated }),
-    )
-  } catch (error) {
-    console.warn('Could not save quiz progress', error)
-    return
-  }
-  notify()
+  store.write(STORAGE_KEY, JSON.stringify({ ...progress, [quizId]: updated }))
 }
