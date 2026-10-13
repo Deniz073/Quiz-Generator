@@ -3,6 +3,7 @@ import { Link } from '@tanstack/react-router'
 import type { Answer } from '#/lib/quiz-state'
 import { buttonClasses } from '#/lib/button-classes'
 import { formatChapter } from '#/lib/chapter-label'
+import { isPassed, toPercent } from '#/lib/progress'
 import { getCorrectIndexes } from '#/quizzes/question'
 import { AnswerList } from '#/components/AnswerList'
 import { FilterButton } from '#/components/FilterButton'
@@ -40,8 +41,9 @@ export function ResultsScreen({
   const flaggedAnswers = answers.filter((answer) => answer.flagged)
   const shown =
     filter === 'all' ? answers : filter === 'flagged' ? flaggedAnswers : wrong
-  const percent = total === 0 ? 0 : Math.round((score / total) * 100)
-  const passed = passPercent !== undefined && score * 100 >= passPercent * total
+  const percent = toPercent({ score, total })
+  const passed =
+    passPercent !== undefined && isPassed(score, total, passPercent)
 
   return (
     <div>
