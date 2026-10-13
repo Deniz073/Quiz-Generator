@@ -1,15 +1,16 @@
-import { useEffect, useEffectEvent, useReducer, useRef, useState } from 'react'
+import type { Dispatch } from 'react'
+import { useEffect, useState } from 'react'
 import { useHotkey, useHotkeys } from '@tanstack/react-hotkeys'
 import { useBlocker } from '@tanstack/react-router'
 import type { PlannedQuestion } from '#/lib/quiz-plan'
-import type { ExamState } from '#/lib/exam-state'
+import type { ExamAction, ExamState } from '#/lib/exam-state'
 import type { ExamConfig, Quiz } from '#/quizzes/types'
-import { clearExamSession, saveExamSession } from '#/lib/exam-session'
-import { examReducer, getAnswers, getScore, startExam } from '#/lib/exam-state'
+import { getAnswers, getScore } from '#/lib/exam-state'
 import { OPTION_KEYS } from '#/lib/option-keys'
 import { reshufflePlan } from '#/lib/quiz-plan'
-import { useCountdown } from '#/lib/use-countdown'
+import { useExam } from '#/lib/use-exam'
 import { ExamQuestionView } from '#/components/ExamQuestionView'
+import { ExamResumePrompt } from '#/components/ExamResumePrompt'
 import { ExamReview } from '#/components/ExamReview'
 import { LeavePrompt } from '#/components/LeavePrompt'
 import { QuizRunner } from '#/components/QuizRunner'
@@ -18,16 +19,15 @@ import { ResultsScreen } from '#/components/ResultsScreen'
 interface Props {
   quiz: Quiz
   exam: ExamConfig
-  /** A new exam, or a restored one (possibly already submitted on timeout). */
-  initialState: ExamState
-  /** Called once per finished exam (user submit or timeout), never for retries. */
-  onFinish: (score: number, total: number) => void
 }
 
 // Always block while the exam runs; the blocker is disabled otherwise.
 const alwaysBlock = () => true
 
-export function ExamRunner(props: Props) {
+export function ExamRunner({ quiz, exam }: Props) {
+  const { phase, state, dispatch, secondsLeft, resume, discard, restart } =
+    useExam(quiz, exam)
+
   // Plain practice on the incorrect questions after the results. Rendered
   // instead of the exam (not inside it), so the exam's hotkeys are unmounted
   // and don't clash with the practice round's.
@@ -35,55 +35,54 @@ export function ExamRunner(props: Props) {
   if (retryItems) {
     return (
       <QuizRunner
-        quizId={props.quiz.id}
+        quizId={quiz.id}
         mode="subset"
         buildPlan={() => reshufflePlan(retryItems)}
       />
     )
   }
-  return <ExamSession {...props} onRetryIncorrect={setRetryItems} />
+  if (phase === 'choosing') {
+    return (
+      <ExamResumePrompt state={state} onResume={resume} onDiscard={discard} />
+    )
+  }
+  return (
+    <ExamSession
+      quizId={quiz.id}
+      passPercent={exam.passPercent}
+      state={state}
+      dispatch={dispatch}
+      secondsLeft={secondsLeft}
+      onRestart={restart}
+      onRetryIncorrect={setRetryItems}
+    />
+  )
+}
+
+interface SessionProps {
+  quizId: string
+  passPercent: number
+  state: ExamState
+  dispatch: Dispatch<ExamAction>
+  secondsLeft: number | undefined
+  onRestart: () => void
+  onRetryIncorrect: (items: Array<PlannedQuestion>) => void
 }
 
 /**
- * The timed mock exam: free navigation between questions, a review screen,
- * auto-submit at the deadline. The session is saved to localStorage on every
- * change while the exam runs and deleted once it is submitted.
+ * The timed mock exam as the user sees it: free navigation between questions,
+ * a review screen, hotkeys, results. State, clock and storage live in useExam.
  */
 function ExamSession({
-  quiz,
-  exam,
-  initialState,
-  onFinish,
+  quizId,
+  passPercent,
+  state,
+  dispatch,
+  secondsLeft,
+  onRestart,
   onRetryIncorrect,
-}: Props & { onRetryIncorrect: (items: Array<PlannedQuestion>) => void }) {
-  const [state, dispatch] = useReducer(examReducer, initialState)
+}: SessionProps) {
   const { submitted, reviewing, current, plan } = state
-
-  // Stops ticking once submitted (the timer is not shown on results). A
-  // restored session whose time ran out starts at 0 and is submitted at once.
-  const secondsLeft = useCountdown(submitted ? undefined : state.endsAt)
-  useEffect(() => {
-    if (secondsLeft === 0) dispatch({ type: 'submit' })
-  }, [secondsLeft])
-
-  // Keep the saved session in step with the exam; on submit delete it and
-  // record the result. recordedPlan makes recording once per exam even if
-  // effects run twice (StrictMode) or a restart reuses this component.
-  const recordedPlan = useRef<ExamState['plan'] | undefined>(undefined)
-  const recordResult = useEffectEvent(() => {
-    onFinish(getScore(state), plan.length)
-  })
-  useEffect(() => {
-    if (!submitted) {
-      saveExamSession(quiz, state)
-      return
-    }
-    clearExamSession(quiz.id)
-    if (recordedPlan.current !== plan) {
-      recordedPlan.current = plan
-      recordResult()
-    }
-  }, [quiz, state, submitted, plan])
 
   // Warn before leaving a running exam: in-app navigation gets the inline
   // prompt below, reload/close the browser's own prompt. Disabled once
@@ -155,14 +154,12 @@ function ExamSession({
     const answers = getAnswers(state)
     return (
       <ResultsScreen
-        quizId={quiz.id}
+        quizId={quizId}
         answers={answers}
         score={getScore(state)}
         retryLabel="New mock exam"
-        passPercent={exam.passPercent}
-        onRetry={() =>
-          dispatch({ type: 'restart', state: startExam(quiz, exam) })
-        }
+        passPercent={passPercent}
+        onRetry={onRestart}
         onRetryIncorrect={() =>
           onRetryIncorrect(
             answers.filter((answer) => !answer.correct).map((a) => a.item),
