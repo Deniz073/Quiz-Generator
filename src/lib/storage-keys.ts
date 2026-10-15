@@ -2,7 +2,7 @@
  * Every localStorage key the app uses, and which of them travel in a backup.
  * The strings are a persisted contract with data already saved in browsers:
  * never change one, bump the version suffix and migrate instead (see how
- * ./flags reads v1 while there is no v2).
+ * ./flags migrates v1 to v2 per quiz).
  */
 
 const PREFIX = 'quiz-generator:'
@@ -12,7 +12,7 @@ export const STORAGE_KEYS = {
   progress: `${PREFIX}progress:v1`,
   /** ./flags */
   flags: `${PREFIX}flags:v2`,
-  /** ./flags, read until there is a v2 value. */
+  /** ./flags, read once per quiz to fill in a missing v2 entry. */
   flagsLegacy: `${PREFIX}flags:v1`,
   /** ./theme (a bare 'light' or 'dark', not JSON) */
   theme: `${PREFIX}theme:v1`,

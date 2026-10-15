@@ -9,16 +9,13 @@ export const Route = createFileRoute('/quiz/$quizId/exam')({
   // chapter route. The loader still runs on the server, so unknown quizzes and
   // quizzes without exam settings get a real 404.
   ssr: 'data-only',
-  loader: ({ params }) => {
-    requireExam(params.quizId)
-  },
+  loader: ({ params }) => requireExam(params.quizId),
   component: ExamPage,
   notFoundComponent: () => <NotFound message="Mock exam not found." />,
 })
 
 function ExamPage() {
-  const { quizId } = Route.useParams()
-  const { quiz, exam } = requireExam(quizId)
+  const { quiz, exam } = Route.useLoaderData()
 
   return (
     <div>

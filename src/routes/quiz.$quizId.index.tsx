@@ -5,7 +5,7 @@ import { getFlaggedQuestions } from '#/lib/flags'
 import { formatChapter } from '#/lib/chapter-label'
 import { formatResult } from '#/lib/progress'
 import { requireQuiz } from '#/lib/quiz-route'
-import { useFlags } from '#/lib/use-flags'
+import { useFlags, useMigrateLegacyFlags } from '#/lib/use-flags'
 import { useQuizProgress } from '#/lib/use-progress'
 import { countQuestions } from '#/quizzes'
 
@@ -13,19 +13,17 @@ const cardLinkClasses =
   'rounded-lg border border-slate-200 bg-white px-4 py-3 transition-colors hover:border-sky-500 dark:border-slate-800 dark:bg-slate-900 dark:hover:border-sky-400'
 
 export const Route = createFileRoute('/quiz/$quizId/')({
-  loader: ({ params }) => {
-    requireQuiz(params.quizId)
-  },
+  loader: ({ params }) => requireQuiz(params.quizId),
   component: QuizPage,
   notFoundComponent: () => <NotFound message="Quiz not found." />,
 })
 
 function QuizPage() {
-  const { quizId } = Route.useParams()
-  const quiz = requireQuiz(quizId)
+  const quiz = Route.useLoaderData()
+  useMigrateLegacyFlags(quiz)
   // Empty on the server and during hydration, then filled in from localStorage.
-  const progress = useQuizProgress(quizId)
-  const flags = useFlags(quizId)
+  const progress = useQuizProgress(quiz.id)
+  const flags = useFlags(quiz.id)
 
   const countFlagged = (chapterId?: string) =>
     flags ? getFlaggedQuestions(quiz, flags, chapterId).length : 0
@@ -38,7 +36,7 @@ function QuizPage() {
   return (
     <div>
       <Link to="/" className={backLinkClasses}>
-        &larr; All quizzes
+        <span aria-hidden="true">&larr;</span> All quizzes
       </Link>
       <h1 className="mt-3 text-3xl font-bold tracking-tight">{quiz.title}</h1>
       <p className="mt-2 text-slate-600 dark:text-slate-400">
@@ -67,7 +65,7 @@ function QuizPage() {
                   ) : null}
                 </span>
                 <span className="shrink-0 text-sm text-slate-600 tabular-nums dark:text-slate-400">
-                  {count} {count === 1 ? 'question' : 'questions'}
+                  {count}&nbsp;{count === 1 ? 'question' : 'questions'}
                 </span>
               </Link>
               <div className="flex shrink-0 flex-col gap-2 sm:flex-row sm:gap-3">
@@ -85,7 +83,7 @@ function QuizPage() {
                     to="/quiz/$quizId/flagged"
                     params={{ quizId: quiz.id }}
                     search={{ chapter: chapter.id }}
-                    aria-label={`Practice ${flagged} flagged in chapter ${chapter.number}: ${chapter.title}`}
+                    aria-label={`Flagged (${flagged}), practice in chapter ${chapter.number}: ${chapter.title}`}
                     className={`flex flex-1 items-center justify-center text-sm font-medium text-amber-700 dark:text-amber-400 ${cardLinkClasses}`}
                   >
                     Flagged ({flagged})
@@ -113,7 +111,7 @@ function QuizPage() {
                   search={{ count: size }}
                   className={`block font-medium ${cardLinkClasses}`}
                 >
-                  {size} questions
+                  {size}&nbsp;questions
                 </Link>
               </li>
             ))}
@@ -124,7 +122,7 @@ function QuizPage() {
                 search={{ count: 'all' }}
                 className={`block font-medium ${cardLinkClasses}`}
               >
-                All {total} questions
+                All {total}&nbsp;questions
               </Link>
             </li>
           </ul>
@@ -182,8 +180,9 @@ function QuizPage() {
             >
               <span className="font-medium">Start mock exam</span>
               <span className="mt-0.5 block text-sm text-slate-600 dark:text-slate-400">
-                {quiz.exam.questionCount} questions &middot; {quiz.exam.minutes}{' '}
-                minutes &middot; pass mark {quiz.exam.passPercent}%
+                {quiz.exam.questionCount}&nbsp;questions &middot;{' '}
+                {quiz.exam.minutes}&nbsp;minutes &middot; pass mark{' '}
+                {quiz.exam.passPercent}%
               </span>
               {progress?.exam ? (
                 <span className="mt-0.5 block text-sm text-slate-600 dark:text-slate-400">

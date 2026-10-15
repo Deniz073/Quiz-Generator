@@ -1,10 +1,14 @@
 import { Link, createFileRoute } from '@tanstack/react-router'
 import { DataBackup } from '#/components/DataBackup'
-import { countQuestions, quizzes } from '#/quizzes'
+import { getQuizSummaries } from '#/lib/quiz-summaries'
 
-export const Route = createFileRoute('/')({ component: Home })
+export const Route = createFileRoute('/')({
+  loader: () => getQuizSummaries(),
+  component: Home,
+})
 
 function Home() {
+  const quizzes = Route.useLoaderData()
   return (
     <div>
       <h1 className="text-3xl font-bold tracking-tight">Quizzes</h1>
@@ -24,8 +28,8 @@ function Home() {
                 {quiz.description}
               </p>
               <p className="mt-3 text-sm text-slate-600 tabular-nums dark:text-slate-400">
-                {quiz.chapters.length} chapters &middot; {countQuestions(quiz)}{' '}
-                questions
+                {quiz.chapterCount}&nbsp;chapters &middot; {quiz.questionCount}
+                &nbsp;questions
               </p>
             </Link>
           </li>

@@ -8,14 +8,14 @@
 
 import { createBrowserStore } from '#/lib/browser-store'
 import { STORAGE_KEYS } from '#/lib/storage-keys'
-import { getQuiz } from '#/quizzes'
 import type { Question, Quiz } from '#/quizzes/types'
 
 const STORAGE_KEY = STORAGE_KEYS.flags
 /**
- * v1 stored question texts (questions had no id). Read only while there is no
- * v2 value, then converted to ids; left in place so an older app version still
- * finds its flags.
+ * v1 stored question texts (questions had no id). Read only by
+ * `migrateLegacyFlags`, which converts a quiz's flags to ids the first time
+ * the quiz is shown; left in place so an older app version still finds its
+ * flags.
  */
 const LEGACY_STORAGE_KEY = STORAGE_KEYS.flagsLegacy
 
@@ -53,36 +53,11 @@ function parseFlags(raw: string | null): Flags {
   )
 }
 
-/** v1 flags (question texts) to ids; texts no longer in the quiz are dropped. */
-function migrateLegacyFlags(legacy: Flags): Flags {
-  return Object.fromEntries(
-    Object.entries(legacy).map(([quizId, texts = []]) => {
-      const idByText = new Map(
-        getQuiz(quizId)
-          ?.chapters.flatMap((chapter) => chapter.questions)
-          .map((question) => [question.question, question.id]),
-      )
-      return [
-        quizId,
-        texts.flatMap((text) => {
-          const id = idByText.get(text)
-          return id === undefined ? [] : [id]
-        }),
-      ] as const
-    }),
-  )
-}
-
 // --- Storage and subscriptions ---------------------------------------------
 
 const store = createBrowserStore<Flags, null>({
-  keys: [STORAGE_KEY, LEGACY_STORAGE_KEY],
-  parse: ([raw, legacyRaw]) =>
-    raw !== null
-      ? parseFlags(raw)
-      : legacyRaw !== null
-        ? migrateLegacyFlags(parseFlags(legacyRaw))
-        : EMPTY,
+  keys: [STORAGE_KEY],
+  parse: ([raw]) => (raw !== null ? parseFlags(raw) : EMPTY),
   // Not loaded yet: nothing is claimed about the flags until the client reads
   // them.
   serverSnapshot: null,
@@ -96,6 +71,40 @@ export const {
 } = store
 
 // --- Reading and writing ----------------------------------------------------
+
+/**
+ * Converts one quiz's v1 flags (question texts) to ids, once the quiz is
+ * loaded; texts no longer in the quiz are dropped. Does nothing if v2 already
+ * has an entry for the quiz (an unflagged-everything entry counts), so it
+ * runs at most once per quiz. The v1 value is left in place. Never throws.
+ */
+export function migrateLegacyFlags(quiz: Quiz): void {
+  if (getFlagsSnapshot()[quiz.id] !== undefined) return
+  let legacyRaw: string | null
+  try {
+    legacyRaw = localStorage.getItem(LEGACY_STORAGE_KEY)
+  } catch {
+    return
+  }
+  if (legacyRaw === null) return
+  const texts = parseFlags(legacyRaw)[quiz.id]
+  if (texts === undefined) return
+
+  const idByText = new Map(
+    quiz.chapters
+      .flatMap((chapter) => chapter.questions)
+      .map((question) => [question.question, question.id] as const),
+  )
+  const ids = texts.flatMap((text) => {
+    const id = idByText.get(text)
+    return id === undefined ? [] : [id]
+  })
+  // Read again: the snapshot may have changed while the quiz was loading.
+  store.write(
+    STORAGE_KEY,
+    JSON.stringify({ ...getFlagsSnapshot(), [quiz.id]: ids }),
+  )
+}
 
 /** Flags or unflags a question. Never throws: if storage fails it isn't saved. */
 export function toggleFlag(quizId: string, question: Question): void {

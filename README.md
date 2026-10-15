@@ -2,7 +2,7 @@
 
 A small multiple-choice quiz app (TanStack Start, React 19, Vite, TypeScript). Quizzes are plain
 TypeScript data, split into chapters, with single- and multi-answer questions, explanations and
-a results screen. Ships with one example quiz: AZ-900 (`src/quizzes/az-900/`).
+a results screen. Ships with three quizzes in `src/quizzes/`: AZ-900, PSM I and PSPO I.
 
 ## Run
 
@@ -34,7 +34,7 @@ needs to change: quizzes are auto-discovered and appear on the home page.
    import type { Quiz } from '../types'
 
    const quiz: Quiz = {
-     id: 'my-quiz', // URL slug, match the folder name
+     id: 'my-quiz', // URL slug, must match the folder name
      title: 'My Quiz',
      description: 'Shown on the home page.',
      chapters: [
@@ -44,6 +44,7 @@ needs to change: quizzes are auto-discovered and appear on the home page.
          title: 'Basics',
          questions: [
            {
+             id: '1-01', // slug, unique within the quiz; never change it later
              question: 'Which option is correct?',
              options: ['Right', 'Wrong 1', 'Wrong 2', 'Wrong 3'],
              correctIndex: 0,
@@ -70,14 +71,15 @@ needs to change: quizzes are auto-discovered and appear on the home page.
    ```
 
 5. **That's it.** Nothing outside the new folder changes. A broken quiz fails fast, with the
-   quiz/chapter/question location, both in `npm run validate:quizzes` and when the app loads.
+   quiz/chapter/question location, in `npm run validate:quizzes` (which `npm run build` runs
+   first, so it cannot be deployed) and when its pages load.
 
 ## Scripts
 
 | Command                    | What it does                             |
 | -------------------------- | ---------------------------------------- |
 | `npm run dev`              | Dev server on port 3000                  |
-| `npm run build`            | Production build                         |
+| `npm run build`            | Validate quizzes, then production build  |
 | `npm run lint`             | ESLint                                   |
 | `npm run check`            | Prettier check                           |
 | `npm run format`           | Prettier write + ESLint fix              |

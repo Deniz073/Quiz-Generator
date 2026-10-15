@@ -15,7 +15,11 @@ export function DataBackup() {
       setStatus({ kind: 'success', message: 'Backup downloaded.' })
     } catch (error) {
       console.error('Could not export saved data', error)
-      setStatus({ kind: 'error', message: 'Could not read the saved data.' })
+      setStatus({
+        kind: 'error',
+        message:
+          'Could not read the saved data. Check that the browser allows site storage, then try again.',
+      })
     }
   }
 
@@ -25,12 +29,18 @@ export function DataBackup() {
       text = await file.text()
     } catch (error) {
       console.error('Could not read backup file', error)
-      setStatus({ kind: 'error', message: 'Could not read the file.' })
+      setStatus({
+        kind: 'error',
+        message: 'Could not read the file. Choose the .json file you exported.',
+      })
       return
     }
     const parsed = parseBackup(text)
     if ('error' in parsed) {
-      setStatus({ kind: 'error', message: parsed.error })
+      setStatus({
+        kind: 'error',
+        message: `${parsed.error} Choose a backup file exported from this app.`,
+      })
       return
     }
     if (
@@ -47,7 +57,8 @@ export function DataBackup() {
       console.error('Could not import backup', error)
       setStatus({
         kind: 'error',
-        message: 'Could not save the backup; your previous data was kept.',
+        message:
+          'Could not save the backup; your previous data was kept. Free up browser storage and try again.',
       })
     }
   }
@@ -87,18 +98,19 @@ export function DataBackup() {
           }}
         />
       </div>
-      {status ? (
-        <p
-          role="status"
-          className={`mt-2 text-sm ${
-            status.kind === 'error'
-              ? 'text-red-700 dark:text-red-400'
-              : 'text-slate-600 dark:text-slate-400'
-          }`}
-        >
-          {status.message}
-        </p>
-      ) : null}
+      {/* Always mounted: screen readers announce changes to an existing live region. */}
+      <p
+        role="status"
+        className={`text-sm ${
+          !status
+            ? ''
+            : status.kind === 'error'
+              ? 'mt-2 text-red-700 dark:text-red-400'
+              : 'mt-2 text-slate-600 dark:text-slate-400'
+        }`}
+      >
+        {status?.message}
+      </p>
     </section>
   )
 }

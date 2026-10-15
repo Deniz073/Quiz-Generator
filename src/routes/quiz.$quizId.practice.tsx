@@ -24,17 +24,14 @@ export const Route = createFileRoute('/quiz/$quizId/practice')({
   // Random question draw and shuffling: client-only component, see the
   // chapter route. The loader still runs on the server for a real 404.
   ssr: 'data-only',
-  loader: ({ params }) => {
-    requireQuiz(params.quizId)
-  },
+  loader: ({ params }) => requireQuiz(params.quizId),
   component: PracticePage,
   notFoundComponent: () => <NotFound message="Quiz not found." />,
 })
 
 function PracticePage() {
-  const { quizId } = Route.useParams()
+  const quiz = Route.useLoaderData()
   const { count } = Route.useSearch()
-  const quiz = requireQuiz(quizId)
 
   const limit = count === 'all' ? undefined : count
 
@@ -44,7 +41,7 @@ function PracticePage() {
       {/* key resets runner state when the size changes. Not recorded in progress. */}
       <QuizRunner
         key={count}
-        quizId={quizId}
+        quizId={quiz.id}
         mode="practice"
         buildPlan={() => buildQuizPlan(quiz, limit)}
       />

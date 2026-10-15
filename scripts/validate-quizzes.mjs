@@ -1,6 +1,7 @@
-// Loads the quiz registry through Vite's module runner (the data files use
+// Loads every quiz through Vite's module runner (the data files use
 // extensionless imports, the `#/` alias and import.meta.glob, so plain node
-// cannot load them) and prints a summary, or the validation errors.
+// cannot load them) and prints a summary, or the validation errors. Also runs
+// before `npm run build`, so a broken quiz never gets deployed.
 import { createServer } from 'vite'
 
 const server = await createServer({
@@ -14,9 +15,10 @@ const server = await createServer({
 
 let exitCode = 0
 try {
-  const { quizzes, countQuestions } = await server.ssrLoadModule(
+  const { loadAllQuizzes, countQuestions } = await server.ssrLoadModule(
     '/src/quizzes/index.ts',
   )
+  const quizzes = await loadAllQuizzes()
   let chapters = 0
   let questions = 0
   let multi = 0

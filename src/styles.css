@@ -31,6 +31,23 @@ html {
   -webkit-text-size-adjust: 100%;
   accent-color: var(--color-sky-600);
   scrollbar-color: var(--color-slate-400) transparent;
+  /* Keeps a focused element clear of the sticky exam timer and leave prompt. */
+  scroll-padding-top: 6rem;
+  -webkit-tap-highlight-color: color-mix(
+    in oklab,
+    var(--color-sky-500) 20%,
+    transparent
+  );
+}
+
+/* No double-tap-to-zoom delay on controls. */
+a,
+button,
+summary,
+select,
+label,
+input {
+  touch-action: manipulation;
 }
 
 html.light {
