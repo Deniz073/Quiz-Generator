@@ -32,7 +32,7 @@ imported and listed in `index.ts`, like az-900. Use relative imports
 import type { Quiz } from '../types'
 
 const quiz: Quiz = {
-  id: 'my-quiz', // slug; match the folder name
+  id: 'my-quiz', // slug; must match the folder name
   title: 'My Quiz',
   description: 'One-sentence description shown on the home page.',
   // exam: { questionCount: 40, minutes: 60, passPercent: 70 }, // optional, see rules
@@ -72,9 +72,9 @@ export default quiz
 
 ### Rules enforced by the validator (`src/quizzes/validate.ts`)
 
-Violations throw at app load and fail `npm run validate:quizzes`, listing quiz > chapter > question.
+Violations throw when the quiz loads and fail `npm run validate:quizzes` (which `npm run build` runs first), listing quiz > chapter > question.
 
-- Quiz `id` and chapter `id`s are URL-safe slugs (`a-z`, `0-9`, single hyphens). Quiz ids are unique across all quizzes; chapter ids unique within a quiz.
+- Quiz `id` and chapter `id`s are URL-safe slugs (`a-z`, `0-9`, single hyphens). The quiz `id` must equal its folder name (so ids are unique across quizzes); chapter ids are unique within a quiz.
 - Chapter ids `practice`, `exam`, `study` and `flagged` are reserved (they are routes: `/quiz/<id>/practice`, `/quiz/<id>/exam`, `/quiz/<id>/study`, `/quiz/<id>/flagged`).
 - Chapter `number`s are unique integers within a quiz.
 - Every question has an `id`: a slug unique within the quiz. Convention: `<chapter number>-<two-digit index>`, e.g. `3-07`. Saved flags refer to it, so when editing an existing quiz never change or reuse an id; give new questions a new one.

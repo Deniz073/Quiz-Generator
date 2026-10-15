@@ -117,6 +117,8 @@ export function ExamReview({ state, secondsLeft, dispatch }: Props) {
       ) : (
         <ol className="mt-3 flex flex-col gap-2">
           {listed.map(({ item, index }) => (
+            // No content-visibility here: its paint containment would clip
+            // the focus ring of the row button.
             <li key={index}>
               <button
                 type="button"
@@ -156,7 +158,7 @@ export function ExamReview({ state, secondsLeft, dispatch }: Props) {
             {counts.unanswered === 1 ? 'question' : 'questions'}?
           </p>
           <p className="mt-1 text-sm">
-            They will count as wrong. You can't change your answers after
+            They will count as wrong. You can’t change your answers after
             submitting.
           </p>
           <div className="mt-3 flex flex-col gap-3 sm:flex-row">

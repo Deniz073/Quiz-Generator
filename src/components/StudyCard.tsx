@@ -51,7 +51,7 @@ export function StudyCard({ question, revealed }: Props) {
               <span className="mt-0.5 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded border border-current text-xs font-semibold">
                 {getOptionLetter(index)}
               </span>
-              <span className="flex-1">{option}</span>
+              <span className="min-w-0 flex-1 break-words">{option}</span>
               {state === 'correct' ? (
                 <>
                   <span className="sr-only">(correct answer)</span>

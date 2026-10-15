@@ -12,17 +12,15 @@ import { getCorrectIndexes } from '#/quizzes/question'
 // `flagged_` keeps this out of the flagged practice route's layout: the URL is
 // /quiz/<id>/flagged/review, but that route renders on its own.
 export const Route = createFileRoute('/quiz/$quizId/flagged_/review')({
-  loader: ({ params }) => {
-    requireQuiz(params.quizId)
-  },
+  loader: ({ params }) => requireQuiz(params.quizId),
   component: FlaggedReviewPage,
   notFoundComponent: () => <NotFound message="Quiz not found." />,
 })
 
 /** Read-only list of the flagged questions with answers and explanations. */
 function FlaggedReviewPage() {
-  const { quizId } = Route.useParams()
-  const quiz = requireQuiz(quizId)
+  const quiz = Route.useLoaderData()
+  const quizId = quiz.id
   // Undefined on the server and during hydration, then filled in from
   // localStorage. Nothing is claimed about the flags until then.
   const flags = useFlags(quizId)

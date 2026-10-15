@@ -11,16 +11,13 @@ export const Route = createFileRoute('/quiz/$quizId/$chapterId')({
   // server and client, so the component renders on the client only. The loader
   // still runs on the server, so unknown ids get a real 404.
   ssr: 'data-only',
-  loader: ({ params }) => {
-    requireChapter(params.quizId, params.chapterId)
-  },
+  loader: ({ params }) => requireChapter(params.quizId, params.chapterId),
   component: ChapterPage,
   notFoundComponent: () => <NotFound message="Chapter not found." />,
 })
 
 function ChapterPage() {
-  const { quizId, chapterId } = Route.useParams()
-  const { quiz, chapter } = requireChapter(quizId, chapterId)
+  const { quiz, chapter } = Route.useLoaderData()
 
   const index = quiz.chapters.findIndex((c) => c.id === chapter.id)
   const nextChapter = quiz.chapters
@@ -33,7 +30,7 @@ function ChapterPage() {
       {/* key resets runner state when navigating to another chapter */}
       <QuizRunner
         key={chapter.id}
-        quizId={quizId}
+        quizId={quiz.id}
         mode="chapter"
         buildPlan={() => buildShuffledPlan(chapter.questions)}
         nextChapterId={nextChapter?.id}

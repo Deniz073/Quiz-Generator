@@ -31,9 +31,11 @@ export function StudyControls({
       <label className="flex items-center gap-2 text-sm font-medium">
         Chapter
         <select
+          name="chapter"
+          autoComplete="off"
           value={chapterId ?? ''}
           onChange={(event) => onChapterChange(event.target.value || undefined)}
-          className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 font-normal focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500 dark:border-slate-700 dark:bg-slate-900"
+          className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 font-normal text-slate-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
         >
           <option value="">All chapters</option>
           {chapters.map((chapter) => (
@@ -46,6 +48,8 @@ export function StudyControls({
       <label className={checkboxLabelClasses}>
         <input
           type="checkbox"
+          name="shuffle"
+          autoComplete="off"
           checked={shuffled}
           onChange={(event) => onShuffledChange(event.target.checked)}
           className={checkboxClasses}
@@ -55,6 +59,8 @@ export function StudyControls({
       <label className={checkboxLabelClasses}>
         <input
           type="checkbox"
+          name="showAll"
+          autoComplete="off"
           checked={showAll}
           onChange={(event) => onShowAllChange(event.target.checked)}
           className={checkboxClasses}

@@ -79,6 +79,12 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         <HeadContent />
       </head>
       <body className="bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100">
+        <a
+          href="#main"
+          className="sr-only rounded-md bg-sky-600 px-4 py-2 font-medium text-white focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-20"
+        >
+          Skip to main content
+        </a>
         <header className="border-b border-slate-200 dark:border-slate-800">
           <div className="mx-auto flex max-w-3xl items-center justify-between px-4 py-3">
             <Link
@@ -90,7 +96,14 @@ function RootDocument({ children }: { children: React.ReactNode }) {
             <ThemeToggle />
           </div>
         </header>
-        <main className="mx-auto max-w-3xl px-4 py-6 sm:py-10">{children}</main>
+        {/* tabIndex -1: the skip link moves focus here, not just the scroll position. */}
+        <main
+          id="main"
+          tabIndex={-1}
+          className="mx-auto max-w-3xl px-4 py-6 sm:py-10"
+        >
+          {children}
+        </main>
         <TanStackDevtools
           config={{
             position: 'bottom-right',

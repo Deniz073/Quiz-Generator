@@ -26,17 +26,14 @@ export const Route = createFileRoute('/quiz/$quizId/flagged')({
   // component, see the chapter route. The loader still runs on the server for a
   // real 404.
   ssr: 'data-only',
-  loader: ({ params }) => {
-    requireQuiz(params.quizId)
-  },
+  loader: ({ params }) => requireQuiz(params.quizId),
   component: FlaggedPage,
   notFoundComponent: () => <NotFound message="Quiz not found." />,
 })
 
 function FlaggedPage() {
-  const { quizId } = Route.useParams()
+  const quiz = Route.useLoaderData()
   const { chapter: chapterParam } = Route.useSearch()
-  const quiz = requireQuiz(quizId)
 
   const chapter = quiz.chapters.find((c) => c.id === chapterParam)
 

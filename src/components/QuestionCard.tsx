@@ -66,6 +66,8 @@ export function QuestionBody({
               : 'border-slate-300 text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800'
           }`}
         >
+          {/* The flag mark makes the state visible without relying on colour. */}
+          {flagged ? <span aria-hidden="true">&#9873; </span> : null}
           Flag for review
         </button>
       </div>

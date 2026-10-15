@@ -1,0 +1,5 @@
+# Text files are LF in the repo and in the working tree, on every OS (matches
+# Prettier's endOfLine), so Windows' core.autocrlf does not rewrite them.
+* text=auto eol=lf
+*.png binary
+*.ico binary

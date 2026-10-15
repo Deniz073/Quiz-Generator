@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link } from '@tanstack/react-router'
 import type { Answer } from '#/lib/quiz-state'
 import { buttonClasses } from '#/lib/button-classes'
@@ -45,9 +45,21 @@ export function ResultsScreen({
   const passed =
     passPercent !== undefined && isPassed(score, total, passPercent)
 
+  // The last question's button was just unmounted, which dropped focus to the
+  // page. Move it to the result so it is read out and keyboard users continue
+  // from here.
+  const summaryRef = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    summaryRef.current?.focus()
+  }, [])
+
   return (
     <div>
-      <div className="rounded-xl border border-slate-200 bg-white p-6 text-center dark:border-slate-800 dark:bg-slate-900">
+      <div
+        ref={summaryRef}
+        tabIndex={-1}
+        className="rounded-xl border border-slate-200 bg-white p-6 text-center dark:border-slate-800 dark:bg-slate-900"
+      >
         <p className="text-sm font-medium text-slate-600 dark:text-slate-400">
           Your result
         </p>
@@ -73,7 +85,7 @@ export function ResultsScreen({
         ) : null}
       </div>
 
-      <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+      <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
         {onRetry ? (
           <button
             type="button"
@@ -154,7 +166,8 @@ export function ResultsScreen({
             return (
               <li
                 key={index}
-                className="rounded-lg border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900"
+                // Up to every question of a quiz: skip rendering far off-screen cards.
+                className="rounded-lg border border-slate-200 bg-white p-4 [contain-intrinsic-size:auto_10rem] [content-visibility:auto] dark:border-slate-800 dark:bg-slate-900"
               >
                 {showStatus || flagged || chapter ? (
                   <div className="mb-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">

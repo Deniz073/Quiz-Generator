@@ -89,11 +89,17 @@ export function StudyDeck({ quiz, chapterId, shuffled, showAll }: Props) {
 
   return (
     <div>
-      <div className="flex flex-wrap items-baseline justify-between gap-x-4 text-sm font-medium text-slate-600 dark:text-slate-400">
+      {/* Live region: the focus stays on Previous/Next, so a card change is
+          announced here, with the question for screen readers only. */}
+      <div
+        aria-live="polite"
+        className="flex flex-wrap items-baseline justify-between gap-x-4 text-sm font-medium text-slate-600 dark:text-slate-400"
+      >
         <span>
           Card {index + 1} of {cards.length}
         </span>
         <span>{formatChapter(card.chapter)}</span>
+        <span className="sr-only">{card.question.question}</span>
       </div>
 
       <div className="mt-6">

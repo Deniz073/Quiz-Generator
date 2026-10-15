@@ -44,7 +44,7 @@ export function ProgressHeader({
             Time left: {formatSeconds(secondsLeft)}
           </span>
         ) : score !== undefined ? (
-          <span>
+          <span className="tabular-nums">
             Score: {score} / {answeredCount}
           </span>
         ) : null}
@@ -58,8 +58,11 @@ export function ProgressHeader({
         aria-label="Quiz progress"
       >
         <div
-          className="h-full bg-sky-500 transition-[width] duration-300 motion-reduce:transition-none"
-          style={{ width: `${(answeredCount / total) * 100}%` }}
+          // scaleX, not width: animates on the compositor.
+          className="h-full origin-left bg-sky-500 transition-transform duration-300 motion-reduce:transition-none"
+          style={{
+            transform: `scaleX(${total > 0 ? answeredCount / total : 0})`,
+          }}
         />
       </div>
     </div>

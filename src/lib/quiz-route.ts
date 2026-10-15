@@ -1,33 +1,35 @@
 import { notFound } from '@tanstack/react-router'
 import type { Chapter, ExamConfig, Quiz } from '#/quizzes/types'
-import { getChapter, getQuiz } from '#/quizzes'
+import { getQuiz } from '#/quizzes'
 
 /*
- * What a route needs from its quiz params. Each throws `notFound()` for an
- * unknown id, so the same call is the loader's 404 (which runs on the server
- * too, giving a real 404 status) and the component's narrowing: no
- * `if (!quiz) return null` after a loader that already checked.
+ * What a route needs from its quiz params, for its loader. Each throws
+ * `notFound()` for an unknown id (which, as the loader also runs on the server,
+ * gives a real 404 status). The component reads the result with
+ * `Route.useLoaderData()`, so it needs no `if (!quiz) return null`.
  */
 
-export function requireQuiz(quizId: string): Quiz {
-  const quiz = getQuiz(quizId)
+export async function requireQuiz(quizId: string): Promise<Quiz> {
+  const quiz = await getQuiz(quizId)
   if (!quiz) throw notFound()
   return quiz
 }
 
-export function requireChapter(
+export async function requireChapter(
   quizId: string,
   chapterId: string,
-): { quiz: Quiz; chapter: Chapter } {
-  const quiz = requireQuiz(quizId)
-  const chapter = getChapter(quizId, chapterId)
+): Promise<{ quiz: Quiz; chapter: Chapter }> {
+  const quiz = await requireQuiz(quizId)
+  const chapter = quiz.chapters.find((c) => c.id === chapterId)
   if (!chapter) throw notFound()
   return { quiz, chapter }
 }
 
 /** The quiz and its mock exam settings; a quiz without them has no exam page. */
-export function requireExam(quizId: string): { quiz: Quiz; exam: ExamConfig } {
-  const quiz = requireQuiz(quizId)
+export async function requireExam(
+  quizId: string,
+): Promise<{ quiz: Quiz; exam: ExamConfig }> {
+  const quiz = await requireQuiz(quizId)
   if (!quiz.exam) throw notFound()
   return { quiz, exam: quiz.exam }
 }
