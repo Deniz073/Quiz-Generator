@@ -194,5 +194,47 @@ export const chapter02: Chapter = {
       explanation:
         'Management of the cloud covers automatic scaling, template-based deployment, health monitoring with automatic replacement, and automatic alerts. The CLI, PowerShell, APIs and the portal are ways of managing in the cloud.',
     },
+    {
+      id: '2-15',
+      question:
+        'Cloud-based backup services, data replication and geo-distribution are features of which of the following?',
+      options: [
+        'A cost reduction plan',
+        'An elastic application configuration',
+        'A disaster recovery plan',
+        'A hybrid cloud deployment',
+      ],
+      correctIndex: 2,
+      explanation:
+        'Disaster recovery uses services such as cloud-based backup, data replication and geo-distribution to keep data and code safe if a disaster occurs. Elasticity is about matching capacity to demand, not protecting data.',
+    },
+    {
+      id: '2-16',
+      question:
+        'An application is automatically scaled out during business hours so it has the resources to meet customer demand, and scaled back in during off-peak hours. Which cloud concept does this describe?',
+      options: [
+        'Agility',
+        'High availability',
+        'Geo-distribution',
+        'Elasticity',
+      ],
+      correctIndex: 3,
+      explanation:
+        'Elasticity is the ability to scale resources up and down automatically as demand changes. Agility is about deploying new services quickly, and high availability is about staying up when failures occur.',
+    },
+    {
+      id: '2-17',
+      question:
+        'A company deploys its application and data to regional datacenters around the world so customers get the best performance in their own region. Which cloud concept does this describe?',
+      options: [
+        'Disaster recovery',
+        'Geo-distribution',
+        'Elasticity',
+        'High availability',
+      ],
+      correctIndex: 1,
+      explanation:
+        'Geo-distribution means deploying apps and data to datacenters in multiple regions, close to your users. High availability is about staying up during failures, and disaster recovery is about protecting data and code after a disaster.',
+    },
   ],
 }

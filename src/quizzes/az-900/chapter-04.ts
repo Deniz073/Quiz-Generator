@@ -199,5 +199,75 @@ export const chapter04: Chapter = {
       explanation:
         'Management groups can be nested, unlike resource groups, and governance conditions applied to them flow down to every subscription inside. A subscription has exactly one parent management group, and management groups sit above subscriptions, so they are never created inside a resource group.',
     },
+    {
+      id: '4-15',
+      question:
+        'What is the logical container into which Azure resources such as web apps, databases and storage accounts are deployed and managed?',
+      options: [
+        'Management group',
+        'Azure region',
+        'Azure Resource Manager (ARM)',
+        'Resource group',
+      ],
+      correctIndex: 3,
+      explanation:
+        'A resource group is the logical container that combines and organizes related Azure resources. A management group organizes subscriptions, and ARM is the deployment and management service, not a container.',
+    },
+    {
+      id: '4-16',
+      question:
+        'Which two components are created inside an Azure subscription? Select two.',
+      options: [
+        'Microsoft Entra user accounts',
+        'Management groups',
+        'Resource groups',
+        'Resources',
+      ],
+      correctIndexes: [2, 3],
+      explanation:
+        'Resource groups and the resources in them live inside a subscription. Management groups sit above subscriptions, and Microsoft Entra user accounts belong to the tenant, not to a subscription.',
+    },
+    {
+      id: '4-17',
+      question:
+        'An Azure storage account named storage001 is an example of which Azure construct?',
+      options: [
+        'A resource group',
+        'A subscription',
+        'A resource',
+        'A resource manager',
+      ],
+      correctIndex: 2,
+      explanation:
+        'A resource is a manageable item available through Azure, such as a virtual machine, storage account, web app, database or virtual network. A resource group is the container that holds resources.',
+    },
+    {
+      id: '4-18',
+      question:
+        'Which Azure component lets you replicate resources across a geography so a secondary region is available if a natural disaster hits the primary site?',
+      options: [
+        'Availability sets',
+        'Virtual machine scale sets',
+        'Availability zones',
+        'Region pairs',
+      ],
+      correctIndex: 3,
+      explanation:
+        'Region pairs link two regions in the same geography so resources can be replicated to a secondary region if the primary one is lost. Availability zones and sets protect within a single region only.',
+    },
+    {
+      id: '4-19',
+      question:
+        'Which two Azure resources can make use of availability zones? Select two.',
+      options: [
+        'Azure SQL databases',
+        'Azure subscriptions',
+        'Resource groups',
+        'Virtual machines',
+      ],
+      correctIndexes: [0, 3],
+      explanation:
+        'Availability zones are used by resources that run on infrastructure, such as virtual machines, managed disks, load balancers and SQL databases. Subscriptions and resource groups are organizational constructs with no physical placement.',
+    },
   ],
 }

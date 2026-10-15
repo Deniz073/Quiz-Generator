@@ -134,17 +134,46 @@ export const chapter08: Chapter = {
     {
       id: '8-10',
       question:
-        'Which three factors can influence the cost of using Azure resources? Select three.',
+        'Which four factors can influence the cost of using Azure resources? Select four.',
       options: [
         'The Azure region in which the resource runs',
         'The number of tags applied to the resource',
         'The type and size of the resource',
         'The number of Azure Advisor recommendations for the resource',
         'The amount of the resource that is consumed',
+        'Outbound data transfers',
       ],
-      correctIndexes: [0, 2, 4],
+      correctIndexes: [0, 2, 4, 5],
       explanation:
-        'Resource type and settings, consumption and geography (region) all affect the price. Tags and Advisor recommendations carry no cost themselves, although tags can help you analyze costs.',
+        'Resource type and settings, consumption, geography (region) and outbound data transfers (billed by type and destination) all affect the price. Tags and Advisor recommendations carry no cost themselves, although tags can help you analyze costs.',
+    },
+    {
+      id: '8-11',
+      question:
+        'Which two features are available by using Azure Cost Management + Billing? Select two.',
+      options: [
+        'Create and manage budgets',
+        'Estimate the total cost of ownership before resources are deployed',
+        'Generate historical reports and forecast future usage and expenditures',
+        'Provide discounted prices when you pay in advance',
+      ],
+      correctIndexes: [0, 2],
+      explanation:
+        'Cost Management lets you set budgets and use historical data to report on and forecast spending. Estimating TCO before deployment is the TCO calculator, and prepayment discounts come from offers such as reservations.',
+    },
+    {
+      id: '8-12',
+      question:
+        'An Azure virtual machine is only used between 9:00 and 17:00 each day. How can you minimize costs while preserving its disks and data?',
+      options: [
+        'Delete the virtual machine when it is not needed',
+        'Resize the virtual machine to a smaller size',
+        'Deallocate the virtual machine when it is not needed',
+        'Implement Privileged Identity Management',
+      ],
+      correctIndex: 2,
+      explanation:
+        'A deallocated VM stops incurring compute charges while its disks and data are kept (storage is still billed), and you start it again when needed. Deleting the VM removes it, and resizing still bills compute around the clock.',
     },
   ],
 }

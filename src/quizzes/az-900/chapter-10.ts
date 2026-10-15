@@ -171,5 +171,19 @@ export const chapter10: Chapter = {
       explanation:
         'Azure Cloud Shell supports both tools, and both are cross-platform with functionally similar management capabilities, so the choice depends on which syntax you know best. Neither is limited to one operating system or one resource type.',
     },
+    {
+      id: '10-13',
+      question:
+        'Which two actions can be performed by using the Azure portal? Select two.',
+      options: [
+        'Change the availability zone of an existing virtual machine',
+        'Create new resources',
+        'Assign a deny permission on a resource group',
+        'Create a Microsoft Entra user',
+      ],
+      correctIndexes: [1, 3],
+      explanation:
+        'The portal is a GUI for creating, configuring and viewing resources, and Microsoft Entra users can be created there too. The availability zone is chosen when a VM is created and cannot be changed in place, and Azure RBAC role assignments grant access, they do not deny it.',
+    },
   ],
 }
