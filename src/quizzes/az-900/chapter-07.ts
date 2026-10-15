@@ -281,5 +281,18 @@ export const chapter07: Chapter = {
       explanation:
         'Microsoft Entra ID offers authentication (including MFA and self-service password reset), single sign-on, application management and device registration. Traffic filtering is done by network security groups, and Group Policy and LDAP come from Microsoft Entra Domain Services.',
     },
+    {
+      id: '7-21',
+      question: 'What is the purpose of defense in depth?',
+      options: [
+        'To evaluate resources and make recommendations that improve reliability and performance',
+        'To use several layers of protection to prevent information from being accessed by unauthorized users',
+        'To manage policies that control or audit resources so configurations stay compliant with corporate standards',
+        'To locate and act on resources associated with specific workloads, environments, business units and owners',
+      ],
+      correctIndex: 1,
+      explanation:
+        'Defense in depth uses several layers of protection so that if one layer is breached, the next one still protects the data. The other options describe Azure Advisor, Azure Policy and resource tagging.',
+    },
   ],
 }

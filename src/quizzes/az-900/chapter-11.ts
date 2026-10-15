@@ -131,5 +131,19 @@ export const chapter11: Chapter = {
       explanation:
         'Service Health tracks the health of Azure services and your resources, including incidents and planned maintenance. Resizing advice comes from Azure Advisor, and cost estimates from the Pricing calculator.',
     },
+    {
+      id: '11-10',
+      question:
+        'You need a custom solution that uses thresholds to trigger autoscaling, scaling an app up or down to meet user demand. What should you include?',
+      options: [
+        'Azure Advisor',
+        'Azure Service Health',
+        'Azure Monitor',
+        'Azure Cost Management',
+      ],
+      correctIndex: 2,
+      explanation:
+        'Azure Monitor collects metric and log data such as CPU percentage, and autoscale rules use these metrics as thresholds to scale out or in. Advisor only gives recommendations and Service Health reports platform incidents.',
+    },
   ],
 }

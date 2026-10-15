@@ -131,5 +131,32 @@ export const chapter03: Chapter = {
       explanation:
         'App Service and Azure SQL Database are managed platforms: you deploy your app or data and Microsoft runs the operating system and infrastructure. Azure Virtual Machines is IaaS, and Microsoft 365 is SaaS.',
     },
+    {
+      id: '3-11',
+      question:
+        'Which cloud service model is typically licensed through a monthly or annual subscription?',
+      options: [
+        'Platform as a service (PaaS)',
+        'Software as a service (SaaS)',
+        'Infrastructure as a service (IaaS)',
+        'Private cloud only',
+      ],
+      correctIndex: 1,
+      explanation:
+        'SaaS is centrally hosted software, usually one version for all customers, licensed per month or year. IaaS and PaaS are consumption-based, so you pay for what you use.',
+    },
+    {
+      id: '3-12',
+      question: 'Which cloud service model do virtual networks belong to?',
+      options: [
+        'Infrastructure as a service (IaaS)',
+        'Platform as a service (PaaS)',
+        'Software as a service (SaaS)',
+        'Function as a service (FaaS)',
+      ],
+      correctIndex: 0,
+      explanation:
+        'Virtual networks are core infrastructure building blocks, like virtual machines and storage, so they are IaaS. PaaS and SaaS sit on top of the infrastructure and hide it from the customer.',
+    },
   ],
 }

@@ -282,5 +282,19 @@ export const chapter05: Chapter = {
       explanation:
         'Public endpoints are internet-facing with a public IP, whereas private endpoints live inside a virtual network with a private IP from its address space. The other two statements swap those characteristics.',
     },
+    {
+      id: '5-21',
+      question:
+        'Which two services can you use to establish network connectivity between an on-premises network and Azure resources? Select two.',
+      options: [
+        'Azure Bastion',
+        'Azure Firewall',
+        'Azure VPN Gateway',
+        'Azure ExpressRoute',
+      ],
+      correctIndexes: [2, 3],
+      explanation:
+        'VPN Gateway (encrypted tunnels over the internet) and ExpressRoute (private circuit) both connect an on-premises network to Azure. Bastion gives browser-based RDP/SSH access to VMs, and Azure Firewall filters traffic in virtual networks.',
+    },
   ],
 }
