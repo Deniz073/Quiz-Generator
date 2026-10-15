@@ -21,7 +21,8 @@ needs to change: quizzes are auto-discovered and appear on the home page.
 1. **Fork or clone** this repo and run `npm install`.
 2. **Easy path: ask your AI coding agent** (Claude Code, Codex, Cursor, ...). Enabling its
    research mode is recommended for topic-based quizzes. You can also hand the agent source
-   material: a `.pdf` or `.md` file in the repo, or a link to a page. Example prompt:
+   material: a `.pdf` or `.md` file (just hand it over, no need to add it to the repo) or a link
+   to a page. Example prompt:
 
    > Add a quiz about `<topic>` based on `<path/to/material.pdf, path/to/notes.md or URL>`.
    > Use research mode, cover every chapter, include some multi-answer questions, and follow
