@@ -83,6 +83,12 @@ li {
   outline-offset: 2px;
 }
 
+/* Headings only get focus from script (src/lib/focus.ts) to mark the reading
+   position after a page or view change. They aren't controls: no ring. */
+:is(h1, h2)[tabindex='-1']:focus-visible {
+  outline: none;
+}
+
 ::selection {
   background: color-mix(in oklab, var(--color-sky-500) 30%, transparent);
 }

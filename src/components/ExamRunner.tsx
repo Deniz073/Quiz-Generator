@@ -1,10 +1,11 @@
 import type { Dispatch } from 'react'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useHotkey } from '@tanstack/react-hotkeys'
 import type { PlannedQuestion } from '#/lib/quiz-plan'
 import type { ExamAction, ExamState } from '#/lib/exam-state'
 import type { ExamConfig, Quiz } from '#/quizzes/types'
 import { getAnswers, getScore } from '#/lib/exam-state'
+import { focusHeading } from '#/lib/focus'
 import { reshufflePlan } from '#/lib/quiz-plan'
 import { useExam } from '#/lib/use-exam'
 import { useLeaveGuard } from '#/lib/use-leave-guard'
@@ -91,6 +92,17 @@ function ExamSession({
     window.scrollTo(0, 0)
   }, [current, reviewing])
 
+  // Switching between a question and the review unmounts the button that was
+  // pressed, so focus would drop to <body>. Move it to the new view's first
+  // heading (the question, or "Review answers") so screen readers follow.
+  const viewRef = useRef<HTMLDivElement>(null)
+  const wasReviewing = useRef(reviewing)
+  useEffect(() => {
+    if (wasReviewing.current === reviewing) return
+    wasReviewing.current = reviewing
+    focusHeading(viewRef.current?.querySelector('h2'))
+  }, [reviewing])
+
   const questionKeys = !submitted && !reviewing && !blocked
 
   // Enter = Next. It keeps its native meaning (a click) on a focused button
@@ -156,19 +168,21 @@ function ExamSession({
           onLeave={leave}
         />
       ) : null}
-      {reviewing ? (
-        <ExamReview
-          state={state}
-          secondsLeft={secondsLeft}
-          dispatch={dispatch}
-        />
-      ) : (
-        <ExamQuestionView
-          state={state}
-          secondsLeft={secondsLeft}
-          dispatch={dispatch}
-        />
-      )}
+      <div ref={viewRef}>
+        {reviewing ? (
+          <ExamReview
+            state={state}
+            secondsLeft={secondsLeft}
+            dispatch={dispatch}
+          />
+        ) : (
+          <ExamQuestionView
+            state={state}
+            secondsLeft={secondsLeft}
+            dispatch={dispatch}
+          />
+        )}
+      </div>
     </>
   )
 }

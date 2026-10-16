@@ -21,7 +21,11 @@ interface Props {
   showAll: boolean
 }
 
-const navButtonClasses = `${buttonClasses('secondary')} disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-transparent`
+// Less side padding below sm: Previous, the reveal button and Next must fit
+// one row on a 320px screen.
+const narrowPadding = 'max-sm:px-3'
+
+const navButtonClasses = `${buttonClasses('secondary')} ${narrowPadding} disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-transparent`
 
 // Focused controls keep their native Enter/Space action, so the reveal hotkey
 // must not also fire for them.
@@ -103,10 +107,14 @@ export function StudyDeck({ quiz, chapterId, shuffled, showAll }: Props) {
       </div>
 
       <div className="mt-6">
-        <StudyCard question={card.question} revealed={isRevealed} />
+        <StudyCard
+          question={card.question}
+          revealed={isRevealed}
+          shareQuizId={quiz.id}
+        />
       </div>
 
-      <div className="mt-6 flex items-center justify-between gap-3">
+      <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
         <button
           type="button"
           disabled={isFirst}
@@ -124,7 +132,7 @@ export function StudyDeck({ quiz, chapterId, shuffled, showAll }: Props) {
           type="button"
           disabled={showAll}
           onClick={() => setRevealed((value) => !value)}
-          className={buttonClasses('primary')}
+          className={`${buttonClasses('primary')} ${narrowPadding}`}
         >
           {showAll ? 'Answers shown' : revealed ? 'Hide answer' : 'Show answer'}
         </button>

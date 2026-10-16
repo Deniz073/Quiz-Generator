@@ -28,14 +28,16 @@ export function StudyControls({
 }: Props) {
   return (
     <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
-      <label className="flex items-center gap-2 text-sm font-medium">
+      {/* A <select> is as wide as its longest option; on phones it takes the
+          row and shrinks to fit instead of widening the page. */}
+      <label className="flex w-full items-center gap-2 text-sm font-medium sm:w-auto">
         Chapter
         <select
           name="chapter"
           autoComplete="off"
           value={chapterId ?? ''}
           onChange={(event) => onChapterChange(event.target.value || undefined)}
-          className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 font-normal text-slate-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+          className="min-w-0 flex-1 rounded-lg border sm:flex-none border-slate-300 bg-white px-3 py-1.5 font-normal text-slate-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
         >
           <option value="">All chapters</option>
           {chapters.map((chapter) => (

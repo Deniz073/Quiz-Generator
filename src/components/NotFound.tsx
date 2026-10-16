@@ -11,7 +11,7 @@ export function NotFound({
       <p className="mt-2 text-slate-600 dark:text-slate-400">{message}</p>
       <Link
         to="/"
-        className="mt-6 inline-block rounded-lg bg-sky-600 px-4 py-2 font-medium text-white hover:bg-sky-700"
+        className="mt-6 inline-block rounded-lg bg-sky-700 px-4 py-2 font-medium text-white hover:bg-sky-800"
       >
         Back to quizzes
       </Link>

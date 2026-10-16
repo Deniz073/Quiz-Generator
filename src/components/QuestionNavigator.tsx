@@ -12,7 +12,7 @@ interface Props {
 // Fill and border differ per status, so the state doesn't rely on colour alone.
 const STATUS_CLASSES: Record<QuestionStatus, string> = {
   answered:
-    'border-sky-600 bg-sky-600 text-white hover:bg-sky-700 dark:border-sky-500 dark:bg-sky-600',
+    'border-sky-700 bg-sky-700 text-white hover:bg-sky-800 dark:border-sky-500 dark:bg-sky-700',
   incomplete:
     'border-dashed border-sky-600 bg-sky-50 text-sky-900 hover:bg-sky-100 dark:border-sky-400 dark:bg-slate-800 dark:text-sky-100 dark:hover:bg-slate-700',
   unanswered:

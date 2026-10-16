@@ -7,6 +7,7 @@ import { QuizRunner } from '#/components/QuizRunner'
 import { formatChapter } from '#/lib/chapter-label'
 import { getFlaggedQuestions, getFlagsSnapshot } from '#/lib/flags'
 import { buildShuffledPlan } from '#/lib/quiz-plan'
+import { pageTitle } from '#/lib/page-title'
 import { requireQuiz } from '#/lib/quiz-route'
 import { useFlags } from '#/lib/use-flags'
 
@@ -27,6 +28,9 @@ export const Route = createFileRoute('/quiz/$quizId/flagged')({
   // real 404.
   ssr: 'data-only',
   loader: ({ params }) => requireQuiz(params.quizId),
+  head: ({ loaderData }) => ({
+    meta: [{ title: pageTitle('Flagged questions', loaderData?.title) }],
+  }),
   component: FlaggedPage,
   notFoundComponent: () => <NotFound message="Quiz not found." />,
 })

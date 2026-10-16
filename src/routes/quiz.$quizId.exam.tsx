@@ -2,6 +2,7 @@ import { createFileRoute } from '@tanstack/react-router'
 import { ExamRunner } from '#/components/ExamRunner'
 import { NotFound } from '#/components/NotFound'
 import { QuizPageHeader } from '#/components/QuizPageHeader'
+import { pageTitle } from '#/lib/page-title'
 import { requireExam } from '#/lib/quiz-route'
 
 export const Route = createFileRoute('/quiz/$quizId/exam')({
@@ -10,6 +11,9 @@ export const Route = createFileRoute('/quiz/$quizId/exam')({
   // quizzes without exam settings get a real 404.
   ssr: 'data-only',
   loader: ({ params }) => requireExam(params.quizId),
+  head: ({ loaderData }) => ({
+    meta: [{ title: pageTitle('Mock exam', loaderData?.quiz.title) }],
+  }),
   component: ExamPage,
   notFoundComponent: () => <NotFound message="Mock exam not found." />,
 })

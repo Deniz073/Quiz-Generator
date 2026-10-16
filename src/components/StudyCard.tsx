@@ -1,4 +1,6 @@
 import { getOptionLetter } from '#/lib/option-keys'
+import { questionPath } from '#/lib/share'
+import { ShareButton } from '#/components/ShareButton'
 import { getCorrectIndexes, isMultipleAnswer } from '#/quizzes/question'
 import type { Question } from '#/quizzes/types'
 
@@ -15,10 +17,12 @@ interface Props {
   question: Question
   /** True once the answer and explanation are shown. */
   revealed: boolean
+  /** Shows a "Share" button linking to this question. */
+  shareQuizId?: string
 }
 
 /** One flashcard: options stay in their original order, nothing is clickable. */
-export function StudyCard({ question, revealed }: Props) {
+export function StudyCard({ question, revealed, shareQuizId }: Props) {
   const multiple = isMultipleAnswer(question)
   const correctIndexes = getCorrectIndexes(question)
   // Options are not shuffled, so the original index is the displayed position.
@@ -26,9 +30,21 @@ export function StudyCard({ question, revealed }: Props) {
 
   return (
     <div>
-      <h2 className="text-xl font-semibold leading-snug sm:text-2xl">
-        {question.question}
-      </h2>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
+        <h2 className="text-xl font-semibold leading-snug sm:text-2xl">
+          {question.question}
+        </h2>
+        {shareQuizId ? (
+          <div className="self-start sm:shrink-0">
+            {/* key: a "Link copied" or failure note belongs to one card. */}
+            <ShareButton
+              key={question.id}
+              path={questionPath(shareQuizId, question.id)}
+              text={question.question}
+            />
+          </div>
+        ) : null}
+      </div>
 
       {multiple ? (
         <p className="mt-2 text-sm font-medium text-slate-600 dark:text-slate-400">

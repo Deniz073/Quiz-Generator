@@ -33,6 +33,11 @@ export function ExamQuestionView({ state, secondsLeft, dispatch }: Props) {
         answeredCount={answered}
         secondsLeft={secondsLeft}
       />
+      {/* Live region: the focus stays on Previous/Next (or the navigator), so
+          the new question is announced here, for screen readers only. */}
+      <p aria-live="polite" className="sr-only">
+        Question {current + 1} of {total}: {item.question.question}
+      </p>
 
       {/* key: don't carry focus or hover state over to the next question. */}
       <div key={current}>
@@ -81,7 +86,9 @@ export function ExamQuestionView({ state, secondsLeft, dispatch }: Props) {
       </div>
 
       <details className="mt-6 rounded-lg border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
-        <summary className="cursor-pointer text-sm font-medium">
+        {/* Vertical padding (cancelled by the negative margin) makes the toggle
+            a usable tap target without changing the layout. */}
+        <summary className="-my-2 cursor-pointer py-2 text-sm font-medium">
           Question navigator
         </summary>
         <div className="mt-4">

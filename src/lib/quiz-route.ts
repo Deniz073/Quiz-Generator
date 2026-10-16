@@ -1,5 +1,5 @@
 import { notFound } from '@tanstack/react-router'
-import type { Chapter, ExamConfig, Quiz } from '#/quizzes/types'
+import type { Chapter, ExamConfig, Question, Quiz } from '#/quizzes/types'
 import { getQuiz } from '#/quizzes'
 
 /*
@@ -32,4 +32,17 @@ export async function requireExam(
   const quiz = await requireQuiz(quizId)
   if (!quiz.exam) throw notFound()
   return { quiz, exam: quiz.exam }
+}
+
+/** A question by its id (stable, so shared links keep working) and its chapter. */
+export async function requireQuestion(
+  quizId: string,
+  questionId: string,
+): Promise<{ quiz: Quiz; chapter: Chapter; question: Question }> {
+  const quiz = await requireQuiz(quizId)
+  for (const chapter of quiz.chapters) {
+    const question = chapter.questions.find((q) => q.id === questionId)
+    if (question) return { quiz, chapter, question }
+  }
+  throw notFound()
 }

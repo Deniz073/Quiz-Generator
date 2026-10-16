@@ -56,6 +56,8 @@ export function ExamReview({ state, secondsLeft, dispatch }: Props) {
         answeredCount={counts.answered}
         secondsLeft={secondsLeft}
       />
+      {/* Focus target when the review opens; the visible label is above. */}
+      <h2 className="sr-only">Review answers</h2>
 
       <dl className="mt-6 grid grid-cols-3 gap-3 text-center">
         <Stat label="Answered" value={counts.answered} />

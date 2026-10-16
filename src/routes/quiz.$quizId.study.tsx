@@ -3,6 +3,7 @@ import { NotFound } from '#/components/NotFound'
 import { QuizPageHeader } from '#/components/QuizPageHeader'
 import { StudyControls } from '#/components/StudyControls'
 import { StudyDeck } from '#/components/StudyDeck'
+import { pageTitle } from '#/lib/page-title'
 import { requireQuiz } from '#/lib/quiz-route'
 
 export const Route = createFileRoute('/quiz/$quizId/study')({
@@ -30,6 +31,9 @@ export const Route = createFileRoute('/quiz/$quizId/study')({
   // still runs on the server, so unknown ids get a real 404.
   ssr: 'data-only',
   loader: ({ params }) => requireQuiz(params.quizId),
+  head: ({ loaderData }) => ({
+    meta: [{ title: pageTitle('Study', loaderData?.title) }],
+  }),
   component: StudyPage,
   notFoundComponent: () => <NotFound message="Quiz not found." />,
 })

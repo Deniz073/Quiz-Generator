@@ -17,6 +17,7 @@ import { Route as QuizQuizIdFlaggedRouteImport } from './routes/quiz.$quizId.fla
 import { Route as QuizQuizIdPracticeRouteImport } from './routes/quiz.$quizId.practice'
 import { Route as QuizQuizIdStudyRouteImport } from './routes/quiz.$quizId.study'
 import { Route as QuizQuizIdFlaggedReviewRouteImport } from './routes/quiz.$quizId.flagged_.review'
+import { Route as QuizQuizIdQuestionQuestionIdRouteImport } from './routes/quiz.$quizId.question.$questionId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -58,6 +59,12 @@ const QuizQuizIdFlaggedReviewRoute = QuizQuizIdFlaggedReviewRouteImport.update({
   path: '/quiz/$quizId/flagged/review',
   getParentRoute: () => rootRouteImport,
 } as any)
+const QuizQuizIdQuestionQuestionIdRoute =
+  QuizQuizIdQuestionQuestionIdRouteImport.update({
+    id: '/quiz/$quizId/question/$questionId',
+    path: '/quiz/$quizId/question/$questionId',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -68,6 +75,7 @@ export interface FileRoutesByFullPath {
   '/quiz/$quizId/study': typeof QuizQuizIdStudyRoute
   '/quiz/$quizId/': typeof QuizQuizIdIndexRoute
   '/quiz/$quizId/flagged/review': typeof QuizQuizIdFlaggedReviewRoute
+  '/quiz/$quizId/question/$questionId': typeof QuizQuizIdQuestionQuestionIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -78,6 +86,7 @@ export interface FileRoutesByTo {
   '/quiz/$quizId/study': typeof QuizQuizIdStudyRoute
   '/quiz/$quizId': typeof QuizQuizIdIndexRoute
   '/quiz/$quizId/flagged/review': typeof QuizQuizIdFlaggedReviewRoute
+  '/quiz/$quizId/question/$questionId': typeof QuizQuizIdQuestionQuestionIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -89,6 +98,7 @@ export interface FileRoutesById {
   '/quiz/$quizId/study': typeof QuizQuizIdStudyRoute
   '/quiz/$quizId/': typeof QuizQuizIdIndexRoute
   '/quiz/$quizId/flagged_/review': typeof QuizQuizIdFlaggedReviewRoute
+  '/quiz/$quizId/question/$questionId': typeof QuizQuizIdQuestionQuestionIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -101,6 +111,7 @@ export interface FileRouteTypes {
     | '/quiz/$quizId/study'
     | '/quiz/$quizId/'
     | '/quiz/$quizId/flagged/review'
+    | '/quiz/$quizId/question/$questionId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -111,6 +122,7 @@ export interface FileRouteTypes {
     | '/quiz/$quizId/study'
     | '/quiz/$quizId'
     | '/quiz/$quizId/flagged/review'
+    | '/quiz/$quizId/question/$questionId'
   id:
     | '__root__'
     | '/'
@@ -121,6 +133,7 @@ export interface FileRouteTypes {
     | '/quiz/$quizId/study'
     | '/quiz/$quizId/'
     | '/quiz/$quizId/flagged_/review'
+    | '/quiz/$quizId/question/$questionId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -132,6 +145,7 @@ export interface RootRouteChildren {
   QuizQuizIdStudyRoute: typeof QuizQuizIdStudyRoute
   QuizQuizIdIndexRoute: typeof QuizQuizIdIndexRoute
   QuizQuizIdFlaggedReviewRoute: typeof QuizQuizIdFlaggedReviewRoute
+  QuizQuizIdQuestionQuestionIdRoute: typeof QuizQuizIdQuestionQuestionIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -192,6 +206,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof QuizQuizIdFlaggedReviewRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/quiz/$quizId/question/$questionId': {
+      id: '/quiz/$quizId/question/$questionId'
+      path: '/quiz/$quizId/question/$questionId'
+      fullPath: '/quiz/$quizId/question/$questionId'
+      preLoaderRoute: typeof QuizQuizIdQuestionQuestionIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -204,6 +225,7 @@ const rootRouteChildren: RootRouteChildren = {
   QuizQuizIdStudyRoute: QuizQuizIdStudyRoute,
   QuizQuizIdIndexRoute: QuizQuizIdIndexRoute,
   QuizQuizIdFlaggedReviewRoute: QuizQuizIdFlaggedReviewRoute,
+  QuizQuizIdQuestionQuestionIdRoute: QuizQuizIdQuestionQuestionIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

@@ -1,9 +1,10 @@
-import { useEffect, useEffectEvent, useReducer } from 'react'
+import { useEffect, useEffectEvent, useReducer, useRef } from 'react'
 import { useHotkey } from '@tanstack/react-hotkeys'
 import type { PlannedQuestion } from '#/lib/quiz-plan'
 import type { ProgressTarget } from '#/lib/progress'
 import type { Round } from '#/lib/quiz-state'
 import { toggleFlag } from '#/lib/flags'
+import { focusHeading, isFocusLost } from '#/lib/focus'
 import { recordResult } from '#/lib/progress'
 import { reshufflePlan } from '#/lib/quiz-plan'
 import {
@@ -115,6 +116,18 @@ export function QuizRunner(props: Props) {
     onPick: (originalIndex) => dispatch({ type: 'toggle', originalIndex }),
   })
 
+  // The card is keyed per question, so "Next question" unmounts with the old
+  // card and focus would drop to <body>. Put it on the new question instead,
+  // so screen readers read it. Not when the card already placed focus itself
+  // (an answered question focuses its Next button).
+  const cardRef = useRef<HTMLDivElement>(null)
+  const shownIndex = useRef(state.current)
+  useEffect(() => {
+    if (shownIndex.current === state.current) return
+    shownIndex.current = state.current
+    if (isFocusLost()) focusHeading(cardRef.current?.querySelector('h2'))
+  }, [state.current])
+
   if (finished) {
     const answers = getAnswers(state, flaggedIndexes)
     return (
@@ -162,27 +175,30 @@ export function QuizRunner(props: Props) {
           onLeave={leave}
         />
       ) : null}
-      <QuestionCard
-        key={state.current}
-        item={item}
-        selected={getSelected(state)}
-        submitted={submitted}
-        index={state.current}
-        total={state.plan.length}
-        score={getScore(state)}
-        answeredCount={state.answers.length}
-        isLast={state.current === state.plan.length - 1}
-        flagged={flaggedIndexes.includes(state.current)}
-        onToggle={(originalIndex) =>
-          dispatch({ type: 'toggle', originalIndex })
-        }
-        onCheck={() => dispatch({ type: 'check' })}
-        onNext={() => dispatch({ type: 'next' })}
-        onPrevious={
-          canGoBack(state) ? () => dispatch({ type: 'previous' }) : undefined
-        }
-        onFlag={() => toggleFlag(quizId, item.question)}
-      />
+      <div ref={cardRef}>
+        <QuestionCard
+          key={state.current}
+          item={item}
+          selected={getSelected(state)}
+          submitted={submitted}
+          index={state.current}
+          total={state.plan.length}
+          score={getScore(state)}
+          answeredCount={state.answers.length}
+          isLast={state.current === state.plan.length - 1}
+          flagged={flaggedIndexes.includes(state.current)}
+          onToggle={(originalIndex) =>
+            dispatch({ type: 'toggle', originalIndex })
+          }
+          onCheck={() => dispatch({ type: 'check' })}
+          onNext={() => dispatch({ type: 'next' })}
+          onPrevious={
+            canGoBack(state) ? () => dispatch({ type: 'previous' }) : undefined
+          }
+          onFlag={() => toggleFlag(quizId, item.question)}
+          shareQuizId={quizId}
+        />
+      </div>
     </>
   )
 }
