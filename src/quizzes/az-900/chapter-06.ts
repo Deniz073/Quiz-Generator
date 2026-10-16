@@ -267,5 +267,43 @@ export const chapter06: Chapter = {
       explanation:
         'Azure Files is a fully managed file share service that supports industry-standard SMB and NFS. Block-level volumes for VMs are Azure Disks, and Azure Files shares can also be mounted from on-premises machines.',
     },
+    {
+      id: '6-20',
+      question:
+        'Which Blob Storage access tier is meant for rarely accessed data that must still be available online, and has a minimum storage duration of 90 days?',
+      options: ['Hot', 'Cool', 'Cold', 'Archive'],
+      correctIndex: 2,
+      explanation:
+        'Cold sits between Cool (30 days minimum) and Archive (180 days, offline). Unlike Archive, Cold data stays online and can be read immediately without rehydration.',
+    },
+    {
+      id: '6-21',
+      question:
+        'A company wants blobs to move automatically from the Hot to the Cool tier 30 days after they were last modified, and to the Archive tier after 180 days. What should it configure?',
+      options: [
+        'A resource lock on the storage account',
+        'A lifecycle management policy',
+        'A storage account with Archive as its default tier',
+        'Geo-redundant storage (GRS)',
+      ],
+      correctIndex: 1,
+      explanation:
+        'Lifecycle management rules move blobs between tiers, or delete them, based on their age or last access. Archive cannot be set as the default tier of an account, and redundancy options like GRS control where copies are kept, not which tier data is in.',
+    },
+    {
+      id: '6-22',
+      question:
+        'Which three kinds of data can a general-purpose v2 storage account hold? Select three.',
+      options: [
+        'Relational SQL databases',
+        'Blob containers',
+        'Virtual networks',
+        'File shares',
+        'Tables',
+      ],
+      correctIndexes: [1, 3, 4],
+      explanation:
+        'A general-purpose v2 account holds Blob containers, Azure Files shares, Queues and Tables (a NoSQL key-attribute store). Relational databases are a separate service, such as Azure SQL Database.',
+    },
   ],
 }

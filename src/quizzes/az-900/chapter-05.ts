@@ -296,5 +296,75 @@ export const chapter05: Chapter = {
       explanation:
         'VPN Gateway (encrypted tunnels over the internet) and ExpressRoute (private circuit) both connect an on-premises network to Azure. Bastion gives browser-based RDP/SSH access to VMs, and Azure Firewall filters traffic in virtual networks.',
     },
+    {
+      id: '5-22',
+      question:
+        'A company wants to orchestrate many containers at scale with Kubernetes, but does not want to manage the Kubernetes control plane itself. Which service should it use?',
+      options: [
+        'Azure Container Instances',
+        'Azure Kubernetes Service (AKS)',
+        'Azure Virtual Desktop',
+        'Azure Functions',
+      ],
+      correctIndex: 1,
+      explanation:
+        'AKS is a managed Kubernetes service: Azure runs the control plane, and you manage your workloads. Azure Container Instances runs individual containers quickly but does not orchestrate them at scale.',
+    },
+    {
+      id: '5-23',
+      question:
+        'Which two statements about containers compared to virtual machines are correct? Select two.',
+      options: [
+        'Containers share the operating system kernel of the host, which makes them lighter and faster to start than VMs',
+        'Each container needs its own complete guest operating system',
+        'A virtual machine virtualizes hardware and runs its own complete operating system',
+        'Containers can only run on Windows',
+      ],
+      correctIndexes: [0, 2],
+      explanation:
+        'A VM virtualizes hardware and runs a full guest OS, while containers virtualize the OS and share the host kernel, so they are smaller and start in seconds. Containers run on both Linux and Windows.',
+    },
+    {
+      id: '5-24',
+      question:
+        'What is the key difference between availability sets and availability zones?',
+      options: [
+        'Availability sets protect against region-wide outages, while availability zones only protect against reboots',
+        'Availability zones are only for storage accounts, while availability sets are for virtual machines',
+        'Availability sets spread VMs over fault and update domains within a datacenter, while availability zones spread them over physically separate datacenters in a region',
+        'There is no difference; availability zones is the new name for availability sets',
+      ],
+      correctIndex: 2,
+      explanation:
+        'An availability set protects against hardware failures and maintenance within one datacenter; availability zones protect against losing a whole datacenter. Neither protects against a full region outage, for that you use another region.',
+    },
+    {
+      id: '5-25',
+      question:
+        'A company wants to divide a virtual network into separate segments, each with its own address range, so that web servers and databases can get different security rules. What should it create?',
+      options: [
+        'Subnets',
+        'Resource groups',
+        'Virtual network peerings',
+        'Management groups',
+      ],
+      correctIndex: 0,
+      explanation:
+        "Subnets split a virtual network's address space into segments, and you can apply a network security group to each subnet. Peering connects separate virtual networks instead of dividing one.",
+    },
+    {
+      id: '5-26',
+      question:
+        'When you deploy a virtual machine, which two resources are created and attached to it? Select two.',
+      options: [
+        'An Azure Files share',
+        'A network interface (NIC)',
+        'A management group',
+        'An OS disk',
+      ],
+      correctIndexes: [1, 3],
+      explanation:
+        'Every VM needs a network interface to connect to a virtual network and an OS disk (a managed disk) for its operating system. A file share or management group is not part of a VM deployment.',
+    },
   ],
 }

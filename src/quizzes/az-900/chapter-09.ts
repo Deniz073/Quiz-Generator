@@ -125,5 +125,61 @@ export const chapter09: Chapter = {
       explanation:
         'Azure Policy enforces organizational standards and assesses compliance of resources at scale. Granting permissions is the job of Azure RBAC, and cost estimates come from the Pricing calculator.',
     },
+    {
+      id: '9-10',
+      question:
+        'A company wants to discover and classify sensitive data across its on-premises, multicloud and SaaS data sources, and see how data moves between systems (data lineage). Which service should it use?',
+      options: [
+        'Azure Policy',
+        'Microsoft Purview',
+        'Azure Advisor',
+        'Microsoft Entra ID',
+      ],
+      correctIndex: 1,
+      explanation:
+        'Microsoft Purview is a family of data governance, risk and compliance solutions: it maps your data, classifies sensitive information and tracks lineage. Azure Policy enforces rules on the configuration of Azure resources, not on the data inside them.',
+    },
+    {
+      id: '9-11',
+      question:
+        'An organization has fifteen Azure Policy definitions that it wants to assign together as one unit, to track compliance with a standard. What should it use?',
+      options: [
+        'A resource lock',
+        'A management group',
+        'A policy initiative',
+        'An Azure RBAC role',
+      ],
+      correctIndex: 2,
+      explanation:
+        'A policy initiative (also called a policy set) groups related policy definitions so they are assigned and tracked as one. A management group is a scope you can assign the initiative to, not a way to group policies.',
+    },
+    {
+      id: '9-12',
+      question:
+        'A resource is deployed without a required tag. Besides marking it as noncompliant, what can Azure Policy do?',
+      options: [
+        'Delete the resource and charge the cost to the user who deployed it',
+        "Revoke the deploying user's RBAC role",
+        'Move the resource to another subscription',
+        'Remediate it automatically, for example by adding the missing tag',
+      ],
+      correctIndex: 3,
+      explanation:
+        'Azure Policy can remediate noncompliant resources, for example by adding a missing tag or inheriting it from the resource group. It does not change who has access; that is the job of Azure RBAC.',
+    },
+    {
+      id: '9-13',
+      question:
+        'A user with the Owner role tries to delete a resource that has a Delete lock. What happens?',
+      options: [
+        'The deletion succeeds, because the Owner role bypasses locks',
+        'The deletion is blocked; the lock must be removed first',
+        'The resource is moved to a recycle bin for 30 days',
+        'The deletion succeeds after a 24-hour delay',
+      ],
+      correctIndex: 1,
+      explanation:
+        'Locks apply to all users and roles, including Owner. To delete the resource, someone with permission to manage locks must first remove the lock, which is an extra deliberate step that prevents accidents.',
+    },
   ],
 }

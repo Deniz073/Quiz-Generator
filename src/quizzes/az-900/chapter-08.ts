@@ -175,5 +175,74 @@ export const chapter08: Chapter = {
       explanation:
         'A deallocated VM stops incurring compute charges while its disks and data are kept (storage is still billed), and you start it again when needed. Deleting the VM removes it, and resizing still bills compute around the clock.',
     },
+    {
+      id: '8-13',
+      question:
+        'A company runs a set of virtual machines 24/7 with a steady workload that must not be interrupted for the next three years. Which purchase option gives the biggest discount?',
+      options: [
+        'Pay-as-you-go',
+        'Azure Reservations with a one- or three-year term',
+        'Azure Spot Virtual Machines',
+        'An Azure free account',
+      ],
+      correctIndex: 1,
+      explanation:
+        'Reservations give a large discount in exchange for a one- or three-year commitment, which suits steady, always-on workloads. Spot VMs can be cheaper, but Azure can evict them at any moment, so they do not fit workloads that must not be interrupted.',
+    },
+    {
+      id: '8-14',
+      question:
+        'A team runs batch jobs that can be stopped and restarted at any time without problems, and wants the lowest possible compute price. Which option fits best?',
+      options: [
+        'Azure Reservations with a three-year term',
+        'Azure Dedicated Host',
+        'Pay-as-you-go virtual machines',
+        'Azure Spot Virtual Machines',
+      ],
+      correctIndex: 3,
+      explanation:
+        "Spot VMs use Azure's unused capacity at a deep discount, but Azure can evict them when it needs that capacity back. That is fine for interruptible work like batch jobs, while a reservation requires a long commitment that does not suit occasional jobs.",
+    },
+    {
+      id: '8-15',
+      question:
+        'A company already owns Windows Server and SQL Server licenses with Software Assurance. How can it lower the cost of running these workloads in Azure?',
+      options: [
+        'Use Azure Hybrid Benefit to reuse its existing licenses',
+        'Apply a ReadOnly lock to the virtual machines',
+        'Move the virtual machines to a different management group',
+        'Enable geo-redundant storage',
+      ],
+      correctIndex: 0,
+      explanation:
+        "Azure Hybrid Benefit lets you bring eligible on-premises Windows Server and SQL Server licenses to Azure, so you don't pay for those licenses again. Locks and management groups govern resources but don't change their price.",
+    },
+    {
+      id: '8-16',
+      question: 'How is network data transfer generally billed in Azure?',
+      options: [
+        'Both inbound and outbound data transfer are always free',
+        'Inbound data is charged, while outbound data is free',
+        'Inbound data (ingress) is generally free, while outbound data (egress) is charged',
+        'Data transfer is only charged between resources in the same virtual network',
+      ],
+      correctIndex: 2,
+      explanation:
+        'Data going into Azure is generally free, but data leaving Azure, to the internet or between regions, is billed. That makes egress a cost factor alongside resource type, usage and region.',
+    },
+    {
+      id: '8-17',
+      question:
+        'You set a monthly budget in Azure Cost Management, and spending passes 100% of it. What happens by default?',
+      options: [
+        'Azure deallocates all resources in the scope of the budget',
+        'Azure deletes the most expensive resources first',
+        'An alert is sent, but the resources keep running',
+        'The subscription is converted to a free account',
+      ],
+      correctIndex: 2,
+      explanation:
+        'Budgets send alerts when thresholds are reached; they do not stop resources on their own. To act automatically, you can connect the budget to an action group that, for example, runs automation to shut down VMs.',
+    },
   ],
 }

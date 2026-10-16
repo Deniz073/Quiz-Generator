@@ -294,5 +294,14 @@ export const chapter07: Chapter = {
       explanation:
         'Defense in depth uses several layers of protection so that if one layer is breached, the next one still protects the data. The other options describe Azure Advisor, Azure Policy and resource tagging.',
     },
+    {
+      id: '7-22',
+      question:
+        'Which layer is at the center of the defense-in-depth model, the one that all other layers ultimately protect?',
+      options: ['Perimeter', 'Network', 'Data', 'Physical security'],
+      correctIndex: 2,
+      explanation:
+        'Defense in depth wraps layers around the data: physical security, identity and access, perimeter, network, compute, application and finally data. Physical security is the outermost layer, not the center.',
+    },
   ],
 }
