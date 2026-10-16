@@ -1,12 +1,18 @@
 import { useEffect, useId, useRef } from 'react'
 import type { PlannedQuestion } from '#/lib/quiz-plan'
-import { buttonClasses } from '#/lib/button-classes'
+import {
+  buttonClasses,
+  questionToolClasses,
+  questionToolIdleClasses,
+} from '#/lib/button-classes'
 import { describeOptionKeys, getOptionLetter } from '#/lib/option-keys'
 import { getOptionState } from '#/lib/option-state'
+import { questionPath } from '#/lib/share'
 import { getCorrectIndexes, isMultipleAnswer } from '#/quizzes/question'
 import { Feedback } from '#/components/Feedback'
 import { OptionButton } from '#/components/OptionButton'
 import { ProgressHeader } from '#/components/ProgressHeader'
+import { ShareButton } from '#/components/ShareButton'
 
 export const tipClasses =
   'hidden text-xs text-slate-600 dark:text-slate-400 sm:block'
@@ -26,6 +32,8 @@ interface BodyProps {
   /** Practice single answer: locks the answer. Otherwise: toggles/replaces the pick. */
   onToggle: (originalIndex: number) => void
   onFlag: () => void
+  /** Shows a "Share" button linking to this question. Omit in the mock exam. */
+  shareQuizId?: string
 }
 
 /** Question text, flag button and options. Shared by practice and the exam. */
@@ -37,6 +45,7 @@ export function QuestionBody({
   flagged,
   onToggle,
   onFlag,
+  shareQuizId,
 }: BodyProps) {
   const { question, optionOrder } = item
   const multiple = isMultipleAnswer(question)
@@ -51,25 +60,33 @@ export function QuestionBody({
         <h2 className="text-xl font-semibold leading-snug sm:text-2xl">
           {question.question}
         </h2>
-        <button
-          type="button"
-          aria-pressed={flagged}
-          onClick={onFlag}
-          // Enter is the global "check / next" hotkey; keep it from hijacking
-          // this button so keyboard users can still toggle it with Enter.
-          onKeyDown={(event) => {
-            if (event.key === 'Enter') event.stopPropagation()
-          }}
-          className={`self-start rounded-md border px-3 py-2 text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500 sm:shrink-0 ${
-            flagged
-              ? 'border-amber-500 bg-amber-100 text-amber-900 dark:border-amber-500 dark:bg-amber-950 dark:text-amber-100'
-              : 'border-slate-300 text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800'
-          }`}
-        >
-          {/* The flag mark makes the state visible without relying on colour. */}
-          {flagged ? <span aria-hidden="true">&#9873; </span> : null}
-          Flag for review
-        </button>
+        <div className="flex items-start gap-2 self-start sm:shrink-0">
+          <button
+            type="button"
+            aria-pressed={flagged}
+            onClick={onFlag}
+            // Enter is the global "check / next" hotkey; keep it from hijacking
+            // this button so keyboard users can still toggle it with Enter.
+            onKeyDown={(event) => {
+              if (event.key === 'Enter') event.stopPropagation()
+            }}
+            className={`${questionToolClasses} ${
+              flagged
+                ? 'border-amber-500 bg-amber-100 text-amber-900 dark:border-amber-500 dark:bg-amber-950 dark:text-amber-100'
+                : questionToolIdleClasses
+            }`}
+          >
+            {/* The flag mark makes the state visible without relying on colour. */}
+            {flagged ? <span aria-hidden="true">&#9873; </span> : null}
+            Flag for review
+          </button>
+          {shareQuizId ? (
+            <ShareButton
+              path={questionPath(shareQuizId, question.id)}
+              text={question.question}
+            />
+          ) : null}
+        </div>
       </div>
 
       {multiple ? (
@@ -134,7 +151,7 @@ interface Props extends Omit<BodyProps, 'changeable'> {
  * unless the user prefers reduced motion. The element's `scroll-margin` keeps
  * it off the edge.
  */
-function scrollIntoViewIfNeeded(element: HTMLElement) {
+export function scrollIntoViewIfNeeded(element: HTMLElement) {
   const reduceMotion = window.matchMedia(
     '(prefers-reduced-motion: reduce)',
   ).matches
@@ -160,6 +177,7 @@ export function QuestionCard({
   onNext,
   onPrevious,
   onFlag,
+  shareQuizId,
 }: Props) {
   const { question, optionOrder } = item
   const multiple = isMultipleAnswer(question)
@@ -221,6 +239,7 @@ export function QuestionCard({
         flagged={flagged}
         onToggle={onToggle}
         onFlag={onFlag}
+        shareQuizId={shareQuizId}
       />
 
       <div aria-live="polite">

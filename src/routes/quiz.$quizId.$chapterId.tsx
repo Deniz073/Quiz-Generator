@@ -3,6 +3,7 @@ import { NotFound } from '#/components/NotFound'
 import { QuizPageHeader } from '#/components/QuizPageHeader'
 import { QuizRunner } from '#/components/QuizRunner'
 import { formatChapter } from '#/lib/chapter-label'
+import { pageTitle } from '#/lib/page-title'
 import { buildShuffledPlan } from '#/lib/quiz-plan'
 import { requireChapter } from '#/lib/quiz-route'
 
@@ -12,6 +13,15 @@ export const Route = createFileRoute('/quiz/$quizId/$chapterId')({
   // still runs on the server, so unknown ids get a real 404.
   ssr: 'data-only',
   loader: ({ params }) => requireChapter(params.quizId, params.chapterId),
+  head: ({ loaderData }) => ({
+    meta: [
+      {
+        title: loaderData
+          ? pageTitle(formatChapter(loaderData.chapter), loaderData.quiz.title)
+          : pageTitle(),
+      },
+    ],
+  }),
   component: ChapterPage,
   notFoundComponent: () => <NotFound message="Chapter not found." />,
 })

@@ -5,6 +5,7 @@ import { QuizPageHeader } from '#/components/QuizPageHeader'
 import { buttonClasses } from '#/lib/button-classes'
 import { formatChapter } from '#/lib/chapter-label'
 import { getFlaggedQuestions } from '#/lib/flags'
+import { pageTitle } from '#/lib/page-title'
 import { requireQuiz } from '#/lib/quiz-route'
 import { useFlags } from '#/lib/use-flags'
 import { getCorrectIndexes } from '#/quizzes/question'
@@ -13,6 +14,9 @@ import { getCorrectIndexes } from '#/quizzes/question'
 // /quiz/<id>/flagged/review, but that route renders on its own.
 export const Route = createFileRoute('/quiz/$quizId/flagged_/review')({
   loader: ({ params }) => requireQuiz(params.quizId),
+  head: ({ loaderData }) => ({
+    meta: [{ title: pageTitle('Review flagged questions', loaderData?.title) }],
+  }),
   component: FlaggedReviewPage,
   notFoundComponent: () => <NotFound message="Quiz not found." />,
 })

@@ -1,18 +1,22 @@
+import { useEffect } from 'react'
 import {
   HeadContent,
   Link,
   Scripts,
   createRootRoute,
+  useRouter,
 } from '@tanstack/react-router'
 import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
 import { TanStackDevtools } from '@tanstack/react-devtools'
 
 import { NotFound } from '#/components/NotFound'
 import { ThemeToggle } from '#/components/ThemeToggle'
+import { focusHeading } from '#/lib/focus'
+import { SITE_TITLE } from '#/lib/page-title'
 import { THEME_COLORS, THEME_INIT_SCRIPT } from '#/lib/theme'
 import appCss from '../styles.css?url'
 
-const TITLE = 'Quiz Generator'
+const TITLE = SITE_TITLE
 const DESCRIPTION =
   'Practice quizzes chapter by chapter, study with explanations, or take a timed mock exam.'
 
@@ -60,7 +64,30 @@ export const Route = createRootRoute({
   notFoundComponent: () => <NotFound />,
 })
 
+/**
+ * After a client-side navigation to another page, move focus to its <h1>, as a
+ * full page load would start reading there. Otherwise focus stays on the
+ * clicked link (or drops to <body> once it unmounts) and screen readers don't
+ * notice the new page. Not on the first load, not when only the search changes
+ * (e.g. the study page's chapter select), and not when the page already put
+ * focus somewhere in <main> itself.
+ */
+function useFocusPageHeading() {
+  const router = useRouter()
+  useEffect(
+    () =>
+      router.subscribe('onRendered', ({ fromLocation, pathChanged }) => {
+        if (!fromLocation || !pathChanged) return
+        const main = document.getElementById('main')
+        if (!main || main.contains(document.activeElement)) return
+        focusHeading(main.querySelector('h1'))
+      }),
+    [router],
+  )
+}
+
 function RootDocument({ children }: { children: React.ReactNode }) {
+  useFocusPageHeading()
   return (
     // The theme script adds a class to <html> before React hydrates.
     <html lang="en" suppressHydrationWarning>
@@ -81,7 +108,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
       <body className="bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100">
         <a
           href="#main"
-          className="sr-only rounded-md bg-sky-600 px-4 py-2 font-medium text-white focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-20"
+          className="sr-only rounded-md bg-sky-700 px-4 py-2 font-medium text-white focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-20"
         >
           Skip to main content
         </a>

@@ -3,6 +3,7 @@ import { NotFound } from '#/components/NotFound'
 import { QuizPageHeader } from '#/components/QuizPageHeader'
 import { QuizRunner } from '#/components/QuizRunner'
 import { buildQuizPlan } from '#/lib/quiz-plan'
+import { pageTitle } from '#/lib/page-title'
 import { requireQuiz } from '#/lib/quiz-route'
 
 // Numbers, not '20': the router parses search values as JSON, so `?count=20`
@@ -25,6 +26,9 @@ export const Route = createFileRoute('/quiz/$quizId/practice')({
   // chapter route. The loader still runs on the server for a real 404.
   ssr: 'data-only',
   loader: ({ params }) => requireQuiz(params.quizId),
+  head: ({ loaderData }) => ({
+    meta: [{ title: pageTitle('Mixed practice', loaderData?.title) }],
+  }),
   component: PracticePage,
   notFoundComponent: () => <NotFound message="Quiz not found." />,
 })

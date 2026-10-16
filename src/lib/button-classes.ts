@@ -3,7 +3,7 @@ const base =
 
 const variants = {
   primary:
-    'bg-sky-600 text-white hover:bg-sky-700 active:bg-sky-800 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-sky-600',
+    'bg-sky-700 text-white hover:bg-sky-800 active:bg-sky-900 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-sky-700',
   secondary:
     'border border-slate-300 hover:bg-slate-100 active:bg-slate-200 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-transparent dark:border-slate-700 dark:hover:bg-slate-800 dark:active:bg-slate-700',
 }
@@ -16,3 +16,11 @@ export function buttonClasses(variant: keyof typeof variants) {
 /** "← Quiz title" link above a page heading. Padding grows the tap target without moving the layout. */
 export const backLinkClasses =
   '-my-2 inline-block rounded-sm py-2 text-sm text-sky-700 hover:underline dark:text-sky-400'
+
+/** Small outlined button beside a question, e.g. "Flag for review" or "Share". */
+export const questionToolClasses =
+  'rounded-md border px-3 py-2 text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500'
+
+/** Colours of a `questionToolClasses` button in its normal (not pressed) state. */
+export const questionToolIdleClasses =
+  'border-slate-300 text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800'

@@ -3,6 +3,7 @@ import { NotFound } from '#/components/NotFound'
 import { backLinkClasses } from '#/lib/button-classes'
 import { getFlaggedQuestions } from '#/lib/flags'
 import { formatChapter } from '#/lib/chapter-label'
+import { pageTitle } from '#/lib/page-title'
 import { formatResult } from '#/lib/progress'
 import { requireQuiz } from '#/lib/quiz-route'
 import { useFlags, useMigrateLegacyFlags } from '#/lib/use-flags'
@@ -14,6 +15,9 @@ const cardLinkClasses =
 
 export const Route = createFileRoute('/quiz/$quizId/')({
   loader: ({ params }) => requireQuiz(params.quizId),
+  head: ({ loaderData }) => ({
+    meta: [{ title: pageTitle(loaderData?.title) }],
+  }),
   component: QuizPage,
   notFoundComponent: () => <NotFound message="Quiz not found." />,
 })
