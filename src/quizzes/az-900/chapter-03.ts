@@ -158,5 +158,18 @@ export const chapter03: Chapter = {
       explanation:
         'Virtual networks are core infrastructure building blocks, like virtual machines and storage, so they are IaaS. PaaS and SaaS sit on top of the infrastructure and hide it from the customer.',
     },
+    {
+      id: '3-13',
+      question: 'Which statement describes serverless computing?',
+      options: [
+        'You rent a dedicated physical server that only your organization uses',
+        "Your code runs without any servers at all, directly on the user's device",
+        'You manage the operating system, while the provider manages the application',
+        'You run code without managing servers; the provider scales it automatically and you pay only when the code runs',
+      ],
+      correctIndex: 3,
+      explanation:
+        'Serverless still runs on servers, but the provider manages them completely: it allocates and scales capacity and bills per execution. Azure Functions is a typical example.',
+    },
   ],
 }

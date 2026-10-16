@@ -145,5 +145,75 @@ export const chapter11: Chapter = {
       explanation:
         'Azure Monitor collects metric and log data such as CPU percentage, and autoscale rules use these metrics as thresholds to scale out or in. Advisor only gives recommendations and Service Health reports platform incidents.',
     },
+    {
+      id: '11-11',
+      question:
+        'Which Azure Monitor tool do you use to write and run queries on collected log data with the Kusto Query Language (KQL)?',
+      options: [
+        'Azure Advisor',
+        'Azure Service Health',
+        'Azure Cost Management',
+        'Log Analytics',
+      ],
+      correctIndex: 3,
+      explanation:
+        'Log Analytics is the Azure Monitor tool for writing and running KQL queries on log data, interactively or as the basis for alerts and workbooks. Service Health reports Azure platform issues and does not query your logs.',
+    },
+    {
+      id: '11-12',
+      question:
+        "A team wants to monitor a web application's request rates, response times, failure rates and page views, also for an app hosted outside Azure. Which Azure Monitor feature is designed for this?",
+      options: [
+        'Azure Resource Health',
+        'Application Insights',
+        'Azure Advisor',
+        'Microsoft Defender for Cloud',
+      ],
+      correctIndex: 1,
+      explanation:
+        'Application Insights is the application performance monitoring (APM) feature of Azure Monitor. It tracks requests, dependencies, exceptions and page views for apps in Azure, on-premises or in another cloud.',
+    },
+    {
+      id: '11-13',
+      question:
+        "An Azure Monitor alert fires when a VM's CPU usage stays above 90%. What defines who is notified and which actions run, such as sending an email or SMS or starting an automation?",
+      options: [
+        'A resource lock',
+        'A policy initiative',
+        'An action group',
+        'A management group',
+      ],
+      correctIndex: 2,
+      explanation:
+        'An action group is a reusable set of notifications (email, SMS, push, voice) and actions (such as a function, logic app or webhook) that alerts trigger. The alert rule decides when to fire; the action group decides what happens.',
+    },
+    {
+      id: '11-14',
+      question:
+        'Azure Service Health combines three views. Which one gives a global overview of the state of all Azure services in all regions, not only the ones you use?',
+      options: [
+        'Azure status',
+        'Service health',
+        'Resource Health',
+        'Azure Monitor metrics',
+      ],
+      correctIndex: 0,
+      explanation:
+        'Azure status is the broad, public view of Azure service health across all regions. Service health narrows this down to the services and regions you use, and Resource Health covers your individual resources, such as a specific VM.',
+    },
+    {
+      id: '11-15',
+      question:
+        'Which statement about the data sources of Azure Monitor is correct?',
+      options: [
+        'It collects data only from resources running in Azure',
+        'It can collect metrics and logs from Azure resources as well as from on-premises servers and other clouds',
+        'It collects data, but the data must be exported to a third-party tool before it can be analyzed',
+        'It only monitors the health of the Azure platform itself, not your resources',
+      ],
+      correctIndex: 1,
+      explanation:
+        'Azure Monitor collects, analyzes and acts on telemetry from Azure, on-premises and multicloud environments. Platform health is covered by Service Health, and you analyze the data in Azure Monitor itself, for example with Log Analytics.',
+    },
   ],
 }

@@ -269,5 +269,27 @@ export const chapter04: Chapter = {
       explanation:
         'Availability zones are used by resources that run on infrastructure, such as virtual machines, managed disks, load balancers and SQL databases. Subscriptions and resource groups are organizational constructs with no physical placement.',
     },
+    {
+      id: '4-20',
+      question: 'What are Azure sovereign regions, such as Azure Government?',
+      options: [
+        "Regions reserved for Microsoft's own internal workloads",
+        'Instances of Azure that are physically and logically isolated from the main public cloud, for legal or compliance needs such as those of government agencies',
+        'Regions that are paired with every other region in the world',
+        'Regions without availability zones that are meant only for testing',
+      ],
+      correctIndex: 1,
+      explanation:
+        'Sovereign regions are isolated instances of Azure, for example Azure Government for US government agencies and a separate Azure instance in China operated by a local partner. They serve customers with specific compliance or legal requirements, not Microsoft itself.',
+    },
+    {
+      id: '4-21',
+      question:
+        'What is the minimum number of availability zones in an Azure region that supports availability zones?',
+      options: ['One', 'Two', 'Three', 'Six'],
+      correctIndex: 2,
+      explanation:
+        'Regions that support availability zones have at least three separate zones, so a zone-redundant service can survive the loss of one zone. Not every region supports availability zones.',
+    },
   ],
 }

@@ -180,5 +180,33 @@ export const chapter01: Chapter = {
       explanation:
         'OpEx is the cost of services or products paid for over time, such as consumption-based Azure VMs and storage. Servers, switches and racks are tangible, upfront purchases, which makes them capital expenditure (CapEx).',
     },
+    {
+      id: '1-14',
+      question:
+        'Azure holds an ISO 27001 certification, and a company runs its workloads on Azure. What does this mean for the compliance of the company itself?',
+      options: [
+        'The company is automatically ISO 27001 certified because Azure is',
+        "The company can rely on Azure's certification for the platform, but must still make its own workloads, data and processes compliant",
+        'The certification only applies to companies that use Azure in the country where it was issued',
+        "Microsoft takes over full responsibility for the company's compliance once its workloads run in Azure",
+      ],
+      correctIndex: 1,
+      explanation:
+        "Azure's certifications cover the infrastructure Microsoft manages. Under the shared responsibility model the customer still owns how it configures resources and handles its data, so it needs its own compliance work and audit.",
+    },
+    {
+      id: '1-15',
+      question:
+        'Compared to the public cloud, what is a main disadvantage of a private cloud?',
+      options: [
+        'Resources are shared with other organizations',
+        'The organization has less control over security and compliance',
+        'The organization must buy and maintain its own hardware, which means higher upfront costs and slower scaling',
+        'It cannot be connected to the internet',
+      ],
+      correctIndex: 2,
+      explanation:
+        'A private cloud gives the most control, but the organization pays for and maintains the hardware (CapEx) and must buy more to scale. Sharing resources with other tenants is a trait of the public cloud, not the private cloud.',
+    },
   ],
 }

@@ -236,5 +236,42 @@ export const chapter02: Chapter = {
       explanation:
         'Geo-distribution means deploying apps and data to datacenters in multiple regions, close to your users. High availability is about staying up during failures, and disaster recovery is about protecting data and code after a disaster.',
     },
+    {
+      id: '2-18',
+      question:
+        'What is the main difference between high availability and disaster recovery?',
+      options: [
+        'High availability only applies to storage, disaster recovery only to virtual machines',
+        'High availability keeps a service running through component or datacenter failures with minimal downtime; disaster recovery restores the service after a major outage, for example in another region',
+        "High availability is the customer's responsibility, while disaster recovery is always handled automatically by Microsoft",
+        'They are two names for the same thing',
+      ],
+      correctIndex: 1,
+      explanation:
+        'High availability minimizes downtime from everyday failures, for example by spreading resources over availability zones. Disaster recovery is the plan to recover after a large-scale outage, such as replicating to another region; it is not something Microsoft does for you automatically.',
+    },
+    {
+      id: '2-19',
+      question:
+        'An Azure service has an SLA of 99.9% uptime. Roughly how much downtime per year does that allow?',
+      options: [
+        'About 52 minutes',
+        'About 8.8 hours',
+        'About 3.7 days',
+        'About 26 seconds',
+      ],
+      correctIndex: 1,
+      explanation:
+        '0.1% of the 8,760 hours in a year is about 8.8 hours (around 44 minutes per month). About 52 minutes per year corresponds to an SLA of 99.99%.',
+    },
+    {
+      id: '2-20',
+      question:
+        'An application depends on a web app with a 99.95% SLA and a database with a 99.99% SLA, and it fails if either one is down. What is the composite SLA of the application?',
+      options: ['99.99%', '99.95%', 'About 99.94%', '99.97%'],
+      correctIndex: 2,
+      explanation:
+        'For services that must all be available, you multiply their SLAs: 99.95% x 99.99% is about 99.94%. A composite SLA is always lower than the lowest individual SLA, because each dependency adds a chance of failure.',
+    },
   ],
 }

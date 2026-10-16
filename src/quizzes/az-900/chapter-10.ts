@@ -185,5 +185,45 @@ export const chapter10: Chapter = {
       explanation:
         'The portal is a GUI for creating, configuring and viewing resources, and Microsoft Entra users can be created there too. The availability zone is chosen when a VM is created and cannot be changed in place, and Azure RBAC role assignments grant access, they do not deny it.',
     },
+    {
+      id: '10-14',
+      question: 'What is infrastructure as code (IaC)?',
+      options: [
+        'Writing application code that runs on IaaS virtual machines',
+        'Defining and deploying infrastructure through code files, such as ARM templates or Bicep, instead of configuring it manually',
+        'Automatically generating documentation from deployed resources',
+        'A pricing model where you pay per line of deployed code',
+      ],
+      correctIndex: 1,
+      explanation:
+        'With IaC you describe your infrastructure in files that you can version, review and redeploy, which makes deployments repeatable and consistent. It is about provisioning infrastructure, not about the application running on it.',
+    },
+    {
+      id: '10-15',
+      question: 'How does Bicep relate to ARM templates?',
+      options: [
+        'Bicep is a separate deployment service that replaces Azure Resource Manager',
+        'Bicep can only deploy virtual machines',
+        'Bicep is a language with a simpler syntax that is converted to an ARM template (JSON) before deployment',
+        'Bicep files are imperative scripts, while ARM templates are declarative',
+      ],
+      correctIndex: 2,
+      explanation:
+        'Bicep is a declarative language for Azure resources with a cleaner syntax than JSON. It is compiled into an ARM template, so deployments still go through Azure Resource Manager.',
+    },
+    {
+      id: '10-16',
+      question:
+        'You deploy the same ARM template to the same resource group several times. What happens?',
+      options: [
+        'Each deployment creates an extra copy of every resource',
+        'The resources end up in the same declared state each time, without duplicates',
+        'The second deployment fails because the resources already exist',
+        'The existing resources are deleted and recreated with new IDs',
+      ],
+      correctIndex: 1,
+      explanation:
+        'ARM templates are idempotent: deploying the same template again gives the same result, so existing resources are kept in, or brought back to, the declared state instead of being duplicated.',
+    },
   ],
 }
