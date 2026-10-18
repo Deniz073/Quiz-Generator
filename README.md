@@ -1,5 +1,8 @@
 # Quiz Generator
 
+[![CI](https://github.com/Deniz073/Quiz-Generator/actions/workflows/ci.yml/badge.svg)](https://github.com/Deniz073/Quiz-Generator/actions/workflows/ci.yml)
+[![Dependabot](https://img.shields.io/badge/dependabot-enabled-025E8C?logo=dependabot&logoColor=white)](.github/dependabot.yml)
+
 A small multiple-choice quiz app (TanStack Start, React 19, Vite, TypeScript). Quizzes are plain
 TypeScript data, split into chapters, with single- and multi-answer questions, explanations and
 a results screen. Ships with three quizzes in `src/quizzes/`: AZ-900, PSM I and PSPO I.
