@@ -96,3 +96,16 @@ Includes a `vercel.json`; import the repo in Vercel and deploy (Nitro output).
 
 Set `VITE_SITE_URL` (e.g. `https://quiz.example.com`) as a build-time env var so
 the `og:image` link preview URL is absolute; without it the tag stays relative.
+
+### Docker
+
+```bash
+docker build --build-arg VITE_SITE_URL=https://quiz.example.com -t quiz-generator .
+docker run -d -p 3000:3000 quiz-generator
+```
+
+Multi-stage build; the final image only holds the Nitro output and runs as the
+unprivileged `node` user. `PORT` (default `3000`) and `HOST` are read at runtime.
+
+Optional extra hardening: add `--read-only --tmpfs /tmp --cap-drop ALL --security-opt no-new-privileges`
+to `docker run`.
