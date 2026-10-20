@@ -1,4 +1,7 @@
 import { Link, createFileRoute } from '@tanstack/react-router'
+import type { Result } from '#/lib/progress'
+import type { ExamConfig, Quiz } from '#/quizzes/types'
+import { ExamSettings } from '#/components/ExamSettings'
 import { NotFound } from '#/components/NotFound'
 import { backLinkClasses } from '#/lib/button-classes'
 import { getFlaggedQuestions } from '#/lib/flags'
@@ -6,6 +9,7 @@ import { formatChapter } from '#/lib/chapter-label'
 import { pageTitle } from '#/lib/page-title'
 import { formatResult } from '#/lib/progress'
 import { requireQuiz } from '#/lib/quiz-route'
+import { useExamConfig } from '#/lib/use-exam-settings'
 import { useFlags, useMigrateLegacyFlags } from '#/lib/use-flags'
 import { useQuizProgress } from '#/lib/use-progress'
 import { countQuestions } from '#/quizzes'
@@ -175,28 +179,49 @@ function QuizPage() {
         </section>
 
         {quiz.exam ? (
-          <section>
-            <h2 className="text-lg font-semibold">Mock exam</h2>
-            <Link
-              to="/quiz/$quizId/exam"
-              params={{ quizId: quiz.id }}
-              className={`mt-3 block ${cardLinkClasses}`}
-            >
-              <span className="font-medium">Start mock exam</span>
-              <span className="mt-0.5 block text-sm text-slate-600 dark:text-slate-400">
-                {quiz.exam.questionCount}&nbsp;questions &middot;{' '}
-                {quiz.exam.minutes}&nbsp;minutes &middot; pass mark{' '}
-                {quiz.exam.passPercent}%
-              </span>
-              {progress?.exam ? (
-                <span className="mt-0.5 block text-sm text-slate-600 dark:text-slate-400">
-                  {formatResult(progress.exam)}
-                </span>
-              ) : null}
-            </Link>
-          </section>
+          <MockExamSection
+            quiz={quiz}
+            defaults={quiz.exam}
+            result={progress?.exam}
+          />
         ) : null}
       </div>
     </div>
+  )
+}
+
+function MockExamSection({
+  quiz,
+  defaults,
+  result,
+}: {
+  quiz: Quiz
+  defaults: ExamConfig
+  result: Result | undefined
+}) {
+  // Defaults on the server and during hydration, then the user's own settings.
+  const config = useExamConfig(quiz, defaults)
+
+  return (
+    <section>
+      <h2 className="text-lg font-semibold">Mock exam</h2>
+      <Link
+        to="/quiz/$quizId/exam"
+        params={{ quizId: quiz.id }}
+        className={`mt-3 block ${cardLinkClasses}`}
+      >
+        <span className="font-medium">Start mock exam</span>
+        <span className="mt-0.5 block text-sm text-slate-600 dark:text-slate-400">
+          {config.questionCount}&nbsp;questions &middot; {config.minutes}
+          &nbsp;minutes &middot; pass mark {config.passPercent}%
+        </span>
+        {result ? (
+          <span className="mt-0.5 block text-sm text-slate-600 dark:text-slate-400">
+            {formatResult(result)}
+          </span>
+        ) : null}
+      </Link>
+      <ExamSettings quiz={quiz} defaults={defaults} config={config} />
+    </section>
   )
 }

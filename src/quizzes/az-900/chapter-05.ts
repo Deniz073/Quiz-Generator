@@ -366,5 +366,33 @@ export const chapter05: Chapter = {
       explanation:
         'Every VM needs a network interface to connect to a virtual network and an OS disk (a managed disk) for its operating system. A file share or management group is not part of a VM deployment.',
     },
+    {
+      id: '5-27',
+      question:
+        'Administrators need RDP and SSH access to Azure virtual machines through the Azure portal over TLS, without giving the virtual machines a public IP address. Which service should they use?',
+      options: [
+        'Azure VPN Gateway',
+        'A network security group',
+        'Azure Bastion',
+        'Azure ExpressRoute',
+      ],
+      correctIndex: 2,
+      explanation:
+        'Azure Bastion provides secure RDP/SSH from the portal over TLS, so VMs need no public IP. A VPN gateway connects networks or devices to the virtual network, and an NSG only filters traffic.',
+    },
+    {
+      id: '5-28',
+      question:
+        'Which statement about the scope of an Azure virtual network is correct?',
+      options: [
+        'A virtual network automatically spans all regions in its geography',
+        'A virtual network is scoped to a single region; to connect virtual networks in different regions you use peering',
+        'A virtual network must be in the same region as every resource group in the subscription',
+        'A virtual network can only contain one subnet per region',
+      ],
+      correctIndex: 1,
+      explanation:
+        'A virtual network lives in one region and one subscription. Virtual networks in other regions are connected with (global) virtual network peering, not by stretching one network across regions.',
+    },
   ],
 }

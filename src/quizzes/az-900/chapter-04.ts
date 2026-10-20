@@ -291,5 +291,42 @@ export const chapter04: Chapter = {
       explanation:
         'Regions that support availability zones have at least three separate zones, so a zone-redundant service can survive the loss of one zone. Not every region supports availability zones.',
     },
+    {
+      id: '4-22',
+      question:
+        'Which statement about the relationship between Azure subscriptions and Microsoft Entra tenants is correct?',
+      options: [
+        'A subscription can trust several tenants at the same time',
+        'A tenant can be linked to only one subscription',
+        'Subscriptions and tenants are not related',
+        'A subscription trusts exactly one tenant, while a tenant can be trusted by multiple subscriptions',
+      ],
+      correctIndex: 3,
+      explanation:
+        'Each subscription trusts a single Microsoft Entra tenant to authenticate its users, but one tenant can serve many subscriptions. That is why one organization can have many subscriptions under the same directory.',
+    },
+    {
+      id: '4-23',
+      question:
+        'A resource group has the tag Department=HR. A new storage account is then created in that resource group. What happens to the tag by default?',
+      options: [
+        'The storage account does not get the tag; tags are not inherited from the resource group',
+        'The storage account automatically gets the Department=HR tag',
+        'The storage account gets the tag, but only after the next billing cycle',
+        'The storage account cannot be created until it has the same tags as its resource group',
+      ],
+      correctIndex: 0,
+      explanation:
+        'Resources do not inherit tags from their resource group or subscription; Azure Policy can add or inherit them automatically. RBAC assignments, policies and locks, by contrast, are inherited by child scopes.',
+    },
+    {
+      id: '4-24',
+      question:
+        'How many levels deep can a management group hierarchy be, not counting the root level or the subscription level?',
+      options: ['3 levels', '6 levels', '10 levels', 'There is no limit'],
+      correctIndex: 1,
+      explanation:
+        'A management group tree supports up to six levels of depth, excluding the root level and the subscription level. Each management group and subscription can have only one parent.',
+    },
   ],
 }

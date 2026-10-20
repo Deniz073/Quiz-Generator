@@ -45,7 +45,7 @@ export function DataBackup() {
     }
     if (
       !window.confirm(
-        'Replace the progress and flags saved in this browser with the backup?',
+        'Replace the progress, flags and exam settings saved in this browser with the backup?',
       )
     ) {
       return
@@ -67,8 +67,9 @@ export function DataBackup() {
     <section className="mt-12 border-t border-slate-200 pt-6 dark:border-slate-800">
       <h2 className="text-lg font-semibold">Your data</h2>
       <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
-        Progress and flagged questions are saved in this browser only. Export
-        them to a file to keep a backup or move them to another browser.
+        Progress, flagged questions and exam settings are saved in this browser
+        only. Export them to a file to keep a backup or move them to another
+        browser.
       </p>
       <div className="mt-3 flex flex-wrap gap-3">
         <button

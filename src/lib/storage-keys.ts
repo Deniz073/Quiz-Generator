@@ -14,6 +14,8 @@ export const STORAGE_KEYS = {
   flags: `${PREFIX}flags:v2`,
   /** ./flags, read once per quiz to fill in a missing v2 entry. */
   flagsLegacy: `${PREFIX}flags:v1`,
+  /** ./exam-settings */
+  examSettings: `${PREFIX}exam-settings:v1`,
   /** ./theme (a bare 'light' or 'dark', not JSON) */
   theme: `${PREFIX}theme:v1`,
 } as const

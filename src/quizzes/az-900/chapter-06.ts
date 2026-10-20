@@ -305,5 +305,28 @@ export const chapter06: Chapter = {
       explanation:
         'A general-purpose v2 account holds Blob containers, Azure Files shares, Queues and Tables (a NoSQL key-attribute store). Relational databases are a separate service, such as Azure SQL Database.',
     },
+    {
+      id: '6-23',
+      question:
+        'An application needs consistently low-latency storage backed by SSDs. Which storage account performance tier fits, and what is a limitation of it?',
+      options: [
+        'Standard; it does not support Blob Storage',
+        'Standard; it only supports the Archive access tier',
+        'Premium; it supports every redundancy option, including GRS',
+        'Premium; it supports only locally redundant (LRS) or zone-redundant (ZRS) storage',
+      ],
+      correctIndex: 3,
+      explanation:
+        'Premium storage accounts use SSDs for low latency but only offer LRS or ZRS redundancy. Standard general-purpose v2 accounts support all redundancy options, including the geo-redundant ones.',
+    },
+    {
+      id: '6-24',
+      question:
+        'Which two access tiers can you set as the default access tier of a general-purpose v2 storage account? Select two.',
+      options: ['Hot', 'Cool', 'Archive', 'Premium'],
+      correctIndexes: [0, 1],
+      explanation:
+        'Hot and Cool can be set as the account-level default. Archive can only be set on individual blobs, and Premium is a performance tier of the storage account, not an access tier.',
+    },
   ],
 }

@@ -6,6 +6,7 @@ import {
   persistExam,
   resumeOrStart,
 } from '#/lib/exam-lifecycle'
+import { readExamConfig } from '#/lib/exam-settings'
 import { useCountdown } from '#/lib/use-countdown'
 
 /**
@@ -16,9 +17,13 @@ import { useCountdown } from '#/lib/use-countdown'
  *
  * `phase` is 'choosing' while a saved exam with time left waits for
  * `resume` or `discard`; the clock and storage are untouched until then.
+ *
+ * `defaults` are the quiz's exam settings; every new exam reads the user's
+ * adjustments on top of them when it starts. A resumed exam keeps its own.
  */
-export function useExam(quiz: Quiz, exam: ExamConfig) {
-  const [start] = useState(() => resumeOrStart(quiz, exam))
+export function useExam(quiz: Quiz, defaults: ExamConfig) {
+  const config = () => readExamConfig(quiz, defaults)
+  const [start] = useState(() => resumeOrStart(quiz, config()))
   const [state, dispatch] = useReducer(examReducer, start.state)
   const [choosing, setChoosing] = useState(start.kind === 'prompt')
 
@@ -42,10 +47,11 @@ export function useExam(quiz: Quiz, exam: ExamConfig) {
     secondsLeft,
     resume: () => setChoosing(false),
     discard: () => {
-      dispatch({ type: 'restart', state: discardAndStart(quiz, exam) })
+      dispatch({ type: 'restart', state: discardAndStart(quiz, config()) })
       setChoosing(false)
     },
     /** A new exam after the results. */
-    restart: () => dispatch({ type: 'restart', state: startExam(quiz, exam) }),
+    restart: () =>
+      dispatch({ type: 'restart', state: startExam(quiz, config()) }),
   }
 }

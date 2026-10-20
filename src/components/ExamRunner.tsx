@@ -47,7 +47,7 @@ export function ExamRunner({ quiz, exam }: Props) {
   return (
     <ExamSession
       quizId={quiz.id}
-      passPercent={exam.passPercent}
+      passPercent={state.passPercent}
       state={state}
       dispatch={dispatch}
       secondsLeft={secondsLeft}

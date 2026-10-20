@@ -29,6 +29,8 @@ export interface ExamState {
   /** Epoch ms. Timestamps, so a throttled background tab stays accurate. */
   startedAt: number
   endsAt: number
+  /** Pass mark the exam was started with, so later setting changes don't move it. */
+  passPercent: number
 }
 
 export type ExamAction =
@@ -53,6 +55,7 @@ export function createExamState(
   plan: ReadonlyArray<PlannedQuestion>,
   startedAt: number,
   minutes: number,
+  passPercent: number,
 ): ExamState {
   return {
     plan,
@@ -63,6 +66,7 @@ export function createExamState(
     submitted: false,
     startedAt,
     endsAt: startedAt + minutes * 60_000,
+    passPercent,
   }
 }
 
@@ -72,6 +76,7 @@ export function startExam(quiz: Quiz, exam: ExamConfig): ExamState {
     buildQuizPlan(quiz, exam.questionCount),
     Date.now(),
     exam.minutes,
+    exam.passPercent,
   )
 }
 

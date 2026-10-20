@@ -303,5 +303,33 @@ export const chapter07: Chapter = {
       explanation:
         'Defense in depth wraps layers around the data: physical security, identity and access, perimeter, network, compute, application and finally data. Physical security is the outermost layer, not the center.',
     },
+    {
+      id: '7-23',
+      question:
+        'A company wants its users in on-premises Active Directory to sign in to Azure and Microsoft 365 with the same credentials. Which tool synchronizes these identities to Microsoft Entra ID?',
+      options: [
+        'Microsoft Entra Connect',
+        'Microsoft Entra Domain Services',
+        'Azure Migrate',
+        'Microsoft Entra B2B',
+      ],
+      correctIndex: 0,
+      explanation:
+        'Microsoft Entra Connect synchronizes on-premises Active Directory identities to Microsoft Entra ID, creating a hybrid identity. Microsoft Entra Domain Services provides managed domain services such as domain join and LDAP, not synchronization from your own AD.',
+    },
+    {
+      id: '7-24',
+      question:
+        'A development team wants to store application secrets, encryption keys and certificates centrally and securely instead of in configuration files. Which Azure service should they use?',
+      options: [
+        'Azure Blob Storage',
+        'Azure Key Vault',
+        'Microsoft Defender for Cloud',
+        'Azure Policy',
+      ],
+      correctIndex: 1,
+      explanation:
+        'Azure Key Vault securely stores and controls access to secrets, keys and certificates. Defender for Cloud assesses security posture but does not store secrets.',
+    },
   ],
 }

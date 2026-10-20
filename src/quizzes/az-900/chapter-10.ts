@@ -225,5 +225,33 @@ export const chapter10: Chapter = {
       explanation:
         'ARM templates are idempotent: deploying the same template again gives the same result, so existing resources are kept in, or brought back to, the declared state instead of being duplicated.',
     },
+    {
+      id: '10-17',
+      question:
+        'How does Azure Cloud Shell keep your files available between sessions?',
+      options: [
+        'It saves them in the local storage of your web browser',
+        'It mounts an Azure Files share from a storage account',
+        'It stores them on the OS disk of a virtual machine you own',
+        'It keeps them in Azure Key Vault',
+      ],
+      correctIndex: 1,
+      explanation:
+        'Cloud Shell persists files by mounting an Azure Files share in a storage account. The shell itself runs on a temporary host, so files outside that share are not kept.',
+    },
+    {
+      id: '10-18',
+      question:
+        'A script runs a series of Azure CLI commands one after another to create resources. Which statement compares this to an ARM template correctly?',
+      options: [
+        'Both are declarative: they describe only the desired end state',
+        'The script is declarative and the ARM template is imperative',
+        'The script is imperative (it lists the steps to run), while the ARM template is declarative (it describes the desired end state)',
+        'Both are imperative: they list the steps in the order they must run',
+      ],
+      correctIndex: 2,
+      explanation:
+        'A CLI or PowerShell script tells Azure which commands to run, step by step, which is imperative. An ARM or Bicep template declares what should exist, and Resource Manager works out how and in which order to create it.',
+    },
   ],
 }

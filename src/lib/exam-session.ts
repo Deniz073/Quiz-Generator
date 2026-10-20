@@ -31,6 +31,8 @@ interface StoredSession {
   questions: Array<StoredQuestion>
   picks: Array<Array<number>>
   flagged: Array<number>
+  /** Missing in sessions saved before the pass mark was adjustable. */
+  passPercent?: number
 }
 
 /** Best effort, every time the exam changes. Never throws. */
@@ -50,6 +52,7 @@ export function saveExamSession(quiz: Quiz, state: ExamState): void {
     questions,
     picks: state.picks.map((pick) => [...pick]),
     flagged: [...state.flagged],
+    passPercent: state.passPercent,
   }
   try {
     localStorage.setItem(examSessionKey(quiz.id), JSON.stringify(session))
@@ -70,8 +73,12 @@ export function clearExamSession(quizId: string): void {
  * The saved unfinished exam resolved against the current quiz data, or
  * undefined if there is none or it no longer matches (then it is deleted).
  * The deadline may already have passed; that is for the caller to handle.
+ * `fallbackPassPercent` applies to sessions saved without a pass mark.
  */
-export function loadExamSession(quiz: Quiz): ExamState | undefined {
+export function loadExamSession(
+  quiz: Quiz,
+  fallbackPassPercent: number,
+): ExamState | undefined {
   let raw: string | null
   try {
     raw = localStorage.getItem(examSessionKey(quiz.id))
@@ -80,7 +87,7 @@ export function loadExamSession(quiz: Quiz): ExamState | undefined {
   }
   if (raw === null) return undefined
 
-  const state = parseSession(raw, quiz)
+  const state = parseSession(raw, quiz, fallbackPassPercent)
   if (!state) clearExamSession(quiz.id)
   return state
 }
@@ -121,7 +128,11 @@ function isPermutation(order: ReadonlyArray<number>, count: number): boolean {
   )
 }
 
-function parseSession(raw: string, quiz: Quiz): ExamState | undefined {
+function parseSession(
+  raw: string,
+  quiz: Quiz,
+  fallbackPassPercent: number,
+): ExamState | undefined {
   let data: unknown
   try {
     data = JSON.parse(raw)
@@ -129,8 +140,16 @@ function parseSession(raw: string, quiz: Quiz): ExamState | undefined {
     return undefined
   }
   if (!isRecord(data)) return undefined
-  const { startedAt, endsAt, current, reviewing, questions, picks, flagged } =
-    data
+  const {
+    startedAt,
+    endsAt,
+    current,
+    reviewing,
+    questions,
+    picks,
+    flagged,
+    passPercent,
+  } = data
   if (
     typeof startedAt !== 'number' ||
     typeof endsAt !== 'number' ||
@@ -142,7 +161,11 @@ function parseSession(raw: string, quiz: Quiz): ExamState | undefined {
     questions.length === 0 ||
     !Array.isArray(picks) ||
     picks.length !== questions.length ||
-    !isIndexArray(flagged)
+    !isIndexArray(flagged) ||
+    (passPercent !== undefined &&
+      (!Number.isInteger(passPercent) ||
+        (passPercent as number) < 1 ||
+        (passPercent as number) > 100))
   ) {
     return undefined
   }
@@ -179,6 +202,7 @@ function parseSession(raw: string, quiz: Quiz): ExamState | undefined {
     submitted: false,
     startedAt,
     endsAt,
+    passPercent: (passPercent as number | undefined) ?? fallbackPassPercent,
   }
 }
 

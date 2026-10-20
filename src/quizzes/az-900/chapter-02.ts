@@ -273,5 +273,47 @@ export const chapter02: Chapter = {
       explanation:
         'For services that must all be available, you multiply their SLAs: 99.95% x 99.99% is about 99.94%. A composite SLA is always lower than the lowest individual SLA, because each dependency adds a chance of failure.',
     },
+    {
+      id: '2-21',
+      question:
+        'A new Azure service is available in public preview. Which statement about its SLA is correct?',
+      options: [
+        'Preview services are not covered by an SLA',
+        'Preview services have the same SLA as the generally available version',
+        'Preview services have a fixed SLA of 99.9%',
+        'Preview services are covered by the SLA of the region they run in',
+      ],
+      correctIndex: 0,
+      explanation:
+        'Services in preview are provided as-is and are excluded from SLAs; an SLA only applies once a service is generally available. There is no region-level SLA that covers preview services instead.',
+    },
+    {
+      id: '2-22',
+      question:
+        'Microsoft fails to meet the SLA of an Azure service you use. What can you typically receive?',
+      options: [
+        'A full refund of all Azure costs for that month',
+        'A service credit: a percentage discount on the fees for that service',
+        'Free use of the service for the rest of the year',
+        'An automatic upgrade to a higher service tier',
+      ],
+      correctIndex: 1,
+      explanation:
+        'When an SLA is not met, you can claim a service credit, a percentage of the fees for the affected service. It is not a full refund of your whole bill, and you generally have to submit a claim.',
+    },
+    {
+      id: '2-23',
+      question:
+        'How can you design a solution with a higher availability than the SLA of a single instance of a service?',
+      options: [
+        'Add more services that the application depends on',
+        'Choose a larger virtual machine size',
+        'Deploy redundant instances across availability zones or regions',
+        'Purchase reserved instances for the service',
+      ],
+      correctIndex: 2,
+      explanation:
+        'Redundant instances in separate zones or regions keep the solution running when one instance fails, which raises availability. Adding dependencies lowers the composite SLA, and VM size or a purchase option does not change availability.',
+    },
   ],
 }

@@ -30,7 +30,7 @@ export function resumeOrStart(
   exam: ExamConfig,
   now = Date.now(),
 ): ExamStart {
-  const saved = loadExamSession(quiz)
+  const saved = loadExamSession(quiz, exam.passPercent)
   if (!saved) return { kind: 'run', state: startExam(quiz, exam) }
   if (saved.endsAt > now) return { kind: 'prompt', state: saved }
   // Time ran out while away: submit what was picked. persistExam then records

@@ -244,5 +244,19 @@ export const chapter08: Chapter = {
       explanation:
         'Budgets send alerts when thresholds are reached; they do not stop resources on their own. To act automatically, you can connect the budget to an action group that, for example, runs automation to shut down VMs.',
     },
+    {
+      id: '8-18',
+      question:
+        'A company has a steady compute spend but expects to change virtual machine sizes and regions over the next three years. Which purchase option gives a discount while keeping that flexibility?',
+      options: [
+        'Azure Reserved Virtual Machine Instances',
+        'Azure Spot Virtual Machines',
+        'Azure Hybrid Benefit',
+        'An Azure savings plan for compute',
+      ],
+      correctIndex: 3,
+      explanation:
+        'A savings plan commits to a fixed hourly spend for one or three years and applies the discount across VM sizes and regions. A reservation gives its discount for a specific VM size and region, so it is less flexible.',
+    },
   ],
 }
