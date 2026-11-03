@@ -15,6 +15,13 @@ export default [
     },
   },
   {
-    ignores: ['eslint.config.js', 'prettier.config.js', '.output/**'],
+    ignores: [
+      'eslint.config.js',
+      'prettier.config.js',
+      '.output/**',
+      // Installed agent skills; their example files aren't part of the app.
+      '.agents/**',
+      '.claude/**',
+    ],
   },
 ]

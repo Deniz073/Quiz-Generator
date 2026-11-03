@@ -120,3 +120,9 @@ automatically (`import.meta.glob` in `src/quizzes/index.ts`).
 - TanStack Start (React 19, file routes), Vite, strict TypeScript, npm.
 - Style: prettier, single quotes, no semicolons. Path alias `#/*` maps to `src/*`.
 - Don't add new dependencies or tests unless asked.
+- UI: use shadcn/ui components where possible (`src/components/ui`, Base UI
+  primitives, `lucide-react` icons; see `components.json`). Check what is
+  installed first, add missing ones with `npx shadcn@latest add <component>`,
+  and use the semantic theme tokens (`bg-primary`, `text-muted-foreground`, ...)
+  instead of raw colours. Forms use shadcn `Field` components with
+  react-hook-form and zod. Load the `shadcn` skill for component work.

@@ -10,6 +10,9 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as LoginRouteImport } from './routes/login'
+import { Route as ProfileRouteImport } from './routes/profile'
+import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 import { Route as QuizQuizIdIndexRouteImport } from './routes/quiz.$quizId.index'
 import { Route as QuizQuizIdChapterIdRouteImport } from './routes/quiz.$quizId.$chapterId'
 import { Route as QuizQuizIdExamRouteImport } from './routes/quiz.$quizId.exam'
@@ -22,6 +25,21 @@ import { Route as QuizQuizIdQuestionQuestionIdRouteImport } from './routes/quiz.
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProfileRoute = ProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
+  id: '/api/auth/$',
+  path: '/api/auth/$',
   getParentRoute: () => rootRouteImport,
 } as any)
 const QuizQuizIdIndexRoute = QuizQuizIdIndexRouteImport.update({
@@ -68,6 +86,9 @@ const QuizQuizIdQuestionQuestionIdRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/login': typeof LoginRoute
+  '/profile': typeof ProfileRoute
+  '/api/auth/$': typeof ApiAuthSplatRoute
   '/quiz/$quizId/$chapterId': typeof QuizQuizIdChapterIdRoute
   '/quiz/$quizId/exam': typeof QuizQuizIdExamRoute
   '/quiz/$quizId/flagged': typeof QuizQuizIdFlaggedRoute
@@ -79,6 +100,9 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/login': typeof LoginRoute
+  '/profile': typeof ProfileRoute
+  '/api/auth/$': typeof ApiAuthSplatRoute
   '/quiz/$quizId/$chapterId': typeof QuizQuizIdChapterIdRoute
   '/quiz/$quizId/exam': typeof QuizQuizIdExamRoute
   '/quiz/$quizId/flagged': typeof QuizQuizIdFlaggedRoute
@@ -91,6 +115,9 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/login': typeof LoginRoute
+  '/profile': typeof ProfileRoute
+  '/api/auth/$': typeof ApiAuthSplatRoute
   '/quiz/$quizId/$chapterId': typeof QuizQuizIdChapterIdRoute
   '/quiz/$quizId/exam': typeof QuizQuizIdExamRoute
   '/quiz/$quizId/flagged': typeof QuizQuizIdFlaggedRoute
@@ -104,6 +131,9 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/login'
+    | '/profile'
+    | '/api/auth/$'
     | '/quiz/$quizId/$chapterId'
     | '/quiz/$quizId/exam'
     | '/quiz/$quizId/flagged'
@@ -115,6 +145,9 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/login'
+    | '/profile'
+    | '/api/auth/$'
     | '/quiz/$quizId/$chapterId'
     | '/quiz/$quizId/exam'
     | '/quiz/$quizId/flagged'
@@ -126,6 +159,9 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/login'
+    | '/profile'
+    | '/api/auth/$'
     | '/quiz/$quizId/$chapterId'
     | '/quiz/$quizId/exam'
     | '/quiz/$quizId/flagged'
@@ -138,6 +174,9 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  LoginRoute: typeof LoginRoute
+  ProfileRoute: typeof ProfileRoute
+  ApiAuthSplatRoute: typeof ApiAuthSplatRoute
   QuizQuizIdChapterIdRoute: typeof QuizQuizIdChapterIdRoute
   QuizQuizIdExamRoute: typeof QuizQuizIdExamRoute
   QuizQuizIdFlaggedRoute: typeof QuizQuizIdFlaggedRoute
@@ -155,6 +194,27 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/profile': {
+      id: '/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof ProfileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/auth/$': {
+      id: '/api/auth/$'
+      path: '/api/auth/$'
+      fullPath: '/api/auth/$'
+      preLoaderRoute: typeof ApiAuthSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/quiz/$quizId/': {
@@ -218,6 +278,9 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  LoginRoute: LoginRoute,
+  ProfileRoute: ProfileRoute,
+  ApiAuthSplatRoute: ApiAuthSplatRoute,
   QuizQuizIdChapterIdRoute: QuizQuizIdChapterIdRoute,
   QuizQuizIdExamRoute: QuizQuizIdExamRoute,
   QuizQuizIdFlaggedRoute: QuizQuizIdFlaggedRoute,

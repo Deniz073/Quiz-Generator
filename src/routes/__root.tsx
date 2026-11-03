@@ -11,8 +11,10 @@ import { TanStackDevtools } from '@tanstack/react-devtools'
 
 import { NotFound } from '#/components/NotFound'
 import { ThemeToggle } from '#/components/ThemeToggle'
+import { UserMenu } from '#/components/UserMenu'
 import { focusHeading } from '#/lib/focus'
 import { SITE_TITLE } from '#/lib/page-title'
+import { getCurrentUser } from '#/lib/session'
 import { THEME_COLORS, THEME_INIT_SCRIPT } from '#/lib/theme'
 import appCss from '../styles.css?url'
 
@@ -26,6 +28,8 @@ const SITE_URL = (import.meta.env.VITE_SITE_URL ?? '').replace(/\/+$/, '')
 const OG_IMAGE = `${SITE_URL}/og.png`
 
 export const Route = createRootRoute({
+  // The signed-in user (or null) is available as context.user in every route.
+  beforeLoad: async () => ({ user: await getCurrentUser() }),
   head: () => ({
     meta: [
       {
@@ -88,6 +92,7 @@ function useFocusPageHeading() {
 
 function RootDocument({ children }: { children: React.ReactNode }) {
   useFocusPageHeading()
+  const { user } = Route.useRouteContext()
   return (
     // The theme script adds a class to <html> before React hydrates.
     <html lang="en" suppressHydrationWarning>
@@ -120,7 +125,10 @@ function RootDocument({ children }: { children: React.ReactNode }) {
             >
               Quiz Generator
             </Link>
-            <ThemeToggle />
+            <div className="flex items-center gap-2">
+              <UserMenu user={user} />
+              <ThemeToggle />
+            </div>
           </div>
         </header>
         {/* tabIndex -1: the skip link moves focus here, not just the scroll position. */}
