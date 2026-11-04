@@ -13,7 +13,7 @@ A quiz without an owner, available to everyone, signed in or not.
 _Avoid_: System quiz, public quiz, default quiz
 
 **Personal quiz**:
-A quiz owned by one user and visible only to them.
+A quiz owned by one user. Only they can use it; while it is published, anyone can also preview it on the Marketplace.
 _Avoid_: Private quiz, custom quiz, user quiz
 
 **Owner**:
@@ -41,10 +41,38 @@ _Avoid_: Choice, answer (for the offered text)
 The text shown after answering, saying why the correct options are correct.
 
 **Seed quiz**:
-A quiz whose content is maintained in the repository and loaded into the database by the seed, either as a built-in quiz or as a personal quiz of the seed owner.
+A built-in quiz whose content is maintained in the repository and loaded into the database by the seed. Personal quizzes are never seed quizzes.
 
-**Seed owner**:
-The user that personal seed quizzes are given to, identified by configuration rather than in the repository.
+## Marketplace
+
+**Marketplace**:
+The page listing every published quiz, where anyone can preview one and signed-in users can import it.
+_Avoid_: Store, library, catalogue
+
+**Publish**:
+An owner making one of their personal quizzes available on the Marketplace. Built-in quizzes are never published; they are already available to everyone.
+_Avoid_: Share (reserved for giving a quiz to one specific person)
+
+**Unpublish**:
+An owner taking their published quiz off the Marketplace. Copies already imported are unaffected.
+
+**Published quiz**:
+A personal quiz that is currently on the Marketplace.
+_Avoid_: Shared quiz, public quiz
+
+**Publisher**:
+The owner of a published quiz, shown by name on its listing.
+
+**Preview**:
+Studying a published quiz on the Marketplace without importing it.
+
+**Import**:
+A signed-in user taking a copy of a published quiz as a personal quiz of their own. The copy is a snapshot: later changes to the published quiz do not reach it.
+_Avoid_: Subscribe, clone, download
+
+**Imported quiz**:
+A personal quiz made by importing a published quiz; it remembers which published quiz it was copied from, while that still exists. A user has at most one imported quiz per published quiz.
+_Avoid_: Copy (in the UI), fork
 
 ## Ways to use a quiz
 
@@ -67,7 +95,7 @@ The question count, time limit and pass mark of a mock exam. A quiz defines the 
 ## Progress
 
 **Visitor**:
-Someone using the site without being signed in. Visitors can use built-in quizzes, but nothing they do is kept.
+Someone using the site without being signed in. Visitors can use built-in quizzes and browse the Marketplace, but nothing they do is kept.
 _Avoid_: Guest, anonymous user
 
 **Attempt**:

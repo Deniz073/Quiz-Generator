@@ -1,6 +1,7 @@
 # AGENTS.md
 
-Instructions for AI agents working on this repo. Most common task: **add a seed quiz**.
+Instructions for AI agents working on this repo. Most common task: **add a seed quiz**
+(a built-in quiz).
 Domain terms (built-in quiz, personal quiz, attempt, flag, ...) are defined in
 [GLOSSARY.md](GLOSSARY.md); use them as written there.
 
@@ -8,23 +9,20 @@ Domain terms (built-in quiz, personal quiz, attempt, flag, ...) are defined in
 
 Quizzes live in Postgres. Seed quizzes are maintained as TypeScript in the repo
 and written to the database by `npm run db:seed` (which runs after
-`db:migrate` on every production deploy). Later, users will create their own
-personal quizzes in the app; those never live in the repo.
+`db:migrate` on every production deploy). Seed quizzes are always built-in
+quizzes (no owner, available to everyone, also signed out). Personal quizzes
+live only in the database and never in the repo.
 
 Contract, two changes and nothing else:
 
 1. Create a folder `src/db/seed/quizzes/<quiz-id>/` whose `index.ts` has an
    `export default` of a `Quiz` (types in `src/quizzes/types.ts`).
-2. Add it to `seedQuizzes` in `src/db/seed/quizzes/index.ts` with its owner:
-   `'built-in'` (no owner, available to everyone, also signed out) or
-   `'seed-owner'` (a personal quiz of the user whose email is in the
-   `SEED_OWNER_EMAIL` env var). Use `'seed-owner'` unless the user asks for a
-   built-in quiz.
+2. Import it and add it to `seedQuizzes` in `src/db/seed/quizzes/index.ts`.
 
 **Do not modify anything else.** No routes, components or migrations change for
 a new quiz.
 
-Reference example: `src/db/seed/quizzes/az-900/` (one file per chapter, assembled in `index.ts`).
+Reference example: `src/db/seed/quizzes/pspo-1/` (one file per chapter, assembled in `index.ts`).
 
 ### Layout
 
@@ -36,7 +34,7 @@ src/db/seed/quizzes/<quiz-id>/
 
 Small quiz: put chapters inline in `index.ts`. Larger quiz: one file per
 chapter exporting a named `Chapter` (e.g. `export const chapter01: Chapter`),
-imported and listed in `index.ts`, like az-900. Import the types with the
+imported and listed in `index.ts`, like pspo-1. Import the types with the
 `#/quizzes/types` alias.
 
 ### Skeleton
@@ -87,7 +85,7 @@ export default quiz
 
 Violations fail `npm run validate:quizzes` (which `npm run build` runs first) and `npm run db:seed` (which then writes nothing), listing quiz > chapter > question.
 
-- Quiz `id` and chapter `id`s are URL-safe slugs (`a-z`, `0-9`, single hyphens). The quiz `id` is unique across seed quizzes (use the folder name); chapter ids are unique within a quiz.
+- Quiz `id` and chapter `id`s are URL-safe slugs (`a-z`, `0-9`, single hyphens). The quiz `id` is unique across all quizzes (use the folder name; the seed fails if a personal quiz already has it); chapter ids are unique within a quiz.
 - Chapter ids `practice`, `exam`, `study` and `flagged` are reserved (they are routes: `/quiz/<id>/practice`, `/quiz/<id>/exam`, `/quiz/<id>/study`, `/quiz/<id>/flagged`).
 - Chapter `number`s are unique whole numbers of 1 or more within a quiz.
 - Every question has an `id`: a slug unique within the quiz. Convention: `<chapter number>-<two-digit index>`, e.g. `3-07`. The seed matches existing rows by it, and users' flags, attempts and unfinished exams hang off those rows, so when editing an existing quiz never change or reuse a question or chapter id (a changed id is a delete plus a new question: its flags are lost); give new questions a new one. Removing a question or chapter from a seed quiz deletes it, with its flags and attempts.
@@ -164,8 +162,7 @@ npm run dev                # optional: open http://localhost:3000 and try it
   step with the server (`useExam` only wires it to React). Visitors keep
   nothing. The theme is a cookie.
 - Env: `DATABASE_URL`, Better Auth (`BETTER_AUTH_URL`, `BETTER_AUTH_SECRET`,
-  Google client id/secret) and `SEED_OWNER_EMAIL` (owner of the seed-owner
-  quizzes; never write the address into the repo).
+  Google client id/secret).
 - UI: use shadcn/ui components where possible (`src/components/ui`, Base UI
   primitives, `lucide-react` icons; see `components.json`). Check what is
   installed first, add missing ones with `npx shadcn@latest add <component>`,

@@ -22,7 +22,7 @@ try {
   const { validateQuizzes } = await server.ssrLoadModule(
     '/src/quizzes/validate.ts',
   )
-  const quizzes = seedQuizzes.map((entry) => entry.quiz)
+  const quizzes = seedQuizzes
   const errors = validateQuizzes(quizzes)
   const ids = quizzes.map((quiz) => quiz.id)
   for (const id of new Set(ids)) {
@@ -39,7 +39,7 @@ try {
   let chapters = 0
   let questions = 0
   let multi = 0
-  for (const { quiz, owner } of seedQuizzes) {
+  for (const quiz of quizzes) {
     const quizQuestions = quiz.chapters.reduce(
       (total, chapter) => total + chapter.questions.length,
       0,
@@ -50,7 +50,7 @@ try {
       multi += chapter.questions.filter((q) => 'correctIndexes' in q).length
     }
     console.log(
-      `  ${quiz.id} (${owner}): ${quiz.chapters.length} chapters, ${quizQuestions} questions`,
+      `  ${quiz.id}: ${quiz.chapters.length} chapters, ${quizQuestions} questions`,
     )
   }
   console.log(

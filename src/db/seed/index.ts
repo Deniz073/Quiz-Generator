@@ -12,11 +12,9 @@
  *   so unfinished exams containing it are deleted (they could no longer be
  *   scored as started).
  * - Built-in quizzes no longer in the seed are deleted. Personal quizzes are
- *   never deleted here: a seed-owner quiz removed from the seed stays with its
- *   owner.
- * - Seed-owner quizzes are given to the user with SEED_OWNER_EMAIL. Without
- *   that variable, or before that user has signed in once, they are skipped
- *   with a warning; run the seed again afterwards.
+ *   never touched: they live only in the database.
+ * - A seed quiz whose id is taken by a personal quiz fails the seed; it never
+ *   takes a user's quiz over.
  *
  * All of it runs in one transaction: a failure leaves the database unchanged
  * (and fails the deploy before the new version is built).
@@ -30,7 +28,6 @@ import {
   question,
   questionOption,
   quiz,
-  user,
 } from '#/db/schema'
 import { toQuizRows } from '#/server/quiz-access'
 import type { Quiz } from '#/quizzes/types'
@@ -45,10 +42,9 @@ function excluded(column: string) {
 }
 
 function validate(): void {
-  const quizzes = seedQuizzes.map((entry) => entry.quiz)
-  const errors = validateQuizzes(quizzes)
+  const errors = validateQuizzes([...seedQuizzes])
   const seen = new Set<string>()
-  for (const { id } of quizzes) {
+  for (const { id } of seedQuizzes) {
     if (seen.has(id))
       errors.push(`Quiz id "${id}" is used by two seed quizzes.`)
     seen.add(id)
@@ -61,55 +57,21 @@ function validate(): void {
   }
 }
 
-async function findSeedOwnerId(): Promise<string | undefined> {
-  const email = process.env.SEED_OWNER_EMAIL?.trim()
-  if (!email) {
-    console.warn('SEED_OWNER_EMAIL is not set: seed-owner quizzes are skipped.')
-    return undefined
-  }
-  const rows = await db
-    .select({ id: user.id })
-    .from(user)
-    .where(sql`lower(${user.email}) = lower(${email})`)
-    .limit(1)
-  if (rows.length === 0) {
-    console.warn(
-      'No user with SEED_OWNER_EMAIL has signed in yet: seed-owner quizzes are skipped. Sign in once, then run the seed again.',
-    )
-    return undefined
-  }
-  return rows[0].id
-}
-
-/**
- * `seedOwnerId`: the current seed owner, who may hand a quiz over (e.g. a
- * seed-owner quiz that becomes built-in). A quiz owned by anyone else is
- * never taken over.
- */
-async function upsertQuiz(
-  tx: Transaction,
-  data: Quiz,
-  ownerId: string | null,
-  seedOwnerId: string | undefined,
-): Promise<void> {
+/** Writes one built-in quiz. */
+async function upsertQuiz(tx: Transaction, data: Quiz): Promise<void> {
   const existing = await tx
     .select({ ownerId: quiz.ownerId })
     .from(quiz)
     .where(eq(quiz.id, data.id))
   const current = existing.at(0)
-  if (
-    current &&
-    current.ownerId !== null &&
-    current.ownerId !== ownerId &&
-    current.ownerId !== seedOwnerId
-  ) {
+  if (current && current.ownerId !== null) {
     throw new Error(
-      `Quiz "${data.id}" is owned by a user other than the seed owner (e.g. after SEED_OWNER_EMAIL changed). Transfer it in the database first; the seed won't take it over.`,
+      `Quiz id "${data.id}" is taken by a personal quiz; give the seed quiz another id. The seed never takes a user's quiz over.`,
     )
   }
 
   // The rows the quiz maps to (the same mapping Quiz access reads back).
-  const rows = toQuizRows(data, ownerId)
+  const rows = toQuizRows(data, null)
   const values = rows.quiz
   await tx
     .insert(quiz)
@@ -267,7 +229,6 @@ async function upsertQuiz(
 
   console.log(
     `  ${data.id}: ${data.chapters.length} chapters, ${questions.length} questions` +
-      (ownerId ? ' (personal quiz of the seed owner)' : ' (built-in)') +
       (changed.length > 0
         ? `, options changed for ${changed.length} questions`
         : ''),
@@ -276,29 +237,15 @@ async function upsertQuiz(
 
 async function main(): Promise<void> {
   validate()
-  const ownerId = await findSeedOwnerId()
   await db.transaction(async (tx) => {
-    for (const entry of seedQuizzes) {
-      if (entry.owner === 'seed-owner' && !ownerId) {
-        console.warn(`  ${entry.quiz.id}: skipped (no seed owner)`)
-        continue
-      }
-      await upsertQuiz(
-        tx,
-        entry.quiz,
-        entry.owner === 'built-in' ? null : (ownerId as string),
-        ownerId,
-      )
-    }
-    // Every seed quiz id, not only the built-in ones: a built-in quiz that
-    // became a seed-owner quiz but was skipped stays as it was until then.
-    const seedIds = seedQuizzes.map((entry) => entry.quiz.id)
+    for (const data of seedQuizzes) await upsertQuiz(tx, data)
+    const seedIds = seedQuizzes.map((data) => data.id)
     const removed = await tx
       .delete(quiz)
       .where(and(isNull(quiz.ownerId), notInArray(quiz.id, seedIds)))
       .returning({ id: quiz.id })
     for (const { id } of removed)
-      console.log(`  ${id}: deleted (no longer a built-in seed quiz)`)
+      console.log(`  ${id}: deleted (no longer a seed quiz)`)
   })
   console.log('Seed complete.')
 }

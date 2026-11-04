@@ -1,0 +1,3 @@
+# Importing a published quiz makes a copy, not a subscription
+
+Importing a published quiz from the Marketplace gives the importer a snapshot copy as a personal quiz of their own, linked to its source only for provenance (credit, "already imported", import count). We rejected subscribing to the published quiz: it would need a third visibility rule beyond "built-in or own", and any question the publisher removed would silently delete importers' flags and attempts on it. The cost is that copies do not receive the publisher's later changes, and unpublishing or deleting the published quiz never takes copies away.
