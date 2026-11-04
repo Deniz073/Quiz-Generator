@@ -3,14 +3,20 @@
 [![CI](https://github.com/Deniz073/Quiz-Generator/actions/workflows/ci.yml/badge.svg)](https://github.com/Deniz073/Quiz-Generator/actions/workflows/ci.yml)
 [![Dependabot](https://img.shields.io/badge/dependabot-enabled-025E8C?logo=dependabot&logoColor=white)](.github/dependabot.yml)
 
-A small multiple-choice quiz app (TanStack Start, React 19, Vite, TypeScript). Quizzes are plain
-TypeScript data, split into chapters, with single- and multi-answer questions, explanations and
-a results screen. Ships with three quizzes in `src/quizzes/`: AZ-900, PSM I and PSPO I.
+A small multiple-choice quiz app (TanStack Start, React 19, Vite, TypeScript, Postgres with
+Drizzle). Quizzes are split into chapters, with single- and multi-answer questions,
+explanations, a results screen and a timed mock exam. PSM I and PSPO I are built in and
+available to everyone; signing in (Google) keeps your results, flags and unfinished exams.
+Seed quiz content lives in `src/db/seed/quizzes/` and is written to the database by
+`npm run db:seed`.
 
 ## Run
 
 ```bash
 npm install
+docker compose up -d   # local Postgres; set DATABASE_URL in .env (see compose.yaml)
+npm run db:migrate
+npm run db:seed        # optional: SEED_OWNER_EMAIL in .env, after signing in once
 npm run dev      # http://localhost:3000
 npm run build    # production build
 npm run preview  # serve the production build
@@ -18,8 +24,9 @@ npm run preview  # serve the production build
 
 ## Adding a quiz
 
-Everything lives in one new folder, `src/quizzes/<quiz-id>/`. No registry, route or component
-needs to change: quizzes are auto-discovered and appear on the home page.
+A seed quiz is one new folder, `src/db/seed/quizzes/<quiz-id>/`, plus one line in
+`src/db/seed/quizzes/index.ts` saying whether it is built in (everyone) or belongs to the seed
+owner (`SEED_OWNER_EMAIL`). `npm run db:seed` writes it to the database.
 
 1. **Fork or clone** this repo and run `npm install`.
 2. **Easy path: ask your AI coding agent** (Claude Code, Codex, Cursor, ...). Enabling its
@@ -34,15 +41,16 @@ needs to change: quizzes are auto-discovered and appear on the home page.
    `AGENTS.md` (also loaded via `CLAUDE.md`) gives the agent the full rules: file layout, the
    skeleton, validation rules and content guidelines.
 
-3. **Manual path:** create `src/quizzes/<quiz-id>/index.ts` that default-exports a `Quiz`
-   (types: [`src/quizzes/types.ts`](src/quizzes/types.ts), full example:
-   [`src/quizzes/az-900/`](src/quizzes/az-900)):
+3. **Manual path:** create `src/db/seed/quizzes/<quiz-id>/index.ts` that default-exports a
+   `Quiz` (types: [`src/quizzes/types.ts`](src/quizzes/types.ts), full example:
+   [`src/db/seed/quizzes/az-900/`](src/db/seed/quizzes/az-900)), and add it to `seedQuizzes` in
+   [`src/db/seed/quizzes/index.ts`](src/db/seed/quizzes/index.ts):
 
    ```ts
-   import type { Quiz } from '../types'
+   import type { Quiz } from '#/quizzes/types'
 
    const quiz: Quiz = {
-     id: 'my-quiz', // URL slug, must match the folder name
+     id: 'my-quiz', // URL slug, use the folder name
      title: 'My Quiz',
      description: 'Shown on the home page.',
      chapters: [
@@ -71,31 +79,42 @@ needs to change: quizzes are auto-discovered and appear on the home page.
 4. **Verify:**
 
    ```bash
-   npx prettier --write src/quizzes/<quiz-id>
+   npx prettier --write src/db/seed/quizzes
    npx tsc --noEmit
    npm run lint
    npm run validate:quizzes   # checks ids, option counts, answer indexes, ...
+   npm run db:seed            # writes it to the local database
    npm run dev                # see it on http://localhost:3000
    ```
 
-5. **That's it.** Nothing outside the new folder changes. A broken quiz fails fast, with the
-   quiz/chapter/question location, in `npm run validate:quizzes` (which `npm run build` runs
-   first, so it cannot be deployed) and when its pages load.
+5. **That's it.** A broken quiz fails fast, with the quiz/chapter/question location, in
+   `npm run validate:quizzes` (which `npm run build` runs first, so it cannot be deployed) and in
+   `npm run db:seed`, which then writes nothing.
 
 ## Scripts
 
-| Command                    | What it does                             |
-| -------------------------- | ---------------------------------------- |
-| `npm run dev`              | Dev server on port 3000                  |
-| `npm run build`            | Validate quizzes, then production build  |
-| `npm run lint`             | ESLint                                   |
-| `npm run check`            | Prettier check                           |
-| `npm run format`           | Prettier write + ESLint fix              |
-| `npm run validate:quizzes` | Validate all quizzes and print a summary |
+| Command                    | What it does                               |
+| -------------------------- | ------------------------------------------ |
+| `npm run dev`              | Dev server on port 3000                    |
+| `npm run build`            | Validate quizzes, then production build    |
+| `npm run lint`             | ESLint                                     |
+| `npm run check`            | Prettier check                             |
+| `npm run format`           | Prettier write + ESLint fix                |
+| `npm run validate:quizzes` | Validate the seed quizzes, print a summary |
+| `npm run db:generate`      | New migration from schema changes          |
+| `npm run db:migrate`       | Apply pending migrations                   |
+| `npm run db:seed`          | Write the seed quizzes to the database     |
 
 ## Deploy
 
-Includes a `vercel.json`; import the repo in Vercel and deploy (Nitro output).
+Includes a `vercel.json`; import the repo in Vercel and deploy (Nitro output). Migrations and
+the seed run in the build command, before the new version is built:
+
+```bash
+if [ "$VERCEL_ENV" = "production" ]; then npm run db:migrate && npm run db:seed; fi && npm run build
+```
+
+Set `SEED_OWNER_EMAIL` (production env) to the account that owns the non-built-in seed quizzes.
 
 Set `VITE_SITE_URL` (e.g. `https://quiz.example.com`) as a build-time env var so
 the `og:image` link preview URL is absolute; without it the tag stays relative.

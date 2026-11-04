@@ -10,7 +10,7 @@ interface Props {
   onDiscard: () => void
 }
 
-/** Shown when an unfinished mock exam with time left was found in storage. */
+/** Shown when the user has an unfinished mock exam with time left. */
 export function ExamResumePrompt({ state, onResume, onDiscard }: Props) {
   const { answered } = getCounts(state)
   const secondsLeft = useCountdown(state.endsAt)

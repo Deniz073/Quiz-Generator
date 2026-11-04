@@ -2,7 +2,9 @@ import { useState } from 'react'
 import type { FormEvent } from 'react'
 import type { ExamConfig, Quiz } from '#/quizzes/types'
 import { buttonClasses } from '#/lib/button-classes'
-import { getExamLimits, saveExamSettings } from '#/lib/exam-settings'
+import { getExamLimits } from '#/domain/exam-settings'
+import { countQuestions } from '#/quizzes'
+import { saveExamSettings, useUserId } from '#/lib/user-data'
 
 type Status = { kind: 'success' | 'error'; message: string }
 
@@ -23,21 +25,31 @@ const fields = [
 const inputClasses =
   'mt-1 w-24 rounded-md border border-slate-300 bg-white px-3 py-2 tabular-nums focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500 dark:border-slate-700 dark:bg-slate-950'
 
-/** Lets the user change the mock exam's size, time limit and pass mark for this quiz. */
+/**
+ * Lets a signed-in user change the mock exam's size, time limit and pass mark
+ * for this quiz. Renders nothing for visitors.
+ */
 export function ExamSettings({ quiz, defaults, config }: Props) {
   const [status, setStatus] = useState<Status>()
-  const limits = getExamLimits(quiz)
+  const [saving, setSaving] = useState(false)
+  const userId = useUserId()
+  const limits = getExamLimits(countQuestions(quiz))
+  if (!userId) return null
 
-  function save(next: ExamConfig, message: string) {
-    setStatus(
-      saveExamSettings(quiz.id, defaults, next)
-        ? { kind: 'success', message }
-        : {
-            kind: 'error',
-            message:
-              'Could not save the settings. Check that the browser allows site storage, then try again.',
-          },
-    )
+  async function save(next: ExamConfig, message: string) {
+    if (!userId) return
+    setSaving(true)
+    try {
+      await saveExamSettings(userId, quiz.id, defaults, next)
+      setStatus({ kind: 'success', message })
+    } catch {
+      setStatus({
+        kind: 'error',
+        message: 'Could not save the settings. Try again in a moment.',
+      })
+    } finally {
+      setSaving(false)
+    }
   }
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -45,7 +57,7 @@ export function ExamSettings({ quiz, defaults, config }: Props) {
     // The inputs' min/max/step already blocked out-of-range values.
     const data = new FormData(event.currentTarget)
     const read = (name: keyof ExamConfig) => Number(data.get(name))
-    save(
+    void save(
       {
         questionCount: read('questionCount'),
         minutes: read('minutes'),
@@ -64,7 +76,7 @@ export function ExamSettings({ quiz, defaults, config }: Props) {
       </summary>
       <form onSubmit={handleSubmit} className="mt-4">
         {/* Keyed by the values in effect, so the inputs pick up settings that
-            arrive after hydration, a reset or another tab. Only the inputs:
+            arrive after loading or a reset. Only the inputs:
             remounting the buttons would drop focus after Save or Reset. */}
         <div
           key={`${config.questionCount}-${config.minutes}-${config.passPercent}`}
@@ -94,12 +106,17 @@ export function ExamSettings({ quiz, defaults, config }: Props) {
           exam you start; an unfinished exam keeps its own settings.
         </p>
         <div className="mt-3 flex flex-wrap gap-3">
-          <button type="submit" className={buttonClasses('primary')}>
+          <button
+            type="submit"
+            disabled={saving}
+            className={buttonClasses('primary')}
+          >
             Save
           </button>
           <button
             type="button"
-            onClick={() => save(defaults, 'Default settings restored.')}
+            disabled={saving}
+            onClick={() => void save(defaults, 'Default settings restored.')}
             className={buttonClasses('secondary')}
           >
             Reset to defaults

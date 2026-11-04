@@ -15,7 +15,7 @@ import { UserMenu } from '#/components/UserMenu'
 import { focusHeading } from '#/lib/focus'
 import { SITE_TITLE } from '#/lib/page-title'
 import { getCurrentUser } from '#/lib/session'
-import { THEME_COLORS, THEME_INIT_SCRIPT } from '#/lib/theme'
+import { THEME_COLORS, getChosenTheme } from '#/lib/theme'
 import appCss from '../styles.css?url'
 
 const TITLE = SITE_TITLE
@@ -28,8 +28,12 @@ const SITE_URL = (import.meta.env.VITE_SITE_URL ?? '').replace(/\/+$/, '')
 const OG_IMAGE = `${SITE_URL}/og.png`
 
 export const Route = createRootRoute({
-  // The signed-in user (or null) is available as context.user in every route.
-  beforeLoad: async () => ({ user: await getCurrentUser() }),
+  // The signed-in user (or null) is available as context.user in every route,
+  // and the chosen theme (from its cookie) as context.theme.
+  beforeLoad: async () => ({
+    user: await getCurrentUser(),
+    theme: getChosenTheme(),
+  }),
   head: () => ({
     meta: [
       {
@@ -62,7 +66,6 @@ export const Route = createRootRoute({
         href: appCss,
       },
     ],
-    scripts: [{ children: THEME_INIT_SCRIPT }],
   }),
   shellComponent: RootDocument,
   notFoundComponent: () => <NotFound />,
@@ -92,10 +95,10 @@ function useFocusPageHeading() {
 
 function RootDocument({ children }: { children: React.ReactNode }) {
   useFocusPageHeading()
-  const { user } = Route.useRouteContext()
+  const { user, theme } = Route.useRouteContext()
   return (
-    // The theme script adds a class to <html> before React hydrates.
-    <html lang="en" suppressHydrationWarning>
+    // The theme toggle changes the class itself, ahead of the next render.
+    <html lang="en" className={theme} suppressHydrationWarning>
       <head>
         {/* Not in head() meta: the router keeps only one tag per name. */}
         <meta

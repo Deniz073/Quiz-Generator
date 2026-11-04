@@ -48,6 +48,14 @@ export type ExamAction =
   /** Ends the exam now (user or timeout). Unanswered questions count as wrong. */
   | { type: 'submit' }
   | { type: 'restart'; state: ExamState }
+  /** The server's clock for the exam (epoch ms), once it has stored it. */
+  | {
+      type: 'clock'
+      /** The exam the times belong to; ignored for any other (a restart). */
+      plan: ExamState['plan']
+      startedAt: number
+      endsAt: number
+    }
 
 export type QuestionStatus = 'answered' | 'incomplete' | 'unanswered'
 
@@ -123,6 +131,9 @@ export function examReducer(state: ExamState, action: ExamAction): ExamState {
       }
     case 'submit':
       return { ...state, submitted: true, reviewing: false }
+    case 'clock':
+      if (action.plan !== state.plan) return state
+      return { ...state, startedAt: action.startedAt, endsAt: action.endsAt }
   }
 }
 

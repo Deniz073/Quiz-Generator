@@ -1,0 +1,189 @@
+{
+  "type": "diff",
+  "version": "9",
+  "dialect": "postgres",
+  "id": "644dd20b-960f-4716-9bb6-a2bec00732c6",
+  "prevIds": [
+    "f5e935d4-d698-4336-9c41-9a827961e7c8"
+  ],
+  "footprints": [
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "exam_session",
+        "exam_session_quiz_id_idx"
+      ],
+      "writes": [
+        "s|idx|public.exam_session_quiz_id_idx",
+        "n|idx|public.exam_session_quiz_id_idx",
+        "e|idx|public.exam_session_quiz_id_idx",
+        "n|rel|public.exam_session_quiz_id_idx"
+      ],
+      "reads": [
+        "n|tbl|public.exam_session",
+        "n|sch|public",
+        "n|col|public.exam_session.quiz_id"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "quiz_attempt",
+        "quiz_attempt_quiz_id_idx"
+      ],
+      "writes": [
+        "s|idx|public.quiz_attempt_quiz_id_idx",
+        "n|idx|public.quiz_attempt_quiz_id_idx",
+        "e|idx|public.quiz_attempt_quiz_id_idx",
+        "n|rel|public.quiz_attempt_quiz_id_idx"
+      ],
+      "reads": [
+        "n|tbl|public.quiz_attempt",
+        "n|sch|public",
+        "n|col|public.quiz_attempt.quiz_id"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "quiz_attempt",
+        "quiz_attempt_chapter_id_idx"
+      ],
+      "writes": [
+        "s|idx|public.quiz_attempt_chapter_id_idx",
+        "n|idx|public.quiz_attempt_chapter_id_idx",
+        "e|idx|public.quiz_attempt_chapter_id_idx",
+        "n|rel|public.quiz_attempt_chapter_id_idx"
+      ],
+      "reads": [
+        "n|tbl|public.quiz_attempt",
+        "n|sch|public",
+        "n|col|public.quiz_attempt.chapter_id"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "user_quiz_exam_settings",
+        "user_quiz_exam_settings_quiz_id_idx"
+      ],
+      "writes": [
+        "s|idx|public.user_quiz_exam_settings_quiz_id_idx",
+        "n|idx|public.user_quiz_exam_settings_quiz_id_idx",
+        "e|idx|public.user_quiz_exam_settings_quiz_id_idx",
+        "n|rel|public.user_quiz_exam_settings_quiz_id_idx"
+      ],
+      "reads": [
+        "n|tbl|public.user_quiz_exam_settings",
+        "n|sch|public",
+        "n|col|public.user_quiz_exam_settings.quiz_id"
+      ]
+    }
+  ],
+  "deltas": [
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "exam_session",
+        "name": "exam_session_quiz_id_idx",
+        "nameExplicit": true,
+        "columns": [
+          {
+            "value": "quiz_id",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          }
+        ],
+        "isUnique": false,
+        "where": null,
+        "with": "",
+        "method": "btree",
+        "concurrently": false,
+        "entityType": "indexes"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "quiz_attempt",
+        "name": "quiz_attempt_quiz_id_idx",
+        "nameExplicit": true,
+        "columns": [
+          {
+            "value": "quiz_id",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          }
+        ],
+        "isUnique": false,
+        "where": null,
+        "with": "",
+        "method": "btree",
+        "concurrently": false,
+        "entityType": "indexes"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "quiz_attempt",
+        "name": "quiz_attempt_chapter_id_idx",
+        "nameExplicit": true,
+        "columns": [
+          {
+            "value": "chapter_id",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          }
+        ],
+        "isUnique": false,
+        "where": null,
+        "with": "",
+        "method": "btree",
+        "concurrently": false,
+        "entityType": "indexes"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "user_quiz_exam_settings",
+        "name": "user_quiz_exam_settings_quiz_id_idx",
+        "nameExplicit": true,
+        "columns": [
+          {
+            "value": "quiz_id",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          }
+        ],
+        "isUnique": false,
+        "where": null,
+        "with": "",
+        "method": "btree",
+        "concurrently": false,
+        "entityType": "indexes"
+      }
+    }
+  ]
+}

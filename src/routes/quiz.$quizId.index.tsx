@@ -1,17 +1,21 @@
 import { Link, createFileRoute } from '@tanstack/react-router'
-import type { Result } from '#/lib/progress'
+import type { Result } from '#/domain/progress'
 import type { ExamConfig, Quiz } from '#/quizzes/types'
 import { ExamSettings } from '#/components/ExamSettings'
 import { NotFound } from '#/components/NotFound'
+import { SignInBanner } from '#/components/SignInBanner'
 import { backLinkClasses } from '#/lib/button-classes'
 import { getFlaggedQuestions } from '#/lib/flags'
 import { formatChapter } from '#/lib/chapter-label'
 import { pageTitle } from '#/lib/page-title'
-import { formatResult } from '#/lib/progress'
+import { formatResult } from '#/domain/progress'
 import { requireQuiz } from '#/lib/quiz-route'
-import { useExamConfig } from '#/lib/use-exam-settings'
-import { useFlags, useMigrateLegacyFlags } from '#/lib/use-flags'
-import { useQuizProgress } from '#/lib/use-progress'
+import {
+  useExamConfig,
+  useFlags,
+  useQuizProgress,
+  useSignedIn,
+} from '#/lib/user-data'
 import { countQuestions } from '#/quizzes'
 
 const cardLinkClasses =
@@ -28,8 +32,7 @@ export const Route = createFileRoute('/quiz/$quizId/')({
 
 function QuizPage() {
   const quiz = Route.useLoaderData()
-  useMigrateLegacyFlags(quiz)
-  // Empty on the server and during hydration, then filled in from localStorage.
+  // Empty on the server and during hydration, then loaded (visitors: empty).
   const progress = useQuizProgress(quiz.id)
   const flags = useFlags(quiz.id)
 
@@ -50,6 +53,7 @@ function QuizPage() {
       <p className="mt-2 text-slate-600 dark:text-slate-400">
         {quiz.description} {total} questions in total.
       </p>
+      <SignInBanner className="mt-4" />
       <h2 className="mt-8 text-lg font-semibold">Chapters</h2>
       <ul className="mt-3 flex flex-col gap-3">
         {quiz.chapters.map((chapter) => {
@@ -201,6 +205,7 @@ function MockExamSection({
 }) {
   // Defaults on the server and during hydration, then the user's own settings.
   const config = useExamConfig(quiz, defaults)
+  const signedIn = useSignedIn()
 
   return (
     <section>
@@ -221,7 +226,13 @@ function MockExamSection({
           </span>
         ) : null}
       </Link>
-      <ExamSettings quiz={quiz} defaults={defaults} config={config} />
+      {signedIn ? (
+        <ExamSettings quiz={quiz} defaults={defaults} config={config} />
+      ) : (
+        <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">
+          Sign in to adjust the number of questions, time limit and pass mark.
+        </p>
+      )}
     </section>
   )
 }

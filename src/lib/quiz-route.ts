@@ -1,16 +1,46 @@
 import { notFound } from '@tanstack/react-router'
 import type { Chapter, ExamConfig, Question, Quiz } from '#/quizzes/types'
-import { getQuiz } from '#/quizzes'
+import { fetchQuiz } from '#/lib/quiz-api'
 
 /*
  * What a route needs from its quiz params, for its loader. Each throws
- * `notFound()` for an unknown id (which, as the loader also runs on the server,
- * gives a real 404 status). The component reads the result with
- * `Route.useLoaderData()`, so it needs no `if (!quiz) return null`.
+ * `notFound()` for an unknown id or a quiz the user may not see; as the loader
+ * also runs on the server, that gives a real 404 status. The component reads
+ * the result with `Route.useLoaderData()`, so it needs no
+ * `if (!quiz) return null`.
  */
 
+/** How long the browser reuses a loaded quiz before asking the server again. */
+const CLIENT_CACHE_MS = 5 * 60_000
+
+const clientCache = new Map<
+  string,
+  { at: number; quiz: Promise<Quiz | null> }
+>()
+
+/**
+ * The quiz, once per quiz for a while in the browser: every page of a quiz
+ * (and every hover preload of one) needs all of it, and it rarely changes.
+ * On the server always fresh.
+ */
+function loadQuiz(quizId: string): Promise<Quiz | null> {
+  if (typeof window === 'undefined') return fetchQuiz({ data: { quizId } })
+  const cached = clientCache.get(quizId)
+  if (cached && Date.now() - cached.at < CLIENT_CACHE_MS) return cached.quiz
+  const quiz = fetchQuiz({ data: { quizId } })
+  clientCache.set(quizId, { at: Date.now(), quiz })
+  // A failed load is not kept, so a retry asks again.
+  quiz.catch(() => clientCache.delete(quizId))
+  return quiz
+}
+
+/** Forgets loaded quizzes, e.g. on sign-out (personal quizzes are private). */
+export function clearQuizCache(): void {
+  clientCache.clear()
+}
+
 export async function requireQuiz(quizId: string): Promise<Quiz> {
-  const quiz = await getQuiz(quizId)
+  const quiz = await loadQuiz(quizId)
   if (!quiz) throw notFound()
   return quiz
 }

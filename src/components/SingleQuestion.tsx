@@ -3,11 +3,11 @@ import { Link } from '@tanstack/react-router'
 import { useHotkey } from '@tanstack/react-hotkeys'
 import type { Question } from '#/quizzes/types'
 import { buttonClasses } from '#/lib/button-classes'
-import { toggleFlag } from '#/lib/flags'
 import { focusHeading, isFocusLost } from '#/lib/focus'
 import { describeOptionKeys } from '#/lib/option-keys'
 import { shuffle } from '#/lib/shuffle'
-import { useFlags } from '#/lib/use-flags'
+import { useFlags } from '#/lib/user-data'
+import { useFlagToggle } from '#/lib/use-flag-toggle'
 import { useOptionHotkeys } from '#/lib/use-option-hotkeys'
 import {
   getCorrectIndexes,
@@ -71,6 +71,7 @@ function Attempt({
   const [picks, setPicks] = useState<ReadonlyArray<number>>([])
   const [submitted, setSubmitted] = useState(false)
   const flags = useFlags(quizId)
+  const onFlag = useFlagToggle(quizId)
 
   const multiple = isMultipleAnswer(question)
   const required = getCorrectIndexes(question).length
@@ -114,7 +115,7 @@ function Attempt({
         submitted={submitted}
         flagged={flags?.has(question.id) ?? false}
         onToggle={pick}
-        onFlag={() => toggleFlag(quizId, question)}
+        onFlag={() => onFlag(question)}
         shareQuizId={quizId}
       />
 

@@ -1,17 +1,18 @@
 /*
- * Light/dark theme. Without a saved choice the page follows the system
- * (prefers-color-scheme, see the `dark` variant in styles.css). Choosing a
- * theme saves it in one versioned localStorage key and puts `light` or `dark`
- * on <html>, which wins over the system. Like progress.ts, nothing here
- * throws: reads fall back to "no choice", writes are best effort (the choice
- * then only lasts until the page is closed).
+ * Light/dark theme, a preference of the device (not of the account). Without
+ * a choice the page follows the system (prefers-color-scheme, see the `dark`
+ * variant in styles.css). Choosing a theme saves it in a cookie and puts
+ * `light` or `dark` on <html>, which wins over the system. The server reads
+ * the cookie too, so the first paint already has the chosen theme.
  */
 
-import { STORAGE_KEYS } from '#/lib/storage-keys'
+import { createIsomorphicFn } from '@tanstack/react-start'
+import { getCookie } from '@tanstack/react-start/server'
 
 export type Theme = 'light' | 'dark'
 
-const STORAGE_KEY = STORAGE_KEYS.theme
+const COOKIE = 'quiz-generator-theme'
+const ONE_YEAR_SECONDS = 60 * 60 * 24 * 365
 const DARK_QUERY = '(prefers-color-scheme: dark)'
 
 /** Background colours of the two themes, for the theme-color meta tags. */
@@ -20,29 +21,26 @@ export const THEME_COLORS: Record<Theme, string> = {
   dark: '#020617',
 }
 
-/**
- * Runs in <head> before the first paint, so a saved choice doesn't flash the
- * system theme first. Mirrors readStored() and applyTheme() without the meta
- * tags: those are synced after hydration.
- */
-export const THEME_INIT_SCRIPT = `try{var t=localStorage.getItem(${JSON.stringify(STORAGE_KEY)});if(t==='light'||t==='dark')document.documentElement.classList.add(t)}catch(e){}`
-
-function readStored(): Theme | undefined {
-  try {
-    const value = localStorage.getItem(STORAGE_KEY)
-    return value === 'light' || value === 'dark' ? value : undefined
-  } catch {
-    // Unavailable (e.g. blocked storage) or on the server.
-    return undefined
-  }
+function parseTheme(value: string | undefined): Theme | undefined {
+  return value === 'light' || value === 'dark' ? value : undefined
 }
 
-// Remembers a choice that couldn't be saved, so the toggle still works.
-let unsavedChoice: Theme | undefined
+function readCookie(): string | undefined {
+  const prefix = `${COOKIE}=`
+  return document.cookie
+    .split('; ')
+    .find((part) => part.startsWith(prefix))
+    ?.slice(prefix.length)
+}
+
+/** The chosen theme, or undefined to follow the system. Server and client. */
+export const getChosenTheme = createIsomorphicFn()
+  .server((): Theme | undefined => parseTheme(getCookie(COOKIE)))
+  .client((): Theme | undefined => parseTheme(readCookie()))
 
 /** The theme in effect: the choice if there is one, else the system's. */
 export function getThemeSnapshot(): Theme {
-  const chosen = unsavedChoice ?? readStored()
+  const chosen = parseTheme(readCookie())
   if (chosen) return chosen
   return window.matchMedia(DARK_QUERY).matches ? 'dark' : 'light'
 }
@@ -65,20 +63,14 @@ function applyTheme(theme: Theme | undefined) {
   })
 }
 
-/** Brings <html> and the theme-color tags in line with the saved choice. */
+/** Brings the theme-color tags (and <html>) in line with the saved choice. */
 export function applySavedTheme(): void {
-  applyTheme(unsavedChoice ?? readStored())
+  applyTheme(parseTheme(readCookie()))
 }
 
 export function setTheme(theme: Theme): void {
+  document.cookie = `${COOKIE}=${theme}; Path=/; Max-Age=${ONE_YEAR_SECONDS}; SameSite=Lax`
   applyTheme(theme)
-  try {
-    localStorage.setItem(STORAGE_KEY, theme)
-    unsavedChoice = undefined
-  } catch (error) {
-    console.warn('Could not save the theme', error)
-    unsavedChoice = theme
-  }
   notify()
 }
 
@@ -90,14 +82,6 @@ function notify() {
   listeners.forEach((listener) => listener())
 }
 
-/** Another tab changed (or cleared) the choice. */
-function onStorage(event: StorageEvent) {
-  if (event.key !== null && event.key !== STORAGE_KEY) return
-  unsavedChoice = undefined
-  applyTheme(readStored())
-  notify()
-}
-
 /** The system theme changed; matters only while there is no choice. */
 function onSystemChange() {
   notify()
@@ -105,14 +89,12 @@ function onSystemChange() {
 
 export function subscribeTheme(listener: () => void): () => void {
   if (listeners.size === 0) {
-    window.addEventListener('storage', onStorage)
     window.matchMedia(DARK_QUERY).addEventListener('change', onSystemChange)
   }
   listeners.add(listener)
   return () => {
     listeners.delete(listener)
     if (listeners.size === 0) {
-      window.removeEventListener('storage', onStorage)
       window
         .matchMedia(DARK_QUERY)
         .removeEventListener('change', onSystemChange)

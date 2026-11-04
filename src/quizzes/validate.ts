@@ -159,8 +159,10 @@ export function validateQuizzes(quizzes: ReadonlyArray<Quiz>): Array<string> {
         )
       }
       chapterIds.add(chapter.id)
-      if (!Number.isInteger(chapter.number)) {
-        errors.push(`${chapterWhere}: number must be an integer`)
+      if (!Number.isInteger(chapter.number) || chapter.number < 1) {
+        errors.push(
+          `${chapterWhere}: number must be a whole number of 1 or more`,
+        )
       }
       if (chapterNumbers.has(chapter.number)) {
         errors.push(

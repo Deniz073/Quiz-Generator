@@ -1,11 +1,8 @@
 import { useEffect, useEffectEvent, useReducer, useRef } from 'react'
 import { useHotkey } from '@tanstack/react-hotkeys'
 import type { PlannedQuestion } from '#/lib/quiz-plan'
-import type { ProgressTarget } from '#/lib/progress'
 import type { Round } from '#/lib/quiz-state'
-import { toggleFlag } from '#/lib/flags'
 import { focusHeading, isFocusLost } from '#/lib/focus'
-import { recordResult } from '#/lib/progress'
 import { reshufflePlan } from '#/lib/quiz-plan'
 import {
   canCheck,
@@ -21,7 +18,8 @@ import {
 import { LeavePrompt } from '#/components/LeavePrompt'
 import { QuestionCard } from '#/components/QuestionCard'
 import { ResultsScreen } from '#/components/ResultsScreen'
-import { useFlags } from '#/lib/use-flags'
+import { saveChapterAttempt, useFlags, useUserId } from '#/lib/user-data'
+import { useFlagToggle } from '#/lib/use-flag-toggle'
 import { useLeaveGuard } from '#/lib/use-leave-guard'
 import { useOptionHotkeys } from '#/lib/use-option-hotkeys'
 
@@ -30,10 +28,11 @@ type Props = {
   /** Builds the plan of a full round (also used for "retry" / "new round"). */
   buildPlan: () => Array<PlannedQuestion>
   /**
-   * Where to save the result when a full round finishes (never for "retry
-   * incorrect" rounds). Omit for modes that are not recorded.
+   * The chapter whose attempt a finished full round records, for signed-in
+   * users (never for "retry incorrect" rounds). Omit for modes that are not
+   * recorded.
    */
-  record?: ProgressTarget
+  record?: { chapterId: string }
   /** False hides the "retry" button, e.g. when `buildPlan` would be empty. */
   canRetry?: boolean
 } & (
@@ -56,8 +55,10 @@ const RETRY_LABELS = {
 
 export function QuizRunner(props: Props) {
   const { quizId, mode, buildPlan, record, canRetry = true } = props
-  // Undefined until loaded from localStorage; nothing shows as flagged then.
+  // Undefined until loaded; nothing shows as flagged then.
   const flags = useFlags(quizId)
+  const onFlag = useFlagToggle(quizId)
+  const userId = useUserId()
 
   // A full round of this mode. Only "subset" rounds are never recorded.
   const fullRound = (): Round => ({ subset: props.mode === 'subset' })
@@ -80,8 +81,14 @@ export function QuizRunner(props: Props) {
   // props and state without making them dependencies (which would save the
   // same result again).
   const finishRound = useEffectEvent(() => {
-    if (record && !round.subset) {
-      recordResult(quizId, record, getScore(state), state.plan.length)
+    if (userId && record && !round.subset) {
+      saveChapterAttempt(
+        userId,
+        quizId,
+        record.chapterId,
+        getScore(state),
+        state.plan.length,
+      )
     }
   })
   useEffect(() => {
@@ -195,7 +202,7 @@ export function QuizRunner(props: Props) {
           onPrevious={
             canGoBack(state) ? () => dispatch({ type: 'previous' }) : undefined
           }
-          onFlag={() => toggleFlag(quizId, item.question)}
+          onFlag={() => onFlag(item.question)}
           shareQuizId={quizId}
         />
       </div>

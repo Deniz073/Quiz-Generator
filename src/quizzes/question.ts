@@ -1,3 +1,4 @@
+import { isCorrectPick, isLegalPick } from '../domain/mock-exam'
 import type { MultipleAnswerQuestion, Question } from './types'
 
 export function isMultipleAnswer(
@@ -18,11 +19,7 @@ export function isAnswerCorrect(
   question: Question,
   chosen: ReadonlyArray<number>,
 ): boolean {
-  const correct = getCorrectIndexes(question)
-  return (
-    chosen.length === correct.length &&
-    correct.every((index) => chosen.includes(index))
-  )
+  return isCorrectPick(getCorrectIndexes(question), chosen)
 }
 
 /**
@@ -52,14 +49,11 @@ export function isValidPick(
   question: Question,
   pick: ReadonlyArray<number>,
 ): boolean {
-  return (
-    new Set(pick).size === pick.length &&
-    pick.length <= getCorrectIndexes(question).length &&
-    pick.every(
-      (index) =>
-        Number.isInteger(index) &&
-        index >= 0 &&
-        index < question.options.length,
-    )
+  return isLegalPick(
+    {
+      optionCount: question.options.length,
+      correct: getCorrectIndexes(question),
+    },
+    pick,
   )
 }

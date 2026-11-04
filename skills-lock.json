@@ -13,6 +13,12 @@
       "skillPath": "security/SKILL.md",
       "computedHash": "087c1094fa5f1834af4785c058dcc8c9abe4c1321b853883c76ea46c93a21cfe"
     },
+    "codebase-design": {
+      "source": "mattpocock/skills",
+      "sourceType": "github",
+      "skillPath": "skills/engineering/codebase-design/SKILL.md",
+      "computedHash": "417e3ea96ab3fbe2b7a4279ce3e59202fb7106ad688c12f2d577c9219803de8d"
+    },
     "create-auth": {
       "source": "better-auth/skills",
       "sourceType": "github",
@@ -23,6 +29,12 @@
       "source": "./node_modules/drizzle-kit/skills",
       "sourceType": "local",
       "computedHash": "27540b3acc549af69f3882a32f4daa68b2efea9c8724d4506631770cd4b13c88"
+    },
+    "improve-codebase-architecture": {
+      "source": "mattpocock/skills",
+      "sourceType": "github",
+      "skillPath": "skills/engineering/improve-codebase-architecture/SKILL.md",
+      "computedHash": "11cfd9568d71445df710d5a9332c674ad773de0c9d5fc22d3ffa175bdd7d988b"
     },
     "shadcn": {
       "source": "shadcn/ui",

@@ -7,7 +7,7 @@ import { formatChapter } from '#/lib/chapter-label'
 import { getFlaggedQuestions } from '#/lib/flags'
 import { pageTitle } from '#/lib/page-title'
 import { requireQuiz } from '#/lib/quiz-route'
-import { useFlags } from '#/lib/use-flags'
+import { useFlags } from '#/lib/user-data'
 import { getCorrectIndexes } from '#/quizzes/question'
 
 // `flagged_` keeps this out of the flagged practice route's layout: the URL is
@@ -25,8 +25,8 @@ export const Route = createFileRoute('/quiz/$quizId/flagged_/review')({
 function FlaggedReviewPage() {
   const quiz = Route.useLoaderData()
   const quizId = quiz.id
-  // Undefined on the server and during hydration, then filled in from
-  // localStorage. Nothing is claimed about the flags until then.
+  // Undefined on the server and during hydration, then loaded. Nothing is
+  // claimed about the flags until then.
   const flags = useFlags(quizId)
 
   const groups = flags

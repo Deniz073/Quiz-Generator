@@ -5,11 +5,11 @@ import { NotFound } from '#/components/NotFound'
 import { QuizPageHeader } from '#/components/QuizPageHeader'
 import { QuizRunner } from '#/components/QuizRunner'
 import { formatChapter } from '#/lib/chapter-label'
-import { getFlaggedQuestions, getFlagsSnapshot } from '#/lib/flags'
+import { getFlaggedQuestions } from '#/lib/flags'
 import { buildShuffledPlan } from '#/lib/quiz-plan'
 import { pageTitle } from '#/lib/page-title'
 import { requireQuiz } from '#/lib/quiz-route'
-import { useFlags } from '#/lib/use-flags'
+import { readFlags, useFlags, useUserId } from '#/lib/user-data'
 
 export const Route = createFileRoute('/quiz/$quizId/flagged')({
   // An invalid, missing or unknown chapter falls back to the whole quiz.
@@ -23,9 +23,8 @@ export const Route = createFileRoute('/quiz/$quizId/flagged')({
           : undefined,
     }
   },
-  // Flags live in localStorage and questions are shuffled: client-only
-  // component, see the chapter route. The loader still runs on the server for a
-  // real 404.
+  // Questions are shuffled: client-only component, see the chapter route. The
+  // loader still runs on the server for a real 404.
   ssr: 'data-only',
   loader: ({ params }) => requireQuiz(params.quizId),
   head: ({ loaderData }) => ({
@@ -68,6 +67,7 @@ function FlaggedPage() {
 
 function FlaggedRound({ quiz, chapterId }: { quiz: Quiz; chapterId?: string }) {
   const flags = useFlags(quiz.id)
+  const userId = useUserId()
   const count = flags
     ? getFlaggedQuestions(quiz, flags, chapterId).length
     : undefined
@@ -95,7 +95,7 @@ function FlaggedRound({ quiz, chapterId }: { quiz: Quiz; chapterId?: string }) {
       mode="flagged"
       // Reads the latest flags, so "retry" drops questions unflagged meanwhile.
       buildPlan={() => {
-        const latest = new Set(getFlagsSnapshot()[quiz.id])
+        const latest = readFlags(userId, quiz.id)
         return buildShuffledPlan(getFlaggedQuestions(quiz, latest, chapterId))
       }}
       canRetry={count !== undefined && count > 0}

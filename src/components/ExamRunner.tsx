@@ -7,9 +7,12 @@ import type { ExamConfig, Quiz } from '#/quizzes/types'
 import { getAnswers, getScore } from '#/lib/exam-state'
 import { focusHeading } from '#/lib/focus'
 import { reshufflePlan } from '#/lib/quiz-plan'
+import type { ExamStartData, ExamScore } from '#/lib/use-exam'
 import { useExam } from '#/lib/use-exam'
 import { useLeaveGuard } from '#/lib/use-leave-guard'
 import { useOptionHotkeys } from '#/lib/use-option-hotkeys'
+import { AlertTriangleIcon, InfoIcon } from 'lucide-react'
+import { Alert, AlertDescription, AlertTitle } from '#/components/ui/alert'
 import { ExamQuestionView } from '#/components/ExamQuestionView'
 import { ExamResumePrompt } from '#/components/ExamResumePrompt'
 import { ExamReview } from '#/components/ExamReview'
@@ -20,11 +23,23 @@ import { ResultsScreen } from '#/components/ResultsScreen'
 interface Props {
   quiz: Quiz
   exam: ExamConfig
+  /** The user's settings and unfinished exam; null for a visitor. */
+  start: ExamStartData
 }
 
-export function ExamRunner({ quiz, exam }: Props) {
-  const { phase, state, dispatch, secondsLeft, resume, discard, restart } =
-    useExam(quiz, exam)
+export function ExamRunner({ quiz, exam, start }: Props) {
+  const {
+    phase,
+    state,
+    dispatch,
+    secondsLeft,
+    saved,
+    saveFailed,
+    recorded,
+    resume,
+    discard,
+    restart,
+  } = useExam(quiz, exam, start)
 
   // Plain practice on the incorrect questions after the results. Rendered
   // instead of the exam (not inside it), so the exam's hotkeys are unmounted
@@ -48,6 +63,9 @@ export function ExamRunner({ quiz, exam }: Props) {
     <ExamSession
       quizId={quiz.id}
       passPercent={state.passPercent}
+      saved={saved}
+      saveFailed={saveFailed}
+      recorded={recorded}
       state={state}
       dispatch={dispatch}
       secondsLeft={secondsLeft}
@@ -60,6 +78,12 @@ export function ExamRunner({ quiz, exam }: Props) {
 interface SessionProps {
   quizId: string
   passPercent: number
+  /** Whether the exam is kept (signed in), so leaving doesn't lose it. */
+  saved: boolean
+  /** A save or the submit failed. */
+  saveFailed: boolean
+  /** The server's score, once recorded; it counts over the local one. */
+  recorded: ExamScore | undefined
   state: ExamState
   dispatch: Dispatch<ExamAction>
   secondsLeft: number | undefined
@@ -69,11 +93,14 @@ interface SessionProps {
 
 /**
  * The timed mock exam as the user sees it: free navigation between questions,
- * a review screen, hotkeys, results. State, clock and storage live in useExam.
+ * a review screen, hotkeys, results. State, clock and saving live in useExam.
  */
 function ExamSession({
   quizId,
   passPercent,
+  saved,
+  saveFailed,
+  recorded,
   state,
   dispatch,
   secondsLeft,
@@ -139,20 +166,43 @@ function ExamSession({
 
   if (submitted) {
     const answers = getAnswers(state)
+    // The recorded score counts: it can differ when answers arrived after the
+    // deadline (the server scores the exam as it was then).
+    const score = recorded?.score ?? getScore(state)
     return (
-      <ResultsScreen
-        quizId={quizId}
-        answers={answers}
-        score={getScore(state)}
-        retryLabel="New mock exam"
-        passPercent={passPercent}
-        onRetry={onRestart}
-        onRetryIncorrect={() =>
-          onRetryIncorrect(
-            answers.filter((answer) => !answer.correct).map((a) => a.item),
-          )
-        }
-      />
+      <>
+        {saveFailed ? (
+          <Alert variant="destructive" className="mb-4">
+            <AlertTriangleIcon />
+            <AlertTitle>This exam could not be saved</AlertTitle>
+            <AlertDescription>
+              Your result below may not be recorded in your progress.
+            </AlertDescription>
+          </Alert>
+        ) : recorded && recorded.score !== getScore(state) ? (
+          <Alert className="mb-4">
+            <InfoIcon />
+            <AlertTitle>Scored as it was at the deadline</AlertTitle>
+            <AlertDescription>
+              Answers given after the time ran out don&rsquo;t count, so the
+              recorded score is {recorded.score}/{recorded.total}.
+            </AlertDescription>
+          </Alert>
+        ) : null}
+        <ResultsScreen
+          quizId={quizId}
+          answers={answers}
+          score={score}
+          retryLabel="New mock exam"
+          passPercent={passPercent}
+          onRetry={onRestart}
+          onRetryIncorrect={() =>
+            onRetryIncorrect(
+              answers.filter((answer) => !answer.correct).map((a) => a.item),
+            )
+          }
+        />
+      </>
     )
   }
 
@@ -161,7 +211,11 @@ function ExamSession({
       {blocked ? (
         <LeavePrompt
           title="Leave the exam?"
-          description="Your progress is saved and you can resume it."
+          description={
+            saved
+              ? 'Your progress is saved and you can resume it.'
+              : 'Your answers will be lost. Sign in to be able to resume an exam.'
+          }
           stayLabel="Stay on the exam"
           leaveLabel="Leave exam"
           onStay={stay}

@@ -13,6 +13,7 @@ import {
   DropdownMenuTrigger,
 } from '#/components/ui/dropdown-menu'
 import { authClient } from '#/lib/auth-client'
+import { clearQuizCache } from '#/lib/quiz-route'
 import type { CurrentUser } from '#/lib/session'
 
 /** Top-bar sign-in link, or an account menu with the profile link and sign-out. */
@@ -43,6 +44,7 @@ export function UserMenu({ user }: { user: CurrentUser | null }) {
     }
     // Leave first (the profile page would redirect to /login), then re-run the
     // root beforeLoad so every route sees the signed-out state.
+    clearQuizCache()
     await navigate({ to: '/' })
     await router.invalidate()
   }

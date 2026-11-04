@@ -1,38 +1,51 @@
 # AGENTS.md
 
-Instructions for AI agents working on this repo. Most common task: **add a quiz**.
+Instructions for AI agents working on this repo. Most common task: **add a seed quiz**.
+Domain terms (built-in quiz, personal quiz, attempt, flag, ...) are defined in
+[GLOSSARY.md](GLOSSARY.md); use them as written there.
 
-## Adding a quiz
+## Adding a seed quiz
 
-Contract: create a new folder `src/quizzes/<quiz-id>/` whose `index.ts` has a
-`export default` of a `Quiz` (types in `src/quizzes/types.ts`). That is the
-**only** change. Quizzes are auto-discovered via `import.meta.glob`; there is no
-registry, route or component to edit, and the quiz shows up on the home page.
+Quizzes live in Postgres. Seed quizzes are maintained as TypeScript in the repo
+and written to the database by `npm run db:seed` (which runs after
+`db:migrate` on every production deploy). Later, users will create their own
+personal quizzes in the app; those never live in the repo.
 
-**Do not modify anything outside your new folder.**
+Contract, two changes and nothing else:
 
-Reference example: `src/quizzes/az-900/` (one file per chapter, assembled in `index.ts`).
+1. Create a folder `src/db/seed/quizzes/<quiz-id>/` whose `index.ts` has an
+   `export default` of a `Quiz` (types in `src/quizzes/types.ts`).
+2. Add it to `seedQuizzes` in `src/db/seed/quizzes/index.ts` with its owner:
+   `'built-in'` (no owner, available to everyone, also signed out) or
+   `'seed-owner'` (a personal quiz of the user whose email is in the
+   `SEED_OWNER_EMAIL` env var). Use `'seed-owner'` unless the user asks for a
+   built-in quiz.
+
+**Do not modify anything else.** No routes, components or migrations change for
+a new quiz.
+
+Reference example: `src/db/seed/quizzes/az-900/` (one file per chapter, assembled in `index.ts`).
 
 ### Layout
 
 ```
-src/quizzes/<quiz-id>/
+src/db/seed/quizzes/<quiz-id>/
   index.ts          # default-exports the Quiz (required, must be index.ts)
   chapter-01.ts     # optional; recommended for larger quizzes
 ```
 
 Small quiz: put chapters inline in `index.ts`. Larger quiz: one file per
 chapter exporting a named `Chapter` (e.g. `export const chapter01: Chapter`),
-imported and listed in `index.ts`, like az-900. Use relative imports
-(`../types`) or the `#/quizzes/types` alias.
+imported and listed in `index.ts`, like az-900. Import the types with the
+`#/quizzes/types` alias.
 
 ### Skeleton
 
 ```ts
-import type { Quiz } from '../types'
+import type { Quiz } from '#/quizzes/types'
 
 const quiz: Quiz = {
-  id: 'my-quiz', // slug; must match the folder name
+  id: 'my-quiz', // slug; use the folder name
   title: 'My Quiz',
   description: 'One-sentence description shown on the home page.',
   // exam: { questionCount: 40, minutes: 60, passPercent: 70 }, // optional, see rules
@@ -72,12 +85,12 @@ export default quiz
 
 ### Rules enforced by the validator (`src/quizzes/validate.ts`)
 
-Violations throw when the quiz loads and fail `npm run validate:quizzes` (which `npm run build` runs first), listing quiz > chapter > question.
+Violations fail `npm run validate:quizzes` (which `npm run build` runs first) and `npm run db:seed` (which then writes nothing), listing quiz > chapter > question.
 
-- Quiz `id` and chapter `id`s are URL-safe slugs (`a-z`, `0-9`, single hyphens). The quiz `id` must equal its folder name (so ids are unique across quizzes); chapter ids are unique within a quiz.
+- Quiz `id` and chapter `id`s are URL-safe slugs (`a-z`, `0-9`, single hyphens). The quiz `id` is unique across seed quizzes (use the folder name); chapter ids are unique within a quiz.
 - Chapter ids `practice`, `exam`, `study` and `flagged` are reserved (they are routes: `/quiz/<id>/practice`, `/quiz/<id>/exam`, `/quiz/<id>/study`, `/quiz/<id>/flagged`).
-- Chapter `number`s are unique integers within a quiz.
-- Every question has an `id`: a slug unique within the quiz. Convention: `<chapter number>-<two-digit index>`, e.g. `3-07`. Saved flags refer to it, so when editing an existing quiz never change or reuse an id; give new questions a new one.
+- Chapter `number`s are unique whole numbers of 1 or more within a quiz.
+- Every question has an `id`: a slug unique within the quiz. Convention: `<chapter number>-<two-digit index>`, e.g. `3-07`. The seed matches existing rows by it, and users' flags, attempts and unfinished exams hang off those rows, so when editing an existing quiz never change or reuse a question or chapter id (a changed id is a delete plus a new question: its flags are lost); give new questions a new one. Removing a question or chapter from a seed quiz deletes it, with its flags and attempts.
 - `title`, `description`, `question`, `explanation` and every option are non-empty.
 - Each quiz has at least one chapter; each chapter at least one question.
 - 2-6 options per question (UI hotkeys cover 6); no duplicate option texts.
@@ -105,21 +118,54 @@ Violations throw when the quiz loads and fail `npm run validate:quizzes` (which 
 ### Verify
 
 ```bash
-npx prettier --write src/quizzes/<quiz-id>
+npx prettier --write src/db/seed/quizzes
 npx tsc --noEmit
 npm run lint
 npm run validate:quizzes   # prints a summary, or the errors (non-zero exit)
+npm run db:seed            # optional, needs the local database: writes it
 npm run dev                # optional: open http://localhost:3000 and try it
 ```
-
-No route, registry or generated-file changes are needed: the folder is picked up
-automatically (`import.meta.glob` in `src/quizzes/index.ts`).
 
 ## Project notes
 
 - TanStack Start (React 19, file routes), Vite, strict TypeScript, npm.
 - Style: prettier, single quotes, no semicolons. Path alias `#/*` maps to `src/*`.
 - Don't add new dependencies or tests unless asked.
+- Data: Postgres with Drizzle (`src/db/`, relations v2). Schema changes go
+  through `npm run db:generate` (new migration in `drizzle/`) and
+  `npm run db:migrate`; never edit an applied migration, and keep every
+  migration compatible with the app version still running (drop or rename
+  columns in a later release). Local database: `docker compose up -d`.
+- Tables: quiz content (`quiz`, `chapter`, `question`, `question_option`,
+  see `src/db/quiz-schema.ts`) and user state (`quiz_attempt`,
+  `question_flag`, `user_quiz_exam_settings`, `exam_session*`, see
+  `src/db/progress-schema.ts`). The app keeps using the `Quiz` type of
+  `src/quizzes/types.ts`; `src/server/quiz-access.ts` maps rows to it and back.
+- Where code lives, by where it may run (enforced by ESLint
+  `no-restricted-imports`):
+  - `src/domain/`: pure rules shared by client and server: progress (attempts,
+    best and last result), exam settings, and the mock exam rulebook (legal
+    picks, scoring, deadline and grace). Relative imports only: the drizzle-kit
+    schema loader imports from here without the `#/` alias.
+  - `src/server/`: database and session access: `quiz-access` (the only
+    module that knows the visibility rule), `user-state` (attempts, flags,
+    exam settings), `exam-store` (unfinished exams; converts ids to slugs and
+    option indexes). Never imported by client code, only by the modules below.
+  - `src/lib/*-api.ts`: server functions, kept thin: validate the input, take
+    the user from the session, ask `src/domain`, call `src/server`. Their
+    handler bodies are stripped from the client, so they may import
+    `src/server`; keep helpers inside the handlers, not at module level.
+- Visibility: a built-in quiz (`owner_id` null) is visible to everyone, a
+  personal quiz only to its owner; anything else is a 404. Server functions
+  take the user from the session, never from the client.
+- No localStorage. Signed-in users' progress, flags, exam settings and
+  unfinished exams are in the database; on the client `src/lib/user-data.ts`
+  caches them per quiz and `src/lib/exam-sync.ts` keeps an unfinished exam in
+  step with the server (`useExam` only wires it to React). Visitors keep
+  nothing. The theme is a cookie.
+- Env: `DATABASE_URL`, Better Auth (`BETTER_AUTH_URL`, `BETTER_AUTH_SECRET`,
+  Google client id/secret) and `SEED_OWNER_EMAIL` (owner of the seed-owner
+  quizzes; never write the address into the repo).
 - UI: use shadcn/ui components where possible (`src/components/ui`, Base UI
   primitives, `lucide-react` icons; see `components.json`). Check what is
   installed first, add missing ones with `npx shadcn@latest add <component>`,

@@ -28,8 +28,8 @@ export function ThemeToggle() {
     getServerThemeSnapshot,
   )
 
-  // The inline script in <head> set the class before paint; this also syncs
-  // the theme-color tags, which only exist in the document after hydration.
+  // The server rendered the chosen theme's class; this syncs the theme-color
+  // tags, which only exist in the document after hydration.
   useEffect(applySavedTheme, [])
 
   const next = theme === 'dark' ? 'light' : 'dark'
