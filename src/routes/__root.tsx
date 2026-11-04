@@ -4,7 +4,7 @@ import {
   Link,
   Scripts,
   createRootRoute,
-  useLocation,
+  useMatches,
   useRouter,
 } from '@tanstack/react-router'
 import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
@@ -14,6 +14,7 @@ import { NotFound } from '#/components/NotFound'
 import { ThemeToggle } from '#/components/ThemeToggle'
 import { UserMenu } from '#/components/UserMenu'
 import { focusHeading } from '#/lib/focus'
+import { isWidePage } from '#/lib/page-width'
 import { SITE_TITLE } from '#/lib/page-title'
 import { getCurrentUser } from '#/lib/session'
 import { THEME_COLORS, getChosenTheme } from '#/lib/theme'
@@ -97,9 +98,11 @@ function useFocusPageHeading() {
 function RootDocument({ children }: { children: React.ReactNode }) {
   useFocusPageHeading()
   const { user, theme } = Route.useRouteContext()
-  // The quiz assistant shows a preview and a chat side by side.
-  const wide = useLocation({
-    select: (location) => location.pathname.startsWith('/assistant/'),
+  // The quiz assistant shows a preview and a chat side by side. From the
+  // rendered matches, not the URL: the width changes with what is shown (its
+  // loading skeleton included), not while the previous page is still up.
+  const wide = useMatches({
+    select: (matches) => matches.some((match) => isWidePage(match.pathname)),
   })
   const width = wide ? 'max-w-7xl' : 'max-w-3xl'
   return (
@@ -128,7 +131,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         </a>
         <header className="border-b border-slate-200 dark:border-slate-800">
           <div
-            className={`mx-auto flex ${width} items-center justify-between px-4 py-3`}
+            className={`mx-auto flex ${width} items-center justify-between px-4 py-3 [view-transition-name:site-header]`}
           >
             <Link
               to="/"

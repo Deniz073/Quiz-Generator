@@ -1,7 +1,9 @@
 import { createFileRoute, notFound, redirect } from '@tanstack/react-router'
 import { NotFound } from '#/components/NotFound'
 import { QuizAssistant } from '#/components/QuizAssistant'
+import { QuizAssistantSkeleton } from '#/components/QuizAssistantSkeleton'
 import { fetchAssistantStart } from '#/lib/assistant-api'
+import { assistantPageKey, takeHandover } from '#/lib/assistant-handover'
 import { pageTitle } from '#/lib/page-title'
 
 /*
@@ -17,6 +19,9 @@ export const Route = createFileRoute('/assistant/$quizId')({
     }
   },
   loader: async ({ params }) => {
+    // Just created on this page: nothing to load (see assistant-handover).
+    const handedOver = takeHandover(params.quizId)
+    if (handedOver) return handedOver
     const start = await fetchAssistantStart({
       data: { quizId: params.quizId === 'new' ? null : params.quizId },
     })
@@ -26,6 +31,8 @@ export const Route = createFileRoute('/assistant/$quizId')({
   // Always fresh: the quiz and the user's keys may have changed elsewhere.
   staleTime: 0,
   gcTime: 0,
+  // Same page for /assistant/new and the quiz its first Save created.
+  remountDeps: ({ params }) => assistantPageKey(params.quizId),
   head: ({ loaderData }) => ({
     meta: [
       {
@@ -37,6 +44,13 @@ export const Route = createFileRoute('/assistant/$quizId')({
       },
     ],
   }),
+  // A skeleton soon instead of keeping the previous page up while the quiz
+  // and keys load. Not at once: every navigation also checks the session
+  // (root beforeLoad), and a handover must finish without one. Kept up
+  // briefly once shown, so it doesn't flash.
+  pendingComponent: QuizAssistantSkeleton,
+  pendingMs: 150,
+  pendingMinMs: 200,
   component: AssistantPage,
   notFoundComponent: () => <NotFound message="Quiz not found." />,
 })

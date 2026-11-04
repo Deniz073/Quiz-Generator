@@ -186,3 +186,23 @@ li {
     @apply font-sans;
   }
 }
+
+/* Into and out of the quiz assistant the page width changes: the header
+ * glides to its new width and the content cross-fades (see src/router.tsx). */
+::view-transition-group(*) {
+  animation-duration: 250ms;
+  animation-timing-function: cubic-bezier(0.2, 0, 0, 1);
+}
+
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 200ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none;
+  }
+}

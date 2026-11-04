@@ -316,7 +316,7 @@ function friendlyError(error: Error): string {
   const nested = /"message":"((?:[^"\\]|\\.)*)"/.exec(raw)?.[1]
   const message = nested ? `${raw.split(' ')[0]} ${nested}` : raw
   // Our own endpoint's 401: the session ended, not the provider key.
-  if (/status: 401/.test(message)) {
+  if (/status: 401\b/.test(message)) {
     return 'You were signed out. Sign in again to go on.'
   }
   if (/401|authentication|api[_ -]?key|invalid x-api-key/i.test(message)) {

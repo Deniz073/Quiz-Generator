@@ -18,6 +18,7 @@ import { Button } from '#/components/ui/button'
 import { Tabs, TabsList, TabsTrigger } from '#/components/ui/tabs'
 import type { AssistantStart, SaveOutcome } from '#/lib/assistant-api'
 import { saveAssistantQuiz } from '#/lib/assistant-api'
+import { handOverNewQuiz } from '#/lib/assistant-handover'
 import { createWorkingCopyStore } from '#/lib/assistant-client-tools'
 import { backLinkClasses } from '#/lib/button-classes'
 import { forgetQuiz } from '#/lib/quiz-route'
@@ -102,9 +103,18 @@ export function QuizAssistant({ start }: { start: AssistantStart }) {
           setJustSaved(true)
           forgetQuiz(outcome.quiz.id)
           if (outcome.created) {
-            void navigate({
+            const target = {
               to: '/assistant/$quizId',
               params: { quizId: outcome.quiz.id },
+            } as const
+            // The route takes this instead of loading (no skeleton, no
+            // remount): the conversation and working copy stay.
+            handOverNewQuiz(outcome.quiz.id, {
+              providers: start.providers,
+              editable: { quiz: outcome.quiz, updatedAt: outcome.updatedAt },
+            })
+            void navigate({
+              ...target,
               replace: true,
               // Saved: the leave guard may not have caught up yet.
               ignoreBlocker: true,
