@@ -16,6 +16,12 @@ export const apiKeyProviderSchema = z.enum(['claude', 'codex'])
 
 export type ApiKeyProvider = z.infer<typeof apiKeyProviderSchema>
 
+/** The provider as the UI names it ("codex" is OpenAI). */
+export const providerLabels: Record<ApiKeyProvider, string> = {
+  claude: 'Claude',
+  codex: 'OpenAI',
+}
+
 /** What the client may know about a saved key: never the key itself. */
 export type ApiKeyStatus =
   | { state: 'none' }

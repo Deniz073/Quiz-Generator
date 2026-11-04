@@ -1,3 +1,15 @@
+<!-- intent-skills:start -->
+## Skill Loading
+
+Use the repository’s installed Intent. If it is unavailable, report the missing dependency instead of downloading a replacement.
+Before editing files for a substantial task:
+- Run `npm exec --no -- intent list` from the workspace root to see available local skills.
+- If a listed skill matches the task, run `npm exec --no -- intent load <package>#<skill>` before changing files.
+- Use the loaded `SKILL.md` guidance while making the change.
+- Monorepos: when working across packages, run the skill check from the workspace root and prefer the local skill for the package being changed.
+- Multiple matches: prefer the most specific local skill for the package or concern you are changing; load additional skills only when the task spans multiple packages or concerns.
+<!-- intent-skills:end -->
+
 # AGENTS.md
 
 Instructions for AI agents working on this repo. Most common task: **add a seed quiz**
@@ -161,6 +173,13 @@ npm run dev                # optional: open http://localhost:3000 and try it
   as a new personal quiz (`imported_at`, `imported_from_id`), see
   `docs/adr/0001-import-copies-published-quizzes.md`. Server functions take
   the user from the session, never from the client.
+- Quiz assistant (`/assistant/new`, `/assistant/<quiz id>`): an AI chat that
+  creates or edits one of the user's personal quizzes, on their own API key.
+  The model edits a browser-side working copy through client tools
+  (`src/lib/assistant-tools.ts`, `src/lib/working-copy.ts`); only Save
+  writes (`src/lib/assistant-api.ts` -> `src/server/quiz-writer.ts`, shared
+  with the seed). Chat stream: `src/routes/api/assistant.ts`, model and
+  prompt: `src/server/quiz-assistant.ts`. See `docs/adr/0002-*`.
 - No localStorage. Signed-in users' progress, flags, exam settings and
   unfinished exams are in the database; on the client `src/lib/user-data.ts`
   caches them per quiz and `src/lib/exam-sync.ts` keeps an unfinished exam in

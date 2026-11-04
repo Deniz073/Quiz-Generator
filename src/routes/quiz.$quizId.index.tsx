@@ -1,7 +1,9 @@
 import { Link, createFileRoute, notFound } from '@tanstack/react-router'
 import type { Result } from '#/domain/progress'
 import type { ExamConfig, Quiz } from '#/quizzes/types'
+import { SparklesIcon } from 'lucide-react'
 import { ExamSettings } from '#/components/ExamSettings'
+import { Button } from '#/components/ui/button'
 import { NotFound } from '#/components/NotFound'
 import { QuizMarketplace } from '#/components/QuizMarketplace'
 import { fetchQuizStanding } from '#/lib/marketplace-api'
@@ -61,7 +63,21 @@ function QuizPage() {
       <Link to="/" className={backLinkClasses}>
         <span aria-hidden="true">&larr;</span> All quizzes
       </Link>
-      <h1 className="mt-3 text-3xl font-bold tracking-tight">{quiz.title}</h1>
+      <div className="mt-3 flex flex-wrap items-start justify-between gap-3">
+        <h1 className="text-3xl font-bold tracking-tight">{quiz.title}</h1>
+        {user && !standing.builtIn ? (
+          <Button
+            variant="outline"
+            nativeButton={false}
+            render={
+              <Link to="/assistant/$quizId" params={{ quizId: quiz.id }} />
+            }
+          >
+            <SparklesIcon data-icon="inline-start" />
+            Edit with assistant
+          </Button>
+        ) : null}
+      </div>
       <p className="mt-2 text-slate-600 dark:text-slate-400">
         {quiz.description} {total} questions in total.
       </p>

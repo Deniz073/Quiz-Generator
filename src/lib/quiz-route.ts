@@ -39,6 +39,11 @@ export function clearQuizCache(): void {
   clientCache.clear()
 }
 
+/** Forgets one loaded quiz, e.g. after the quiz assistant saved it. */
+export function forgetQuiz(quizId: string): void {
+  clientCache.delete(quizId)
+}
+
 export async function requireQuiz(quizId: string): Promise<Quiz> {
   const quiz = await loadQuiz(quizId)
   if (!quiz) throw notFound()

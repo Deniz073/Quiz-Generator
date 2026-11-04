@@ -85,6 +85,13 @@ function validateQuestion(
   }
 }
 
+/** One question's own problems (not its id's uniqueness); empty when valid. */
+export function validateQuestionContent(question: Question): Array<string> {
+  const errors: Array<string> = []
+  validateQuestion(question, 'question', errors)
+  return errors.map((error) => error.replace(/^question: /, ''))
+}
+
 function validateExam(
   quiz: Quiz,
   quizWhere: string,

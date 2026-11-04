@@ -103,7 +103,12 @@ function Status({ standing }: { standing: QuizStanding }) {
   if (standing.imported) {
     const source = standing.importedFrom
     if (!source) {
-      return <>Imported from a quiz that is no longer on the Marketplace.</>
+      return (
+        <>
+          Imported from a quiz that is no longer on the Marketplace.{' '}
+          {publishNote(standing.edited)}
+        </>
+      )
     }
     return (
       <>
@@ -119,11 +124,19 @@ function Status({ standing }: { standing: QuizStanding }) {
         ) : (
           <span className="font-medium text-foreground">{source.title}</span>
         )}{' '}
-        by {source.publisherName}. Changes to it don’t reach your copy.
+        by {source.publisherName}. Changes to it don’t reach your copy.{' '}
+        {publishNote(standing.edited)}
       </>
     )
   }
   return <>Not published. Publish it to let others preview and import it.</>
+}
+
+/** An imported quiz: publishable once its owner has edited it. */
+function publishNote(edited: boolean): string {
+  return edited
+    ? 'You have edited your copy, so you can publish it.'
+    : 'Edit it with the quiz assistant to publish your own version.'
 }
 
 function copyNote(copies: number): string {

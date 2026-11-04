@@ -1,9 +1,10 @@
 import { useState } from 'react'
 import { Link, createFileRoute } from '@tanstack/react-router'
-import { Search } from 'lucide-react'
+import { Search, SparklesIcon } from 'lucide-react'
 import type { QuizSummary } from '#/lib/quiz-api'
 import { SignInBanner } from '#/components/SignInBanner'
 import { Badge } from '#/components/ui/badge'
+import { Button } from '#/components/ui/button'
 import { Input } from '#/components/ui/input'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '#/components/ui/tabs'
 import { formatResult } from '#/domain/progress'
@@ -16,6 +17,7 @@ export const Route = createFileRoute('/')({
 
 function Home() {
   const quizzes = Route.useLoaderData()
+  const { user } = Route.useRouteContext()
   const [query, setQuery] = useState('')
   const needle = query.trim().toLowerCase()
   const matches = needle
@@ -27,7 +29,18 @@ function Home() {
   const hasPersonal = quizzes.some((quiz) => !quiz.builtIn)
   return (
     <div>
-      <h1 className="text-3xl font-bold tracking-tight">Quizzes</h1>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h1 className="text-3xl font-bold tracking-tight">Quizzes</h1>
+        {user ? (
+          <Button
+            nativeButton={false}
+            render={<Link to="/assistant/$quizId" params={{ quizId: 'new' }} />}
+          >
+            <SparklesIcon data-icon="inline-start" />
+            Create with assistant
+          </Button>
+        ) : null}
+      </div>
       <p className="mt-2 text-slate-600 dark:text-slate-400">
         Pick a quiz to practice chapter by chapter.
       </p>

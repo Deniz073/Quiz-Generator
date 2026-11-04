@@ -50,7 +50,7 @@ The page listing every published quiz, where anyone can preview one and signed-i
 _Avoid_: Store, library, catalogue
 
 **Publish**:
-An owner making one of their personal quizzes available on the Marketplace. Built-in quizzes are never published; they are already available to everyone.
+An owner making one of their personal quizzes available on the Marketplace. Built-in quizzes are never published; they are already available to everyone. An imported quiz can be published only once its owner has edited it.
 _Avoid_: Share (reserved for giving a quiz to one specific person)
 
 **Unpublish**:
@@ -71,8 +71,29 @@ A signed-in user taking a copy of a published quiz as a personal quiz of their o
 _Avoid_: Subscribe, clone, download
 
 **Imported quiz**:
-A personal quiz made by importing a published quiz; it remembers which published quiz it was copied from, while that still exists. A user has at most one imported quiz per published quiz.
+A personal quiz made by importing a published quiz; it remembers which published quiz it was copied from, while that still exists. A user has at most one imported quiz per published quiz. Once its owner has edited it, they may publish it as their own.
 _Avoid_: Copy (in the UI), fork
+
+## Quiz assistant
+
+**Quiz assistant**:
+A conversation with an AI model whose only purpose is creating a new personal quiz or editing one of the user's own personal quizzes. Built-in quizzes are never edited this way.
+_Avoid_: Chatbot, AI generator, copilot
+
+**Provider**:
+The AI company whose model the quiz assistant uses, with the user's own API key: Claude or OpenAI.
+_Avoid_: Codex, ChatGPT (for the provider)
+
+**Working copy**:
+The quiz as the quiz assistant is editing it, including changes not yet saved. It exists only while the assistant is open; leaving loses it.
+_Avoid_: Draft
+
+**Save**:
+Writing the working copy to the quiz, creating the quiz the first time. Removing questions or chapters this way also removes their flags and attempts.
+
+**Discard**:
+Throwing away the working copy's unsaved changes, back to the quiz as last saved.
+_Avoid_: Undo, reset
 
 ## Ways to use a quiz
 

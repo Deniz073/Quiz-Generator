@@ -48,6 +48,8 @@ export const fetchPreview = createServerFn({ method: 'GET' })
 export interface QuizStanding extends MarketplaceStanding {
   builtIn: boolean
   imported: boolean
+  /** Saved changes by its owner since it was created or imported. */
+  edited: boolean
   published: boolean
   canPublish: boolean
   canDelete: boolean
@@ -68,6 +70,7 @@ export const fetchQuizStanding = createServerFn({ method: 'GET' })
       ...standing,
       builtIn: header.builtIn,
       imported: header.imported,
+      edited: header.edited,
       published: header.published,
       canPublish: owned && canPublish(header),
       canDelete: owned && canDelete(header),

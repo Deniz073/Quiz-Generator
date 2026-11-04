@@ -4,6 +4,7 @@ import {
   Link,
   Scripts,
   createRootRoute,
+  useLocation,
   useRouter,
 } from '@tanstack/react-router'
 import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
@@ -96,6 +97,11 @@ function useFocusPageHeading() {
 function RootDocument({ children }: { children: React.ReactNode }) {
   useFocusPageHeading()
   const { user, theme } = Route.useRouteContext()
+  // The quiz assistant shows a preview and a chat side by side.
+  const wide = useLocation({
+    select: (location) => location.pathname.startsWith('/assistant/'),
+  })
+  const width = wide ? 'max-w-7xl' : 'max-w-3xl'
   return (
     // The theme toggle changes the class itself, ahead of the next render.
     <html lang="en" className={theme} suppressHydrationWarning>
@@ -121,7 +127,9 @@ function RootDocument({ children }: { children: React.ReactNode }) {
           Skip to main content
         </a>
         <header className="border-b border-slate-200 dark:border-slate-800">
-          <div className="mx-auto flex max-w-3xl items-center justify-between px-4 py-3">
+          <div
+            className={`mx-auto flex ${width} items-center justify-between px-4 py-3`}
+          >
             <Link
               to="/"
               className="-my-1 inline-block rounded-md py-1 text-lg font-bold tracking-tight transition-colors hover:text-sky-700 dark:hover:text-sky-400"
@@ -145,7 +153,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         <main
           id="main"
           tabIndex={-1}
-          className="mx-auto max-w-3xl px-4 py-6 sm:py-10"
+          className={`mx-auto ${width} px-4 ${wide ? 'py-4' : 'py-6 sm:py-10'}`}
         >
           {children}
         </main>

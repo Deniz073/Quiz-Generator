@@ -1,0 +1,47 @@
+{
+  "type": "diff",
+  "version": "9",
+  "dialect": "postgres",
+  "id": "e2128a4f-e09d-4476-b660-e1ac3f3ae223",
+  "prevIds": [
+    "edea29ab-36d5-43ae-a865-36212d100a65"
+  ],
+  "footprints": [
+    {
+      "statementType": "add_column",
+      "statementTarget": [
+        "column",
+        "public",
+        "quiz",
+        "edited_at"
+      ],
+      "writes": [
+        "s|col|public.quiz.edited_at",
+        "n|col|public.quiz.edited_at",
+        "e|col|public.quiz.edited_at"
+      ],
+      "reads": [
+        "n|tbl|public.quiz",
+        "n|sch|public"
+      ]
+    }
+  ],
+  "deltas": [
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "quiz",
+        "name": "edited_at",
+        "type": "timestamp with time zone",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    }
+  ]
+}

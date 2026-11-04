@@ -56,6 +56,12 @@ export const quiz = pgTable(
       (): AnyPgColumn => quiz.id,
       { onDelete: 'set null' },
     ),
+    /**
+     * When the owner last saved changes to the content (the quiz assistant).
+     * Null: unchanged since it was created or imported. An imported quiz may
+     * be published only once it is set (src/domain/marketplace.ts).
+     */
+    editedAt: timestamp('edited_at', { withTimezone: true }),
     createdAt: timestamp('created_at', { withTimezone: true })
       .defaultNow()
       .notNull(),

@@ -1,0 +1,138 @@
+import { createServerFn } from '@tanstack/react-start'
+import { z } from 'zod'
+import type { ApiKeyProvider } from '#/lib/api-keys-schema'
+import { QUIZ_LIMITS, checkQuizLimits } from '#/quizzes/limits'
+import type { Question, Quiz } from '#/quizzes/types'
+import { validateQuizzes } from '#/quizzes/validate'
+import type { EditableQuiz, SaveOutcome } from '#/server/quiz-writer'
+import { getApiKeysStatus } from '#/server/api-key-store'
+import { findEditableQuiz, saveOwnQuiz } from '#/server/quiz-writer'
+import { requireRequestUserId } from '#/server/request-user'
+
+/*
+ * The quiz assistant's server functions: what the assistant starts from, and
+ * Save. The chat itself streams from /api/assistant. Every write takes the
+ * user from the session and re-checks the quiz rules and size caps here: the
+ * working copy comes from the browser, so it is untrusted input.
+ */
+
+export type { EditableQuiz, SaveOutcome }
+
+export interface AssistantStart {
+  /** Providers with a key that can be used now. */
+  providers: Array<ApiKeyProvider>
+  /** The quiz to edit; null for a new quiz. */
+  editable: EditableQuiz | null
+}
+
+/** Null when the quiz isn't one of the user's own personal quizzes. */
+export const fetchAssistantStart = createServerFn({ method: 'GET' })
+  .validator(z.object({ quizId: z.string().min(1).max(200).nullable() }))
+  .handler(async ({ data }): Promise<AssistantStart | null> => {
+    const userId = await requireRequestUserId()
+    const [keys, editable] = await Promise.all([
+      getApiKeysStatus(userId),
+      data.quizId ? findEditableQuiz(data.quizId, userId) : null,
+    ])
+    if (data.quizId && !editable) return null
+    const providers = (['claude', 'codex'] as const).filter(
+      (provider) => keys[provider].state === 'set',
+    )
+    return { providers, editable }
+  })
+
+const text = (max: number) => z.string().max(max)
+
+const questionSchema = z.object({
+  id: z.string().max(100),
+  question: text(QUIZ_LIMITS.textLength),
+  options: z.array(text(QUIZ_LIMITS.textLength)).max(6),
+  explanation: text(QUIZ_LIMITS.explanationLength),
+  correctIndex: z.number().int().optional(),
+  correctIndexes: z.array(z.number().int()).max(6).optional(),
+})
+
+const quizSchema = z.object({
+  id: z.string().max(200),
+  title: text(QUIZ_LIMITS.textLength),
+  description: text(QUIZ_LIMITS.textLength),
+  chapters: z
+    .array(
+      z.object({
+        id: z.string().max(100),
+        number: z.number().int(),
+        title: text(QUIZ_LIMITS.textLength),
+        questions: z.array(questionSchema).max(QUIZ_LIMITS.questions),
+      }),
+    )
+    .max(QUIZ_LIMITS.chapters),
+  exam: z
+    .object({
+      questionCount: z.number().int(),
+      minutes: z.number().int(),
+      passPercent: z.number().int(),
+    })
+    .optional(),
+})
+
+/** Exactly the fields of a `Quiz`, so the validator sees what will be stored. */
+function toQuiz(input: z.infer<typeof quizSchema>): Quiz {
+  return {
+    id: input.id,
+    title: input.title,
+    description: input.description,
+    chapters: input.chapters.map((c) => ({
+      id: c.id,
+      number: c.number,
+      title: c.title,
+      questions: c.questions.map((q): Question => {
+        const base = {
+          id: q.id,
+          question: q.question,
+          options: q.options,
+          explanation: q.explanation,
+        }
+        if (q.correctIndexes !== undefined && q.correctIndex !== undefined) {
+          // Both: the validator reports it.
+          return {
+            ...base,
+            correctIndex: q.correctIndex,
+            correctIndexes: q.correctIndexes,
+          }
+        }
+        return q.correctIndexes !== undefined
+          ? { ...base, correctIndexes: q.correctIndexes }
+          : { ...base, correctIndex: q.correctIndex ?? -1 }
+      }),
+    })),
+    ...(input.exam && { exam: input.exam }),
+  }
+}
+
+export const saveAssistantQuiz = createServerFn({ method: 'POST' })
+  .validator(
+    z.object({
+      quiz: quizSchema,
+      /** Null: a new quiz. */
+      baseUpdatedAt: z.string().max(40).nullable(),
+      confirmed: z.boolean(),
+    }),
+  )
+  .handler(async ({ data }): Promise<SaveOutcome> => {
+    const userId = await requireRequestUserId()
+    const quiz = toQuiz(data.quiz)
+    const isNew = data.baseUpdatedAt === null
+    // A new quiz gets its id on Save; any valid slug stands in for the check.
+    const checked = isNew ? { ...quiz, id: 'new-quiz' } : quiz
+    const problems = [
+      ...validateQuizzes([checked]),
+      ...checkQuizLimits(checked),
+    ]
+    if (problems.length > 0) {
+      throw new Error(`The quiz can't be saved yet: ${problems.join('; ')}`)
+    }
+    return saveOwnQuiz(userId, quiz, {
+      baseUpdatedAt: data.baseUpdatedAt,
+      confirmed: data.confirmed,
+    })
+  })

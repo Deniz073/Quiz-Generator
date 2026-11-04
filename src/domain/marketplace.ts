@@ -10,15 +10,17 @@ export interface QuizStanding {
   builtIn: boolean
   /** Made by importing a published quiz. */
   imported: boolean
+  /** Its owner has saved changes to it since it was created or imported. */
+  edited: boolean
 }
 
 /**
- * Only an owner's own personal quizzes. An imported quiz may be published only
- * once its owner has edited it since importing it; quizzes can't be edited
- * yet, so for now an imported quiz is never published.
+ * Only an owner's own personal quizzes. An imported quiz only once its owner
+ * has edited it (with the quiz assistant): republishing someone else's quiz
+ * unchanged is not allowed.
  */
 export function canPublish(quiz: QuizStanding): boolean {
-  return !quiz.builtIn && !quiz.imported
+  return !quiz.builtIn && (!quiz.imported || quiz.edited)
 }
 
 /** Any personal quiz; with it go the owner's progress and flags on it. */

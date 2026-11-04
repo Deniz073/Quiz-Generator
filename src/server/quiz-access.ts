@@ -18,8 +18,8 @@ import type { ExamConfig, Question, Quiz } from '#/quizzes/types'
 
 /*
  * Quiz access: a quiz as a given user may see it, and the mapping between the
- * quiz tables and the app's `Quiz` (both ways: reads here, writes by the
- * seed). The only module that knows the visibility rule: a built-in quiz (no
+ * quiz tables and the app's `Quiz` (both ways: reads here, writes by
+ * #/server/quiz-writer). The only module that knows the visibility rule: a built-in quiz (no
  * owner) is visible to everyone, a personal quiz only to its owner, and
  * anything else reads as missing (null), so personal quiz ids are not
  * revealed. The one exception is the Marketplace: anyone may list and
@@ -48,6 +48,8 @@ export interface QuizHeader {
   builtIn: boolean
   /** An imported quiz (copied from a published quiz). */
   imported: boolean
+  /** Its owner has saved changes to it (the quiz assistant). */
+  edited: boolean
   /** On the Marketplace. */
   published: boolean
   /** The mock exam defaults; undefined if the quiz has no mock exam. */
@@ -62,6 +64,7 @@ const headerColumns = {
   description: quiz.description,
   ownerId: quiz.ownerId,
   importedAt: quiz.importedAt,
+  editedAt: quiz.editedAt,
   publishedAt: quiz.publishedAt,
   examQuestionCount: quiz.examQuestionCount,
   examMinutes: quiz.examMinutes,
@@ -78,6 +81,7 @@ type HeaderRow = {
   description: string
   ownerId: string | null
   importedAt: Date | null
+  editedAt: Date | null
   publishedAt: Date | null
   examQuestionCount: number | null
   examMinutes: number | null
@@ -110,6 +114,7 @@ function toHeader(row: HeaderRow): QuizHeader {
     description: row.description,
     builtIn: row.ownerId === null,
     imported: row.importedAt !== null,
+    edited: row.editedAt !== null,
     published: row.publishedAt !== null,
     exam: toExamConfig(row),
     chapterCount: row.chapterCount,
@@ -269,7 +274,7 @@ async function loadQuiz(
   }
 }
 
-// --- Writing (the seed) -----------------------------------------------------
+// --- Writing (#/server/quiz-writer and imports) -----------------------------
 
 /** A quiz as rows, without generated ids: the inverse of findQuiz. */
 export interface QuizRows {

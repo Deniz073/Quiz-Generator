@@ -12,6 +12,8 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as ProfileRouteImport } from './routes/profile'
+import { Route as ApiAssistantRouteImport } from './routes/api/assistant'
+import { Route as AssistantQuizIdRouteImport } from './routes/assistant.$quizId'
 import { Route as MarketplaceIndexRouteImport } from './routes/marketplace.index'
 import { Route as MarketplaceQuizIdRouteImport } from './routes/marketplace.$quizId'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
@@ -37,6 +39,16 @@ const LoginRoute = LoginRouteImport.update({
 const ProfileRoute = ProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAssistantRoute = ApiAssistantRouteImport.update({
+  id: '/api/assistant',
+  path: '/api/assistant',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AssistantQuizIdRoute = AssistantQuizIdRouteImport.update({
+  id: '/assistant/$quizId',
+  path: '/assistant/$quizId',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MarketplaceIndexRoute = MarketplaceIndexRouteImport.update({
@@ -100,6 +112,8 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/profile': typeof ProfileRoute
+  '/api/assistant': typeof ApiAssistantRoute
+  '/assistant/$quizId': typeof AssistantQuizIdRoute
   '/marketplace/$quizId': typeof MarketplaceQuizIdRoute
   '/marketplace/': typeof MarketplaceIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
@@ -116,6 +130,8 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/profile': typeof ProfileRoute
+  '/api/assistant': typeof ApiAssistantRoute
+  '/assistant/$quizId': typeof AssistantQuizIdRoute
   '/marketplace/$quizId': typeof MarketplaceQuizIdRoute
   '/marketplace': typeof MarketplaceIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
@@ -133,6 +149,8 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/profile': typeof ProfileRoute
+  '/api/assistant': typeof ApiAssistantRoute
+  '/assistant/$quizId': typeof AssistantQuizIdRoute
   '/marketplace/$quizId': typeof MarketplaceQuizIdRoute
   '/marketplace/': typeof MarketplaceIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
@@ -151,6 +169,8 @@ export interface FileRouteTypes {
     | '/'
     | '/login'
     | '/profile'
+    | '/api/assistant'
+    | '/assistant/$quizId'
     | '/marketplace/$quizId'
     | '/marketplace/'
     | '/api/auth/$'
@@ -167,6 +187,8 @@ export interface FileRouteTypes {
     | '/'
     | '/login'
     | '/profile'
+    | '/api/assistant'
+    | '/assistant/$quizId'
     | '/marketplace/$quizId'
     | '/marketplace'
     | '/api/auth/$'
@@ -183,6 +205,8 @@ export interface FileRouteTypes {
     | '/'
     | '/login'
     | '/profile'
+    | '/api/assistant'
+    | '/assistant/$quizId'
     | '/marketplace/$quizId'
     | '/marketplace/'
     | '/api/auth/$'
@@ -200,6 +224,8 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   LoginRoute: typeof LoginRoute
   ProfileRoute: typeof ProfileRoute
+  ApiAssistantRoute: typeof ApiAssistantRoute
+  AssistantQuizIdRoute: typeof AssistantQuizIdRoute
   MarketplaceQuizIdRoute: typeof MarketplaceQuizIdRoute
   MarketplaceIndexRoute: typeof MarketplaceIndexRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
@@ -234,6 +260,20 @@ declare module '@tanstack/react-router' {
       path: '/profile'
       fullPath: '/profile'
       preLoaderRoute: typeof ProfileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/assistant': {
+      id: '/api/assistant'
+      path: '/api/assistant'
+      fullPath: '/api/assistant'
+      preLoaderRoute: typeof ApiAssistantRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/assistant/$quizId': {
+      id: '/assistant/$quizId'
+      path: '/assistant/$quizId'
+      fullPath: '/assistant/$quizId'
+      preLoaderRoute: typeof AssistantQuizIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/marketplace/': {
@@ -320,6 +360,8 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   LoginRoute: LoginRoute,
   ProfileRoute: ProfileRoute,
+  ApiAssistantRoute: ApiAssistantRoute,
+  AssistantQuizIdRoute: AssistantQuizIdRoute,
   MarketplaceQuizIdRoute: MarketplaceQuizIdRoute,
   MarketplaceIndexRoute: MarketplaceIndexRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,

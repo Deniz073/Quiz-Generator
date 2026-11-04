@@ -23,7 +23,12 @@
     "@base-ui/react": "^1.9.0",
     "@better-auth/drizzle-adapter": "1.7.15",
     "@hookform/resolvers": "^7.0.1",
+    "@shadcn/react": "^0.3.1",
     "@tailwindcss/vite": "^4.1.18",
+    "@tanstack/ai": "^1.0.1",
+    "@tanstack/ai-anthropic": "^1.0.0",
+    "@tanstack/ai-openai": "^1.0.1",
+    "@tanstack/ai-react": "^1.0.1",
     "@tanstack/react-devtools": "0.10.13",
     "@tanstack/react-hotkeys": "0.14.0",
     "@tanstack/react-router": "1.170.44",
@@ -60,5 +65,10 @@
     "tsx": "^4.23.15",
     "typescript": "^6.0.2",
     "vite": "^8.0.0"
+  },
+  "intent": {
+    "skills": [
+      "*"
+    ]
   }
 }
