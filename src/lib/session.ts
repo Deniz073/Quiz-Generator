@@ -1,11 +1,11 @@
 import { createServerFn } from '@tanstack/react-start'
 import { getRequestHeaders } from '@tanstack/react-start/server'
-import { eq } from 'drizzle-orm'
+import { z } from 'zod'
 import { redirect } from '@tanstack/react-router'
 import { auth } from '#/lib/auth'
-import { db } from '#/db'
-import { userSettings } from '#/db/schema'
-import { apiKeysSchema } from '#/lib/api-keys-schema'
+import { apiKeyProviderSchema, apiKeysSchema } from '#/lib/api-keys-schema'
+import type { ApiKeysStatus } from '#/lib/api-keys-schema'
+import { getApiKeysStatus, updateApiKeys } from '#/server/api-key-store'
 
 export type CurrentUser = {
   id: string
@@ -38,40 +38,32 @@ export const getCurrentUser = createServerFn({ method: 'GET' }).handler(
   },
 )
 
-/** The signed-in user's saved API keys. Redirects to /login when signed out. */
+/**
+ * Whether the signed-in user has saved API keys, with a short hint. Never the
+ * keys themselves. Redirects to /login when signed out.
+ */
 export const getApiKeys = createServerFn({ method: 'GET' }).handler(
-  async () => {
+  async (): Promise<ApiKeysStatus> => {
     const user = await requireSessionUser()
-    const rows = await db
-      .select({
-        claudeApiKey: userSettings.claudeApiKey,
-        codexApiKey: userSettings.codexApiKey,
-      })
-      .from(userSettings)
-      .where(eq(userSettings.userId, user.id))
-      .limit(1)
-    const row = rows.at(0)
-    return {
-      claudeApiKey: row?.claudeApiKey ?? '',
-      codexApiKey: row?.codexApiKey ?? '',
-    }
+    return getApiKeysStatus(user.id)
   },
 )
 
-/** Saves both keys; an empty string clears a key. */
+/** Saves the non-empty keys; an empty field keeps the saved key. */
 export const saveApiKeys = createServerFn({ method: 'POST' })
   .validator(apiKeysSchema)
   .handler(async ({ data }) => {
     const user = await requireSessionUser()
-    const values = {
-      claudeApiKey: data.claudeApiKey || null,
-      codexApiKey: data.codexApiKey || null,
-    }
-    await db
-      .insert(userSettings)
-      .values({ userId: user.id, ...values })
-      .onConflictDoUpdate({
-        target: userSettings.userId,
-        set: { ...values, updatedAt: new Date() },
-      })
+    await updateApiKeys(user.id, {
+      claude: data.claudeApiKey || undefined,
+      codex: data.codexApiKey || undefined,
+    })
+  })
+
+/** Removes one saved key. */
+export const removeApiKey = createServerFn({ method: 'POST' })
+  .validator(z.object({ provider: apiKeyProviderSchema }))
+  .handler(async ({ data }) => {
+    const user = await requireSessionUser()
+    await updateApiKeys(user.id, { [data.provider]: null })
   })

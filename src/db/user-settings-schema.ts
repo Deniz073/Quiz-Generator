@@ -6,7 +6,7 @@ export const userSettings = pgTable('user_settings', {
   userId: text('user_id')
     .primaryKey()
     .references(() => user.id, { onDelete: 'cascade' }),
-  // Plaintext for now. Encrypt before using this outside local development.
+  // Encrypted (`v1:<iv>:<tag>:<ciphertext>`); only src/server/api-key-store reads or writes them.
   claudeApiKey: text('claude_api_key'),
   codexApiKey: text('codex_api_key'),
   createdAt: timestamp('created_at').defaultNow().notNull(),

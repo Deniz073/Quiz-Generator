@@ -167,7 +167,10 @@ npm run dev                # optional: open http://localhost:3000 and try it
   step with the server (`useExam` only wires it to React). Visitors keep
   nothing. The theme is a cookie.
 - Env: `DATABASE_URL`, Better Auth (`BETTER_AUTH_URL`, `BETTER_AUTH_SECRET`,
-  Google client id/secret).
+  Google client id/secret), `API_KEY_ENCRYPTION_KEY` (32 bytes base64,
+  `openssl rand -base64 32`; encrypts users' provider API keys, see
+  `src/server/secret-box.ts`. Optional: without it the app runs but keys
+  can't be saved. Changing or losing it makes saved keys unreadable).
 - UI: use shadcn/ui components where possible (`src/components/ui`, Base UI
   primitives, `lucide-react` icons; see `components.json`). Check what is
   installed first, add missing ones with `npx shadcn@latest add <component>`,
