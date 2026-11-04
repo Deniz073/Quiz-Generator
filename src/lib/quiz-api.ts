@@ -18,6 +18,8 @@ export interface QuizSummary {
   description: string
   /** False: a personal quiz of the user. */
   builtIn: boolean
+  /** A personal quiz imported from the Marketplace. */
+  imported: boolean
   chapterCount: number
   questionCount: number
   /** The user's mock exam results, if any. */
@@ -39,7 +41,7 @@ export const fetchQuizSummaries = createServerFn({ method: 'GET' }).handler(
           headers.map((h) => h.id),
         )
       : new Map<string, Result>()
-    return headers.map(({ exam: _defaults, ...header }) => ({
+    return headers.map(({ exam: _defaults, published: _p, ...header }) => ({
       ...header,
       examResult: results.get(header.id),
     }))

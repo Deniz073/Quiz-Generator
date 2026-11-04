@@ -1,7 +1,18 @@
-import { and, asc, count, eq, isNull, or } from 'drizzle-orm'
+import {
+  and,
+  asc,
+  count,
+  desc,
+  eq,
+  inArray,
+  isNotNull,
+  isNull,
+  or,
+  sql,
+} from 'drizzle-orm'
 import type { SQL } from 'drizzle-orm'
 import { db } from '#/db'
-import { chapter, question, questionOption, quiz } from '#/db/schema'
+import { chapter, question, questionOption, quiz, user } from '#/db/schema'
 import { getCorrectIndexes } from '#/quizzes/question'
 import type { ExamConfig, Question, Quiz } from '#/quizzes/types'
 
@@ -11,7 +22,8 @@ import type { ExamConfig, Question, Quiz } from '#/quizzes/types'
  * seed). The only module that knows the visibility rule: a built-in quiz (no
  * owner) is visible to everyone, a personal quiz only to its owner, and
  * anything else reads as missing (null), so personal quiz ids are not
- * revealed. Server only.
+ * revealed. The one exception is the Marketplace: anyone may list and
+ * preview a published quiz (listListings, findPublishedQuiz). Server only.
  */
 
 /** The condition "this quiz is visible to `userId`" (null: a visitor). */
@@ -34,6 +46,10 @@ export interface QuizHeader {
   description: string
   /** False: a personal quiz (of this user). */
   builtIn: boolean
+  /** An imported quiz (copied from a published quiz). */
+  imported: boolean
+  /** On the Marketplace. */
+  published: boolean
   /** The mock exam defaults; undefined if the quiz has no mock exam. */
   exam: ExamConfig | undefined
   chapterCount: number
@@ -45,6 +61,8 @@ const headerColumns = {
   title: quiz.title,
   description: quiz.description,
   ownerId: quiz.ownerId,
+  importedAt: quiz.importedAt,
+  publishedAt: quiz.publishedAt,
   examQuestionCount: quiz.examQuestionCount,
   examMinutes: quiz.examMinutes,
   examPassPercent: quiz.examPassPercent,
@@ -52,11 +70,15 @@ const headerColumns = {
   questionCount,
 }
 
+type Executor = typeof db | Parameters<Parameters<typeof db.transaction>[0]>[0]
+
 type HeaderRow = {
   id: string
   title: string
   description: string
   ownerId: string | null
+  importedAt: Date | null
+  publishedAt: Date | null
   examQuestionCount: number | null
   examMinutes: number | null
   examPassPercent: number | null
@@ -87,6 +109,8 @@ function toHeader(row: HeaderRow): QuizHeader {
     title: row.title,
     description: row.description,
     builtIn: row.ownerId === null,
+    imported: row.importedAt !== null,
+    published: row.publishedAt !== null,
     exam: toExamConfig(row),
     chapterCount: row.chapterCount,
     questionCount: row.questionCount,
@@ -170,18 +194,40 @@ export async function findQuestion(
   return rows.at(0) ?? null
 }
 
+type QuizFilter = NonNullable<
+  NonNullable<Parameters<typeof db.query.quiz.findFirst>[0]>['where']
+>
+
 /** The quiz with all its content as the app uses it, or null. */
 export async function findQuiz(
   quizId: string,
   userId: string | null,
 ): Promise<Quiz | null> {
-  const row = await db.query.quiz.findFirst({
-    where: userId
+  return loadQuiz(
+    db,
+    userId
       ? {
           id: quizId,
           OR: [{ ownerId: { isNull: true } }, { ownerId: userId }],
         }
       : { id: quizId, ownerId: { isNull: true } },
+  )
+}
+
+/**
+ * A published quiz with all its content, for its preview on the Marketplace:
+ * the one way anyone (visitors too) may see a personal quiz they don't own.
+ */
+export async function findPublishedQuiz(quizId: string): Promise<Quiz | null> {
+  return loadQuiz(db, { id: quizId, publishedAt: { isNotNull: true } })
+}
+
+async function loadQuiz(
+  executor: Executor,
+  where: QuizFilter,
+): Promise<Quiz | null> {
+  const row = await executor.query.quiz.findFirst({
+    where,
     with: {
       chapters: {
         orderBy: { number: 'asc' },
@@ -273,4 +319,294 @@ export function toQuizRows(data: Quiz, ownerId: string | null): QuizRows {
       }),
     })),
   }
+}
+
+// --- Marketplace ------------------------------------------------------------
+
+/**
+ * How many imported quizzes were copied from the quiz row of the query. The
+ * outer column is spelled out: in a single-table query Drizzle leaves the
+ * table off `quiz.id`, which inside this subquery would mean "imported".
+ */
+const importCount =
+  sql<number>`(select count(*) from "quiz" as "imported" where "imported"."imported_from_id" = "quiz"."id")`.mapWith(
+    Number,
+  )
+
+/** A published quiz as the Marketplace lists it. */
+export interface Listing {
+  id: string
+  title: string
+  description: string
+  chapterCount: number
+  questionCount: number
+  publisherName: string
+  /** ISO timestamp. */
+  publishedAt: string
+  importCount: number
+  /** Published by this user. */
+  yours: boolean
+  /** This user's imported quiz of it, if they have one. */
+  yourCopyId: string | null
+}
+
+async function queryListings(
+  userId: string | null,
+  where: SQL | undefined,
+): Promise<Array<Listing>> {
+  const rows = await db
+    .select({
+      id: quiz.id,
+      title: quiz.title,
+      description: quiz.description,
+      ownerId: quiz.ownerId,
+      publishedAt: quiz.publishedAt,
+      publisherName: user.name,
+      chapterCount: db.$count(chapter, eq(chapter.quizId, quiz.id)),
+      questionCount,
+      importCount,
+    })
+    .from(quiz)
+    .innerJoin(user, eq(user.id, quiz.ownerId))
+    .where(and(isNotNull(quiz.publishedAt), where))
+    .orderBy(desc(quiz.publishedAt), asc(quiz.id))
+  const copies =
+    userId && rows.length > 0
+      ? await db
+          .select({ id: quiz.id, sourceId: quiz.importedFromId })
+          .from(quiz)
+          .where(
+            and(
+              eq(quiz.ownerId, userId),
+              inArray(
+                quiz.importedFromId,
+                rows.map((row) => row.id),
+              ),
+            ),
+          )
+      : []
+  const copyOf = new Map(copies.map((c) => [c.sourceId, c.id]))
+  return rows.map(({ ownerId, publishedAt, ...row }) => ({
+    ...row,
+    // Never null here (the where clause), but the column is nullable.
+    publishedAt: (publishedAt ?? new Date(0)).toISOString(),
+    yours: userId !== null && ownerId === userId,
+    yourCopyId: copyOf.get(row.id) ?? null,
+  }))
+}
+
+/** Every published quiz, newest first, as `userId` (null: a visitor) sees it. */
+export async function listListings(
+  userId: string | null,
+): Promise<Array<Listing>> {
+  return queryListings(userId, undefined)
+}
+
+/** One published quiz's listing, or null if it isn't published. */
+export async function findListing(
+  quizId: string,
+  userId: string | null,
+): Promise<Listing | null> {
+  const rows = await queryListings(userId, eq(quiz.id, quizId))
+  return rows.at(0) ?? null
+}
+
+/** Where a quiz stands on the Marketplace, for its own page. */
+export interface MarketplaceStanding {
+  /** How many imported quizzes were copied from it. */
+  importCount: number
+  /** The published quiz an imported quiz was copied from, while it exists. */
+  importedFrom: {
+    id: string
+    title: string
+    publisherName: string
+    /** Still published, so its preview can be linked. */
+    published: boolean
+  } | null
+}
+
+/** For a quiz visible to the user (see findQuizHeader); null otherwise. */
+export async function findMarketplaceStanding(
+  quizId: string,
+  userId: string | null,
+): Promise<MarketplaceStanding | null> {
+  const rows = await db
+    .select({
+      importCount,
+      sourceId: quiz.importedFromId,
+    })
+    .from(quiz)
+    .where(visibleQuiz(quizId, userId))
+    .limit(1)
+  const row = rows.at(0)
+  if (!row) return null
+  if (!row.sourceId) return { importCount: row.importCount, importedFrom: null }
+  const sources = await db
+    .select({
+      id: quiz.id,
+      title: quiz.title,
+      publisherName: user.name,
+      publishedAt: quiz.publishedAt,
+    })
+    .from(quiz)
+    .innerJoin(user, eq(user.id, quiz.ownerId))
+    .where(eq(quiz.id, row.sourceId))
+    .limit(1)
+  const source = sources.at(0)
+  return {
+    importCount: row.importCount,
+    importedFrom: source
+      ? {
+          id: source.id,
+          title: source.title,
+          publisherName: source.publisherName,
+          published: source.publishedAt !== null,
+        }
+      : null,
+  }
+}
+
+/**
+ * Publishes or unpublishes one of the user's own quizzes (whether they may is
+ * src/domain/marketplace's call). Publishing again keeps the first date.
+ * False if the user doesn't own the quiz.
+ */
+export async function setPublished(
+  quizId: string,
+  userId: string,
+  published: boolean,
+): Promise<boolean> {
+  const rows = await db
+    .update(quiz)
+    .set({
+      publishedAt: published ? sql`coalesce(${quiz.publishedAt}, now())` : null,
+    })
+    .where(and(eq(quiz.id, quizId), eq(quiz.ownerId, userId)))
+    .returning({ id: quiz.id })
+  return rows.length > 0
+}
+
+/** A fresh id for an imported quiz: the source's plus a random suffix. */
+function newImportedQuizId(sourceId: string): string {
+  const base = sourceId.slice(0, 60).replace(/-+$/, '')
+  const suffix = crypto.randomUUID().replaceAll('-', '').slice(0, 8)
+  return `${base}-${suffix}`
+}
+
+/**
+ * Imports a published quiz (not the user's own) as a personal quiz of the
+ * user: a copy of its content and mock exam defaults, nothing of the
+ * publisher's progress. A user who already has a copy gets that one back.
+ * Null if the quiz isn't published or is the user's own.
+ */
+export async function importPublishedQuiz(
+  sourceId: string,
+  userId: string,
+): Promise<{ id: string; created: boolean } | null> {
+  return db.transaction(async (tx) => {
+    const findCopy = async () => {
+      const copies = await tx
+        .select({ id: quiz.id })
+        .from(quiz)
+        .where(and(eq(quiz.ownerId, userId), eq(quiz.importedFromId, sourceId)))
+        .limit(1)
+      return copies.at(0)
+    }
+    const source = await loadQuiz(tx, {
+      id: sourceId,
+      publishedAt: { isNotNull: true },
+      ownerId: { ne: userId },
+    })
+    if (!source) return null
+    const existing = await findCopy()
+    if (existing) return { id: existing.id, created: false }
+
+    const rows = toQuizRows(
+      { ...source, id: newImportedQuizId(sourceId) },
+      userId,
+    )
+    // A concurrent import of the same quiz by the same user (a double click)
+    // waits here for the other one and then inserts nothing.
+    const inserted = await tx
+      .insert(quiz)
+      .values({
+        ...rows.quiz,
+        importedAt: new Date(),
+        importedFromId: sourceId,
+      })
+      .onConflictDoNothing()
+      .returning({ id: quiz.id })
+    if (inserted.length === 0) {
+      const raced = await findCopy()
+      if (raced) return { id: raced.id, created: false }
+      throw new Error('Could not import the quiz. Please try again.')
+    }
+    await insertQuizContent(tx, rows.quiz.id, rows.chapters)
+    return { id: rows.quiz.id, created: true }
+  })
+}
+
+/** Writes the chapters, questions and options of a new quiz. */
+async function insertQuizContent(
+  tx: Executor,
+  quizId: string,
+  chapters: QuizRows['chapters'],
+): Promise<void> {
+  if (chapters.length === 0) return
+  const chapterRows = await tx
+    .insert(chapter)
+    .values(
+      chapters.map((c) => ({
+        quizId,
+        slug: c.slug,
+        number: c.number,
+        title: c.title,
+      })),
+    )
+    .returning({ id: chapter.id, slug: chapter.slug })
+  const chapterIds = new Map(chapterRows.map((row) => [row.slug, row.id]))
+  const questions = chapters.flatMap((c) =>
+    c.questions.map((q) => ({ ...q, chapterId: lookup(chapterIds, c.slug) })),
+  )
+  if (questions.length === 0) return
+  const questionRows = await tx
+    .insert(question)
+    .values(
+      questions.map((q) => ({
+        quizId,
+        chapterId: q.chapterId,
+        slug: q.slug,
+        position: q.position,
+        text: q.text,
+        explanation: q.explanation,
+      })),
+    )
+    .returning({ id: question.id, slug: question.slug })
+  const questionIds = new Map(questionRows.map((row) => [row.slug, row.id]))
+  const options = questions.flatMap((q) =>
+    q.options.map((o) => ({ ...o, questionId: lookup(questionIds, q.slug) })),
+  )
+  if (options.length > 0) await tx.insert(questionOption).values(options)
+}
+
+function lookup(ids: Map<string, string>, slug: string): string {
+  const id = ids.get(slug)
+  if (id === undefined) throw new Error(`Missing row for "${slug}".`)
+  return id
+}
+
+/**
+ * Deletes one of the user's own quizzes, with everyone's progress, flags and
+ * unfinished exams on it (the foreign keys cascade). Imported quizzes copied
+ * from it stay, without their link. False if the user doesn't own it.
+ */
+export async function deleteOwnQuiz(
+  quizId: string,
+  userId: string,
+): Promise<boolean> {
+  const rows = await db
+    .delete(quiz)
+    .where(and(eq(quiz.id, quizId), eq(quiz.ownerId, userId)))
+    .returning({ id: quiz.id })
+  return rows.length > 0
 }

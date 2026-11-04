@@ -1,0 +1,372 @@
+{
+  "type": "diff",
+  "version": "9",
+  "dialect": "postgres",
+  "id": "edea29ab-36d5-43ae-a865-36212d100a65",
+  "prevIds": [
+    "644dd20b-960f-4716-9bb6-a2bec00732c6"
+  ],
+  "footprints": [
+    {
+      "statementType": "add_column",
+      "statementTarget": [
+        "column",
+        "public",
+        "quiz",
+        "published_at"
+      ],
+      "writes": [
+        "s|col|public.quiz.published_at",
+        "n|col|public.quiz.published_at",
+        "e|col|public.quiz.published_at"
+      ],
+      "reads": [
+        "n|tbl|public.quiz",
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "add_column",
+      "statementTarget": [
+        "column",
+        "public",
+        "quiz",
+        "imported_at"
+      ],
+      "writes": [
+        "s|col|public.quiz.imported_at",
+        "n|col|public.quiz.imported_at",
+        "e|col|public.quiz.imported_at"
+      ],
+      "reads": [
+        "n|tbl|public.quiz",
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "add_column",
+      "statementTarget": [
+        "column",
+        "public",
+        "quiz",
+        "imported_from_id"
+      ],
+      "writes": [
+        "s|col|public.quiz.imported_from_id",
+        "n|col|public.quiz.imported_from_id",
+        "e|col|public.quiz.imported_from_id"
+      ],
+      "reads": [
+        "n|tbl|public.quiz",
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "add_unique",
+      "statementTarget": [
+        "table",
+        "public",
+        "quiz"
+      ],
+      "writes": [
+        "s|uq|public.quiz.quiz_owner_id_imported_from_id_unique",
+        "n|uq|public.quiz.quiz_owner_id_imported_from_id_unique",
+        "e|uq|public.quiz.quiz_owner_id_imported_from_id_unique",
+        "n|con|public.quiz.quiz_owner_id_imported_from_id_unique",
+        "n|rel|public.quiz_owner_id_imported_from_id_unique"
+      ],
+      "reads": [
+        "n|tbl|public.quiz",
+        "n|sch|public",
+        "n|col|public.quiz.owner_id",
+        "n|col|public.quiz.imported_from_id"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "quiz",
+        "quiz_imported_from_id_idx"
+      ],
+      "writes": [
+        "s|idx|public.quiz_imported_from_id_idx",
+        "n|idx|public.quiz_imported_from_id_idx",
+        "e|idx|public.quiz_imported_from_id_idx",
+        "n|rel|public.quiz_imported_from_id_idx"
+      ],
+      "reads": [
+        "n|tbl|public.quiz",
+        "n|sch|public",
+        "n|col|public.quiz.imported_from_id"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "quiz",
+        "quiz_published_at_idx"
+      ],
+      "writes": [
+        "s|idx|public.quiz_published_at_idx",
+        "n|idx|public.quiz_published_at_idx",
+        "e|idx|public.quiz_published_at_idx",
+        "n|rel|public.quiz_published_at_idx"
+      ],
+      "reads": [
+        "n|tbl|public.quiz",
+        "n|sch|public",
+        "n|col|public.quiz.published_at"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": [
+        "table",
+        "public",
+        "quiz"
+      ],
+      "writes": [
+        "s|fk|public.quiz.quiz_imported_from_id_quiz_id_fkey",
+        "n|fk|public.quiz.quiz_imported_from_id_quiz_id_fkey",
+        "e|fk|public.quiz.quiz_imported_from_id_quiz_id_fkey",
+        "n|con|public.quiz.quiz_imported_from_id_quiz_id_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.quiz",
+        "n|sch|public",
+        "n|tbl|public.quiz",
+        "n|sch|public",
+        "n|col|public.quiz.imported_from_id",
+        "n|col|public.quiz.id",
+        "e|uniqueness|public.quiz.id"
+      ]
+    },
+    {
+      "statementType": "add_check",
+      "statementTarget": [
+        "table",
+        "public",
+        "quiz"
+      ],
+      "writes": [
+        "s|ck|public.quiz.quiz_published_is_personal",
+        "n|ck|public.quiz.quiz_published_is_personal",
+        "e|ck|public.quiz.quiz_published_is_personal",
+        "n|con|public.quiz.quiz_published_is_personal"
+      ],
+      "reads": [
+        "n|tbl|public.quiz",
+        "n|sch|public",
+        "n|col|public.quiz.published_at",
+        "n|col|public.quiz.owner_id"
+      ]
+    },
+    {
+      "statementType": "add_check",
+      "statementTarget": [
+        "table",
+        "public",
+        "quiz"
+      ],
+      "writes": [
+        "s|ck|public.quiz.quiz_imported_is_personal",
+        "n|ck|public.quiz.quiz_imported_is_personal",
+        "e|ck|public.quiz.quiz_imported_is_personal",
+        "n|con|public.quiz.quiz_imported_is_personal"
+      ],
+      "reads": [
+        "n|tbl|public.quiz",
+        "n|sch|public",
+        "n|col|public.quiz.imported_at",
+        "n|col|public.quiz.owner_id"
+      ]
+    },
+    {
+      "statementType": "add_check",
+      "statementTarget": [
+        "table",
+        "public",
+        "quiz"
+      ],
+      "writes": [
+        "s|ck|public.quiz.quiz_imported_from_is_imported",
+        "n|ck|public.quiz.quiz_imported_from_is_imported",
+        "e|ck|public.quiz.quiz_imported_from_is_imported",
+        "n|con|public.quiz.quiz_imported_from_is_imported"
+      ],
+      "reads": [
+        "n|tbl|public.quiz",
+        "n|sch|public",
+        "n|col|public.quiz.imported_from_id",
+        "n|col|public.quiz.imported_at"
+      ]
+    }
+  ],
+  "deltas": [
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "quiz",
+        "name": "published_at",
+        "type": "timestamp with time zone",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "quiz",
+        "name": "imported_at",
+        "type": "timestamp with time zone",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "quiz",
+        "name": "imported_from_id",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "quiz",
+        "name": "quiz_imported_from_id_idx",
+        "nameExplicit": true,
+        "columns": [
+          {
+            "value": "imported_from_id",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          }
+        ],
+        "isUnique": false,
+        "where": null,
+        "with": "",
+        "method": "btree",
+        "concurrently": false,
+        "entityType": "indexes"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "quiz",
+        "name": "quiz_published_at_idx",
+        "nameExplicit": true,
+        "columns": [
+          {
+            "value": "published_at",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          }
+        ],
+        "isUnique": false,
+        "where": "\"published_at\" IS NOT NULL",
+        "with": "",
+        "method": "btree",
+        "concurrently": false,
+        "entityType": "indexes"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "quiz",
+        "name": "quiz_imported_from_id_quiz_id_fkey",
+        "nameExplicit": false,
+        "columns": [
+          "imported_from_id"
+        ],
+        "schemaTo": "public",
+        "tableTo": "quiz",
+        "columnsTo": [
+          "id"
+        ],
+        "onUpdate": "NO ACTION",
+        "onDelete": "SET NULL",
+        "entityType": "fks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "quiz",
+        "name": "quiz_owner_id_imported_from_id_unique",
+        "nameExplicit": true,
+        "columns": [
+          "owner_id",
+          "imported_from_id"
+        ],
+        "nullsNotDistinct": false,
+        "entityType": "uniques"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "quiz",
+        "name": "quiz_published_is_personal",
+        "value": "\"published_at\" IS NULL OR \"owner_id\" IS NOT NULL",
+        "entityType": "checks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "quiz",
+        "name": "quiz_imported_is_personal",
+        "value": "\"imported_at\" IS NULL OR \"owner_id\" IS NOT NULL",
+        "entityType": "checks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "quiz",
+        "name": "quiz_imported_from_is_imported",
+        "value": "\"imported_from_id\" IS NULL OR \"imported_at\" IS NOT NULL",
+        "entityType": "checks"
+      }
+    }
+  ]
+}

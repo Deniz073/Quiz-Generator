@@ -1,4 +1,5 @@
 import { defineRelationsPart, sql } from 'drizzle-orm'
+import type { AnyPgColumn } from 'drizzle-orm/pg-core'
 import {
   boolean,
   check,
@@ -21,6 +22,12 @@ import { user } from './auth-schema'
  *
  * Rules that span rows (2-6 options, how many are correct) are checked by
  * src/quizzes/validate.ts before anything is written, not by the database.
+ *
+ * Marketplace: a personal quiz with `published_at` set is a published quiz.
+ * An imported quiz is a personal quiz with `imported_at` set, for good;
+ * `imported_from_id` is the published quiz it was copied from, null again
+ * once that quiz is deleted. Who may publish what is a rule of
+ * src/domain/marketplace.ts, not of the database.
  */
 
 const SLUG = `'^[a-z0-9]+(-[a-z0-9]+)*$'`
@@ -40,6 +47,15 @@ export const quiz = pgTable(
     examQuestionCount: integer('exam_question_count'),
     examMinutes: integer('exam_minutes'),
     examPassPercent: integer('exam_pass_percent'),
+    /** Null: not on the Marketplace. Only personal quizzes are published. */
+    publishedAt: timestamp('published_at', { withTimezone: true }),
+    /** Set: an imported quiz (stays set when its source is deleted). */
+    importedAt: timestamp('imported_at', { withTimezone: true }),
+    /** The published quiz this imported quiz was copied from, while it exists. */
+    importedFromId: text('imported_from_id').references(
+      (): AnyPgColumn => quiz.id,
+      { onDelete: 'set null' },
+    ),
     createdAt: timestamp('created_at', { withTimezone: true })
       .defaultNow()
       .notNull(),
@@ -50,6 +66,27 @@ export const quiz = pgTable(
   },
   (t) => [
     index('quiz_owner_id_idx').on(t.ownerId),
+    index('quiz_imported_from_id_idx').on(t.importedFromId),
+    index('quiz_published_at_idx')
+      .on(t.publishedAt)
+      .where(sql`${t.publishedAt} IS NOT NULL`),
+    // At most one imported quiz per user per published quiz (nulls: distinct).
+    unique('quiz_owner_id_imported_from_id_unique').on(
+      t.ownerId,
+      t.importedFromId,
+    ),
+    check(
+      'quiz_published_is_personal',
+      sql`${t.publishedAt} IS NULL OR ${t.ownerId} IS NOT NULL`,
+    ),
+    check(
+      'quiz_imported_is_personal',
+      sql`${t.importedAt} IS NULL OR ${t.ownerId} IS NOT NULL`,
+    ),
+    check(
+      'quiz_imported_from_is_imported',
+      sql`${t.importedFromId} IS NULL OR ${t.importedAt} IS NOT NULL`,
+    ),
     check('quiz_id_slug', sql`${t.id} ~ ${sql.raw(SLUG)}`),
     check(
       'quiz_exam_all_or_none',

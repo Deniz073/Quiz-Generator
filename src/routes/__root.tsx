@@ -129,6 +129,13 @@ function RootDocument({ children }: { children: React.ReactNode }) {
               Quiz Generator
             </Link>
             <div className="flex items-center gap-2">
+              <Link
+                to="/marketplace"
+                className="rounded-md px-2 py-1 text-sm font-medium transition-colors hover:text-sky-700 dark:hover:text-sky-400"
+                activeProps={{ 'aria-current': 'page' }}
+              >
+                Marketplace
+              </Link>
               <UserMenu user={user} />
               <ThemeToggle />
             </div>

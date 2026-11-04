@@ -1,6 +1,11 @@
 import { useState } from 'react'
 import { useHotkey } from '@tanstack/react-hotkeys'
-import { buttonClasses } from '#/lib/button-classes'
+import { ChevronLeftIcon, ChevronRightIcon } from 'lucide-react'
+import { ShareButton } from '#/components/ShareButton'
+import { Button } from '#/components/ui/button'
+import { Kbd } from '#/components/ui/kbd'
+import { Progress } from '#/components/ui/progress'
+import { questionPath } from '#/lib/share'
 import { formatChapter } from '#/lib/chapter-label'
 import { shuffle } from '#/lib/shuffle'
 import { StudyCard } from '#/components/StudyCard'
@@ -19,13 +24,9 @@ interface Props {
   shuffled: boolean
   /** Keep every card's answer revealed. */
   showAll: boolean
+  /** Offer a link to each question; only where its quiz page is reachable. */
+  shareable?: boolean
 }
-
-// Less side padding below sm: Previous, the reveal button and Next must fit
-// one row on a 320px screen.
-const narrowPadding = 'max-sm:px-3'
-
-const navButtonClasses = `${buttonClasses('secondary')} ${narrowPadding} disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-transparent`
 
 // Focused controls keep their native Enter/Space action, so the reveal hotkey
 // must not also fire for them.
@@ -45,7 +46,13 @@ function buildCards(
 }
 
 /** Not scored and not saved: just stepping through cards. */
-export function StudyDeck({ quiz, chapterId, shuffled, showAll }: Props) {
+export function StudyDeck({
+  quiz,
+  chapterId,
+  shuffled,
+  showAll,
+  shareable = true,
+}: Props) {
   // The route renders on the client only (ssr: 'data-only'), so shuffling
   // during init can't cause a hydration mismatch. The parent keys this
   // component on chapter and shuffle, so changing either starts over.
@@ -94,64 +101,83 @@ export function StudyDeck({ quiz, chapterId, shuffled, showAll }: Props) {
   return (
     <div>
       {/* Live region: the focus stays on Previous/Next, so a card change is
-          announced here, with the question for screen readers only. */}
-      <div
-        aria-live="polite"
-        className="flex flex-wrap items-baseline justify-between gap-x-4 text-sm font-medium text-slate-600 dark:text-slate-400"
-      >
-        <span>
-          Card {index + 1} of {cards.length}
-        </span>
-        <span>{formatChapter(card.chapter)}</span>
-        <span className="sr-only">{card.question.question}</span>
-      </div>
+          announced here, with the question. */}
+      <p aria-live="polite" className="sr-only">
+        Card {index + 1} of {cards.length}: {card.question.question}
+      </p>
+      <Progress
+        value={((index + 1) / cards.length) * 100}
+        aria-label={`Card ${index + 1} of ${cards.length}`}
+      />
 
-      <div className="mt-6">
-        <StudyCard
-          question={card.question}
-          revealed={isRevealed}
-          shareQuizId={quiz.id}
-        />
-      </div>
+      <article className="mt-3 rounded-xl border bg-card p-5 text-card-foreground sm:p-8">
+        <div className="-mt-1 mb-4 flex min-h-8 items-center justify-between gap-3 text-sm text-muted-foreground">
+          <span className="truncate">{formatChapter(card.chapter)}</span>
+          <span className="flex shrink-0 items-center gap-2">
+            <span className="tabular-nums">
+              {index + 1} of {cards.length}
+            </span>
+            {shareable ? (
+              // key: a "Link copied" or failure note belongs to one card.
+              <ShareButton
+                key={card.question.id}
+                compact
+                path={questionPath(quiz.id, card.question.id)}
+                text={card.question.question}
+              />
+            ) : null}
+          </span>
+        </div>
+        <StudyCard question={card.question} revealed={isRevealed} />
+      </article>
 
-      <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
-        <button
-          type="button"
+      <div className="mt-4 flex items-center justify-between gap-2">
+        <Button
+          variant="ghost"
+          size="lg"
           disabled={isFirst}
+          aria-keyshortcuts="ArrowLeft"
+          title="Previous (←)"
           onClick={(event) => {
             goTo(index - 1)
             // A mouse click would leave focus here, and Space/Enter would then
             // press this button again instead of revealing the answer.
             if (event.detail > 0) event.currentTarget.blur()
           }}
-          className={navButtonClasses}
         >
-          Previous
-        </button>
-        <button
-          type="button"
-          disabled={showAll}
-          onClick={() => setRevealed((value) => !value)}
-          className={`${buttonClasses('primary')} ${narrowPadding}`}
-        >
-          {showAll ? 'Answers shown' : revealed ? 'Hide answer' : 'Show answer'}
-        </button>
-        <button
-          type="button"
+          <ChevronLeftIcon data-icon="inline-start" />
+          <span className="max-sm:sr-only">Previous</span>
+        </Button>
+        {showAll ? null : (
+          <Button
+            size="lg"
+            aria-keyshortcuts="Space"
+            onClick={() => setRevealed((value) => !value)}
+          >
+            {revealed ? 'Hide answer' : 'Show answer'}
+            <Kbd
+              aria-hidden="true"
+              className="bg-primary-foreground/15 text-primary-foreground max-sm:hidden"
+            >
+              Space
+            </Kbd>
+          </Button>
+        )}
+        <Button
+          variant="ghost"
+          size="lg"
           disabled={isLast}
+          aria-keyshortcuts="ArrowRight"
+          title="Next (→)"
           onClick={(event) => {
             goTo(index + 1)
             if (event.detail > 0) event.currentTarget.blur()
           }}
-          className={navButtonClasses}
         >
-          Next
-        </button>
+          <span className="max-sm:sr-only">Next</span>
+          <ChevronRightIcon data-icon="inline-end" />
+        </Button>
       </div>
-      <p className="mt-3 hidden text-center text-xs text-slate-600 dark:text-slate-400 sm:block">
-        Tip: press &larr; or &rarr; to move, Space or Enter to show or hide the
-        answer.
-      </p>
     </div>
   )
 }

@@ -7,6 +7,8 @@ A small multiple-choice quiz app (TanStack Start, React 19, Vite, TypeScript, Po
 Drizzle). Quizzes are split into chapters, with single- and multi-answer questions,
 explanations, a results screen and a timed mock exam. PSM I and PSPO I are built in and
 available to everyone; signing in (Google) keeps your results, flags and unfinished exams.
+Users can publish their personal quizzes on the Marketplace, where anyone can preview them and
+signed-in users can import a copy.
 The built-in quizzes' content lives in `src/db/seed/quizzes/` and is written to the database by
 `npm run db:seed`; personal quizzes live only in the database.
 

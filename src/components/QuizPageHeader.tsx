@@ -9,11 +9,14 @@ export function QuizPageHeader({
   quiz,
   title,
   className = 'mb-6',
+  signInBanner = true,
 }: {
   quiz: Quiz
   title: ReactNode
   /** Spacing below the title. */
   className?: string
+  /** The "sign in to keep your progress" note; pointless where nothing is kept. */
+  signInBanner?: boolean
 }) {
   return (
     <>
@@ -24,7 +27,7 @@ export function QuizPageHeader({
       >
         <span aria-hidden="true">&larr;</span> {quiz.title}
       </Link>
-      <SignInBanner className="mt-3" />
+      {signInBanner ? <SignInBanner className="mt-3" /> : null}
       <h1 className={`mt-3 text-2xl font-bold ${className}`}>{title}</h1>
     </>
   )

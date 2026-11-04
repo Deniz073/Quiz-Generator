@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react'
+import { CheckIcon, Share2Icon } from 'lucide-react'
+import { Button } from '#/components/ui/button'
 import {
   questionToolClasses,
   questionToolIdleClasses,
@@ -17,6 +19,8 @@ interface Props {
   path: string
   /** Shown by the share sheet's target app, e.g. the question text. */
   text: string
+  /** A small icon button, e.g. in a card's corner. */
+  compact?: boolean
 }
 
 /**
@@ -24,7 +28,7 @@ interface Props {
  * natural way to send something; otherwise (or if the share sheet isn't
  * available) the link is copied to the clipboard.
  */
-export function ShareButton({ path, text }: Props) {
+export function ShareButton({ path, text, compact = false }: Props) {
   const [status, setStatus] = useState<Status>()
 
   useEffect(() => {
@@ -59,24 +63,40 @@ export function ShareButton({ path, text }: Props) {
     }
   }
 
+  const copied = status?.kind === 'copied'
   return (
-    <div className="flex flex-col items-start">
-      <button
-        type="button"
-        onClick={() => void share()}
-        // Enter is a global hotkey in practice rounds ("check / next"); keep it
-        // from hijacking this button, like the flag button next to it.
-        onKeyDown={(event) => {
-          if (event.key === 'Enter') event.stopPropagation()
-        }}
-        className={`${questionToolClasses} ${questionToolIdleClasses}`}
-      >
-        {status?.kind === 'copied' ? 'Link copied' : 'Share'}
-      </button>
+    <div className={compact ? 'relative' : 'flex flex-col items-start'}>
+      {compact ? (
+        <Button
+          variant="ghost"
+          size="icon-sm"
+          onClick={() => void share()}
+          onKeyDown={(event) => {
+            if (event.key === 'Enter') event.stopPropagation()
+          }}
+          aria-label={copied ? 'Link copied' : 'Share this question'}
+          title={copied ? 'Link copied' : 'Share this question'}
+        >
+          {copied ? <CheckIcon /> : <Share2Icon />}
+        </Button>
+      ) : (
+        <button
+          type="button"
+          onClick={() => void share()}
+          // Enter is a global hotkey in practice rounds ("check / next"); keep it
+          // from hijacking this button, like the flag button next to it.
+          onKeyDown={(event) => {
+            if (event.key === 'Enter') event.stopPropagation()
+          }}
+          className={`${questionToolClasses} ${questionToolIdleClasses}`}
+        >
+          {copied ? 'Link copied' : 'Share'}
+        </button>
+      )}
       {/* Always mounted: screen readers announce changes to an existing live region. */}
       <p
         role="status"
-        className={`max-w-64 text-xs ${status?.kind === 'failed' ? 'mt-1' : ''}`}
+        className={`max-w-64 text-xs ${status?.kind === 'failed' ? 'mt-1' : ''} ${compact && status?.kind === 'failed' ? 'absolute top-full right-0 z-10 w-64 rounded-md border bg-popover p-2 shadow-sm' : ''}`}
       >
         {status?.kind === 'copied' ? (
           <span className="sr-only">Link copied to the clipboard.</span>

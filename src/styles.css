@@ -111,6 +111,8 @@ li {
     var(--color-slate-100)
   );
   --destructive: light-dark(var(--color-red-700), var(--color-red-400));
+  /* Correct answers. */
+  --success: light-dark(var(--color-emerald-700), var(--color-emerald-400));
   --border: light-dark(var(--color-slate-200), var(--color-slate-800));
   --input: light-dark(var(--color-slate-300), var(--color-slate-700));
   --ring: var(--color-sky-500);
@@ -149,6 +151,7 @@ li {
   --color-input: var(--input);
   --color-border: var(--border);
   --color-destructive: var(--destructive);
+  --color-success: var(--success);
   --color-accent-foreground: var(--accent-foreground);
   --color-accent: var(--accent);
   --color-muted-foreground: var(--muted-foreground);

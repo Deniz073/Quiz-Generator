@@ -3,6 +3,7 @@ import { Link, createFileRoute } from '@tanstack/react-router'
 import { Search } from 'lucide-react'
 import type { QuizSummary } from '#/lib/quiz-api'
 import { SignInBanner } from '#/components/SignInBanner'
+import { Badge } from '#/components/ui/badge'
 import { Input } from '#/components/ui/input'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '#/components/ui/tabs'
 import { formatResult } from '#/domain/progress'
@@ -95,7 +96,12 @@ function QuizList({
               params={{ quizId: quiz.id }}
               className="block rounded-xl border border-slate-200 bg-white p-5 transition-colors hover:border-sky-500 hover:bg-sky-50/50 dark:border-slate-800 dark:bg-slate-900 dark:hover:border-sky-400 dark:hover:bg-slate-900/60"
             >
-              <h2 className="text-xl font-semibold">{quiz.title}</h2>
+              <h2 className="flex flex-wrap items-center gap-2 text-xl font-semibold">
+                {quiz.title}
+                {quiz.imported ? (
+                  <Badge variant="secondary">Imported</Badge>
+                ) : null}
+              </h2>
               <p className="mt-1 text-slate-600 dark:text-slate-400">
                 {quiz.description}
               </p>

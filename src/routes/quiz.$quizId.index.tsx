@@ -1,8 +1,10 @@
-import { Link, createFileRoute } from '@tanstack/react-router'
+import { Link, createFileRoute, notFound } from '@tanstack/react-router'
 import type { Result } from '#/domain/progress'
 import type { ExamConfig, Quiz } from '#/quizzes/types'
 import { ExamSettings } from '#/components/ExamSettings'
 import { NotFound } from '#/components/NotFound'
+import { QuizMarketplace } from '#/components/QuizMarketplace'
+import { fetchQuizStanding } from '#/lib/marketplace-api'
 import { SignInBanner } from '#/components/SignInBanner'
 import { backLinkClasses } from '#/lib/button-classes'
 import { getFlaggedQuestions } from '#/lib/flags'
@@ -22,16 +24,26 @@ const cardLinkClasses =
   'rounded-lg border border-slate-200 bg-white px-4 py-3 transition-colors hover:border-sky-500 dark:border-slate-800 dark:bg-slate-900 dark:hover:border-sky-400'
 
 export const Route = createFileRoute('/quiz/$quizId/')({
-  loader: ({ params }) => requireQuiz(params.quizId),
+  loader: async ({ params }) => {
+    // The quiz may come from the browser's cache; its Marketplace standing
+    // (published or not) is always fresh.
+    const [quiz, standing] = await Promise.all([
+      requireQuiz(params.quizId),
+      fetchQuizStanding({ data: { quizId: params.quizId } }),
+    ])
+    if (!standing) throw notFound()
+    return { quiz, standing }
+  },
   head: ({ loaderData }) => ({
-    meta: [{ title: pageTitle(loaderData?.title) }],
+    meta: [{ title: pageTitle(loaderData?.quiz.title) }],
   }),
   component: QuizPage,
   notFoundComponent: () => <NotFound message="Quiz not found." />,
 })
 
 function QuizPage() {
-  const quiz = Route.useLoaderData()
+  const { quiz, standing } = Route.useLoaderData()
+  const { user } = Route.useRouteContext()
   // Empty on the server and during hydration, then loaded (visitors: empty).
   const progress = useQuizProgress(quiz.id)
   const flags = useFlags(quiz.id)
@@ -190,6 +202,10 @@ function QuizPage() {
           />
         ) : null}
       </div>
+
+      {user ? (
+        <QuizMarketplace quiz={quiz} standing={standing} userName={user.name} />
+      ) : null}
     </div>
   )
 }

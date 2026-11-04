@@ -142,8 +142,9 @@ npm run dev                # optional: open http://localhost:3000 and try it
 - Where code lives, by where it may run (enforced by ESLint
   `no-restricted-imports`):
   - `src/domain/`: pure rules shared by client and server: progress (attempts,
-    best and last result), exam settings, and the mock exam rulebook (legal
-    picks, scoring, deadline and grace). Relative imports only: the drizzle-kit
+    best and last result), exam settings, the mock exam rulebook (legal
+    picks, scoring, deadline and grace), and the Marketplace rules (who may
+    publish or delete a quiz). Relative imports only: the drizzle-kit
     schema loader imports from here without the `#/` alias.
   - `src/server/`: database and session access: `quiz-access` (the only
     module that knows the visibility rule), `user-state` (attempts, flags,
@@ -154,8 +155,12 @@ npm run dev                # optional: open http://localhost:3000 and try it
     handler bodies are stripped from the client, so they may import
     `src/server`; keep helpers inside the handlers, not at module level.
 - Visibility: a built-in quiz (`owner_id` null) is visible to everyone, a
-  personal quiz only to its owner; anything else is a 404. Server functions
-  take the user from the session, never from the client.
+  personal quiz only to its owner; anything else is a 404. The one
+  exception: a published quiz (`published_at` set) can be listed and
+  previewed (Study only) on the Marketplace by anyone. Importing copies it
+  as a new personal quiz (`imported_at`, `imported_from_id`), see
+  `docs/adr/0001-import-copies-published-quizzes.md`. Server functions take
+  the user from the session, never from the client.
 - No localStorage. Signed-in users' progress, flags, exam settings and
   unfinished exams are in the database; on the client `src/lib/user-data.ts`
   caches them per quiz and `src/lib/exam-sync.ts` keeps an unfinished exam in
