@@ -12,6 +12,7 @@ import type {
   PlannedExamQuestion,
   StoredExam,
 } from '#/domain/mock-exam'
+import { correctIndexesOf } from '#/server/quiz-access'
 
 /*
  * Storage of unfinished mock exams. Speaks the rulebook's language
@@ -85,9 +86,7 @@ async function load(
       optionOrder: q.optionOrder,
       flagged: q.flagged,
       optionCount: q.question.options.length,
-      correct: q.question.options.flatMap((o, index) =>
-        o.isCorrect ? [index] : [],
-      ),
+      correct: correctIndexesOf(q.question.options),
     })),
     progress: {
       current: row.currentPosition,

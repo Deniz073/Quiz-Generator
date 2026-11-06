@@ -6,6 +6,7 @@ import type {
   ApiKeyStatus,
   ApiKeysStatus,
 } from '#/lib/api-keys-schema'
+import { API_KEY_PROVIDERS } from '#/lib/api-keys-schema'
 import {
   decryptSecret,
   encryptSecret,
@@ -21,14 +22,15 @@ import {
 const columns = {
   claude: userSettings.claudeApiKey,
   codex: userSettings.codexApiKey,
-} as const
+} as const satisfies Record<ApiKeyProvider, unknown>
 
 const fieldNames = {
   claude: 'claudeApiKey',
   codex: 'codexApiKey',
-} as const
-
-const providers = Object.keys(columns) as ApiKeyProvider[]
+} as const satisfies Record<
+  ApiKeyProvider,
+  keyof typeof userSettings.$inferInsert
+>
 
 // Binds each ciphertext to its user and column.
 function aadFor(userId: string, provider: ApiKeyProvider): string {
@@ -37,7 +39,7 @@ function aadFor(userId: string, provider: ApiKeyProvider): string {
 
 async function loadEncrypted(userId: string) {
   const rows = await db
-    .select({ claude: columns.claude, codex: columns.codex })
+    .select(columns)
     .from(userSettings)
     .where(eq(userSettings.userId, userId))
     .limit(1)
@@ -71,8 +73,9 @@ export async function getApiKeysStatus(userId: string): Promise<ApiKeysStatus> {
   }
   return {
     storageConfigured: isSecretBoxConfigured(),
-    claude: status('claude'),
-    codex: status('codex'),
+    ...(Object.fromEntries(
+      API_KEY_PROVIDERS.map((provider) => [provider, status(provider)]),
+    ) as Record<ApiKeyProvider, ApiKeyStatus>),
   }
 }
 
@@ -87,7 +90,7 @@ export async function updateApiKeys(
   const values: Partial<
     Record<(typeof fieldNames)[ApiKeyProvider], string | null>
   > = {}
-  for (const provider of providers) {
+  for (const provider of API_KEY_PROVIDERS) {
     const value = changes[provider]
     if (value === undefined) continue
     values[fieldNames[provider]] =

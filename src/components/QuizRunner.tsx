@@ -23,45 +23,33 @@ import { useFlagToggle } from '#/lib/use-flag-toggle'
 import { useLeaveGuard } from '#/lib/use-leave-guard'
 import { useOptionHotkeys } from '#/lib/use-option-hotkeys'
 
-type Props = {
+interface Props {
   quizId: string
   /** Builds the plan of a full round (also used for "retry" / "new round"). */
   buildPlan: () => Array<PlannedQuestion>
-  /**
-   * The chapter whose attempt a finished full round records, for signed-in
-   * users (never for "retry incorrect" rounds). Omit for modes that are not
-   * recorded.
-   */
-  record?: { chapterId: string }
-  /** False hides the "retry" button, e.g. when `buildPlan` would be empty. */
+  /** The button that starts a new full round, e.g. "Retry chapter". */
+  retryLabel: string
+  /** False hides that button, e.g. when `buildPlan` would be empty. */
   canRetry?: boolean
-} & (
-  | { mode: 'chapter'; nextChapterId: string | undefined }
-  // Mixed practice: immediate feedback across chapters.
-  | { mode: 'practice' }
-  // Practice again on a fixed subset of questions (e.g. the ones missed in a
-  // mock exam). Never recorded.
-  | { mode: 'subset' }
-  // Practice the questions flagged in earlier rounds. Never recorded.
-  | { mode: 'flagged' }
-)
-
-const RETRY_LABELS = {
-  chapter: 'Retry chapter',
-  practice: 'New practice round',
-  subset: 'Practice again',
-  flagged: 'Practice flagged again',
+  /** The chapter a finished full round records (see Round). */
+  recordsChapter?: string
+  nextChapterId?: string
 }
 
-export function QuizRunner(props: Props) {
-  const { quizId, mode, buildPlan, record, canRetry = true } = props
+export function QuizRunner({
+  quizId,
+  buildPlan,
+  retryLabel,
+  canRetry = true,
+  recordsChapter,
+  nextChapterId,
+}: Props) {
   // Undefined until loaded; nothing shows as flagged then.
   const flags = useFlags(quizId)
   const onFlag = useFlagToggle(quizId)
   const userId = useUserId()
 
-  // A full round of this mode. Only "subset" rounds are never recorded.
-  const fullRound = (): Round => ({ subset: props.mode === 'subset' })
+  const fullRound = (): Round => ({ recordsChapter })
 
   // The route renders on the client only (ssr: 'data-only'), so shuffling
   // during init can't cause a hydration mismatch.
@@ -81,11 +69,11 @@ export function QuizRunner(props: Props) {
   // props and state without making them dependencies (which would save the
   // same result again).
   const finishRound = useEffectEvent(() => {
-    if (userId && record && !round.subset) {
+    if (userId && round.recordsChapter) {
       saveChapterAttempt(
         userId,
         quizId,
-        record.chapterId,
+        round.recordsChapter,
         getScore(state),
         state.plan.length,
       )
@@ -112,7 +100,6 @@ export function QuizRunner(props: Props) {
     requireReset: true,
   })
 
-  // Left arrow goes back to review the previous question.
   useHotkey('ArrowLeft', () => dispatch({ type: 'previous' }), {
     enabled: !blocked && canGoBack(state),
   })
@@ -142,10 +129,8 @@ export function QuizRunner(props: Props) {
         quizId={quizId}
         answers={answers}
         score={getScore(state)}
-        retryLabel={RETRY_LABELS[mode]}
-        nextChapterId={
-          props.mode === 'chapter' ? props.nextChapterId : undefined
-        }
+        retryLabel={retryLabel}
+        nextChapterId={nextChapterId}
         onRetry={
           canRetry
             ? () =>
@@ -162,8 +147,7 @@ export function QuizRunner(props: Props) {
             plan: reshufflePlan(
               answers.filter((answer) => !answer.correct).map((a) => a.item),
             ),
-            // Nothing saved: the score isn't comparable to a full run.
-            round: { subset: true },
+            round: {},
           })
         }
       />

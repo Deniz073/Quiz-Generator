@@ -9,20 +9,14 @@ import { getFlaggedQuestions } from '#/lib/flags'
 import { buildShuffledPlan } from '#/lib/quiz-plan'
 import { pageTitle } from '#/lib/page-title'
 import { requireQuiz } from '#/lib/quiz-route'
+import { parseChapterParam } from '#/lib/study-search'
 import { readFlags, useFlags, useUserId } from '#/lib/user-data'
 
 export const Route = createFileRoute('/quiz/$quizId/flagged')({
   // An invalid, missing or unknown chapter falls back to the whole quiz.
-  validateSearch: (search: Record<string, unknown>): { chapter?: string } => {
-    const { chapter } = search
-    return {
-      // A numeric-looking chapter id like `1` is parsed as a number.
-      chapter:
-        typeof chapter === 'string' || typeof chapter === 'number'
-          ? String(chapter)
-          : undefined,
-    }
-  },
+  validateSearch: (search: Record<string, unknown>): { chapter?: string } => ({
+    chapter: parseChapterParam(search.chapter),
+  }),
   // Questions are shuffled: client-only component, see the chapter route. The
   // loader still runs on the server for a real 404.
   ssr: 'data-only',
@@ -92,7 +86,7 @@ function FlaggedRound({ quiz, chapterId }: { quiz: Quiz; chapterId?: string }) {
   return (
     <QuizRunner
       quizId={quiz.id}
-      mode="flagged"
+      retryLabel="Practice flagged again"
       // Reads the latest flags, so "retry" drops questions unflagged meanwhile.
       buildPlan={() => {
         const latest = readFlags(userId, quiz.id)

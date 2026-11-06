@@ -1,10 +1,11 @@
 import type { PlannedQuestion } from '#/lib/quiz-plan'
 import type { ExamState } from '#/lib/exam-state'
 import type { StoredExam } from '#/domain/mock-exam'
-import { isPermutation, isTimeUp } from '#/domain/mock-exam'
+import { examMinutes, isTimeUp } from '#/domain/mock-exam'
 import type { ExamConfig, Quiz } from '#/quizzes/types'
 import { examReducer, startExam } from '#/lib/exam-state'
-import { isValidPick } from '#/quizzes/question'
+import { chapterRef } from '#/lib/quiz-plan'
+import { answerKey, isLegalPick, isPermutation } from '#/quizzes/question'
 
 /*
  * What happens to a mock exam outside its reducer: deciding between a new,
@@ -53,17 +54,7 @@ export function resolveStoredExam(
     quiz.chapters.flatMap((chapter) =>
       chapter.questions.map(
         (question) =>
-          [
-            question.id,
-            {
-              question,
-              chapter: {
-                id: chapter.id,
-                number: chapter.number,
-                title: chapter.title,
-              },
-            },
-          ] as const,
+          [question.id, { question, chapter: chapterRef(chapter) }] as const,
       ),
     ),
   )
@@ -85,7 +76,7 @@ export function resolveStoredExam(
     if (
       !found ||
       !isPermutation(entry.optionOrder, found.question.options.length) ||
-      !isValidPick(found.question, entry.picks)
+      !isLegalPick(answerKey(found.question), entry.picks)
     ) {
       return undefined
     }
@@ -110,11 +101,28 @@ export function resolveStoredExam(
   }
 }
 
+/** How far the server's clock (`serverNow`, epoch ms) is ahead of this device's. */
+export function clockOffset(serverNow: number): number {
+  return serverNow - Date.now()
+}
+
+/** The server's times on this device's clock (the countdown uses Date.now()). */
+export function toDeviceTimes<T extends { startedAt: number; endsAt: number }>(
+  times: T,
+  offset: number,
+): T {
+  return {
+    ...times,
+    startedAt: times.startedAt - offset,
+    endsAt: times.endsAt - offset,
+  }
+}
+
 /** What the server needs to start storing a new exam. */
 export function toNewSession(quizId: string, state: ExamState) {
   return {
     quizId,
-    minutes: Math.max(1, Math.round((state.endsAt - state.startedAt) / 60_000)),
+    minutes: examMinutes(state.startedAt, state.endsAt),
     passPercent: state.passPercent,
     questions: state.plan.map((item) => ({
       questionId: item.question.id,

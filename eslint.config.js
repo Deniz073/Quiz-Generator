@@ -24,8 +24,6 @@ export default [
       'src/server/**',
       'src/db/**',
       'src/lib/*-api.ts',
-      'src/lib/session.ts',
-      'src/lib/auth.ts',
       'src/routes/api/**',
     ],
     rules: {
@@ -35,7 +33,7 @@ export default [
           patterns: [
             {
               // regex, not group: in gitignore syntax a leading # is a comment.
-              regex: '^#/(db|server|lib/auth)(/|$)',
+              regex: '^#/(db|server)(/|$)',
               allowTypeImports: true,
               message:
                 'Server only: call it from a server function (src/lib/*-api.ts) instead.',
@@ -45,10 +43,10 @@ export default [
       ],
     },
   },
-  // Domain rules are shared by client, server and the drizzle-kit schema
-  // loader (which has no #/ alias): relative imports only.
+  // Domain and quiz rules are shared by client, server and the drizzle-kit
+  // schema loader (which has no #/ alias): relative imports only.
   {
-    files: ['src/domain/**/*.ts'],
+    files: ['src/domain/**/*.ts', 'src/quizzes/**/*.ts'],
     rules: {
       '@typescript-eslint/no-restricted-imports': [
         'error',
@@ -56,7 +54,8 @@ export default [
           patterns: [
             {
               regex: '^#/',
-              message: 'Domain modules use relative imports only.',
+              message:
+                'Domain and quiz rule modules use relative imports only.',
             },
           ],
         },

@@ -1,25 +1,24 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useReducer, useRef, useState } from 'react'
 import { Link } from '@tanstack/react-router'
 import { useHotkey } from '@tanstack/react-hotkeys'
 import type { Question } from '#/quizzes/types'
-import { buttonClasses } from '#/lib/button-classes'
-import { focusHeading, isFocusLost } from '#/lib/focus'
+import { buttonClasses, tipClasses } from '#/lib/button-classes'
+import { focusHeading, isFocusLost, scrollIntoViewIfNeeded } from '#/lib/focus'
 import { describeOptionKeys } from '#/lib/option-keys'
-import { shuffle } from '#/lib/shuffle'
+import { buildShuffledPlan } from '#/lib/quiz-plan'
+import {
+  canCheck,
+  createInitialState,
+  getSelected,
+  isSubmitted,
+  quizReducer,
+} from '#/lib/quiz-state'
 import { useFlags } from '#/lib/user-data'
 import { useFlagToggle } from '#/lib/use-flag-toggle'
 import { useOptionHotkeys } from '#/lib/use-option-hotkeys'
-import {
-  getCorrectIndexes,
-  isMultipleAnswer,
-  togglePick,
-} from '#/quizzes/question'
+import { isMultipleAnswer } from '#/quizzes/question'
 import { Feedback } from '#/components/Feedback'
-import {
-  QuestionBody,
-  scrollIntoViewIfNeeded,
-  tipClasses,
-} from '#/components/QuestionCard'
+import { QuestionBody } from '#/components/QuestionCard'
 
 interface Props {
   quizId: string
@@ -63,39 +62,27 @@ function Attempt({
   question,
   onRetry,
 }: Props & { onRetry: () => void }) {
-  // The route renders on the client only (ssr: 'data-only'), so shuffling
-  // during init can't cause a hydration mismatch.
-  const [optionOrder] = useState(() =>
-    shuffle(question.options.map((_, index) => index)),
+  // A practice round of one question. The route renders on the client only
+  // (ssr: 'data-only'), so shuffling during init can't cause a hydration
+  // mismatch.
+  const [state, dispatch] = useReducer(quizReducer, undefined, () =>
+    createInitialState(buildShuffledPlan([question]), {}),
   )
-  const [picks, setPicks] = useState<ReadonlyArray<number>>([])
-  const [submitted, setSubmitted] = useState(false)
+  const { optionOrder } = state.plan[0]
+  const submitted = isSubmitted(state)
+  const picks = getSelected(state)
   const flags = useFlags(quizId)
   const onFlag = useFlagToggle(quizId)
 
   const multiple = isMultipleAnswer(question)
-  const required = getCorrectIndexes(question).length
-  const canCheck = multiple && !submitted && picks.length === required
   const keyTip = describeOptionKeys(optionOrder.length)
+  const toggle = (originalIndex: number) =>
+    dispatch({ type: 'toggle', originalIndex })
+  const check = () => dispatch({ type: 'check' })
 
-  // As in practice rounds: a single answer locks in on the first pick, multiple
-  // answers are toggled and then checked.
-  const pick = (originalIndex: number) => {
-    if (submitted) return
-    if (multiple) {
-      setPicks((current) => togglePick(question, current, originalIndex))
-    } else {
-      setPicks([originalIndex])
-      setSubmitted(true)
-    }
-  }
-
-  useOptionHotkeys({ optionOrder, enabled: !submitted, onPick: pick })
+  useOptionHotkeys({ optionOrder, enabled: !submitted, onPick: toggle })
   // requireReset: holding Enter checks once.
-  useHotkey('Enter', () => setSubmitted(true), {
-    enabled: canCheck,
-    requireReset: true,
-  })
+  useHotkey('Enter', check, { enabled: canCheck(state), requireReset: true })
 
   // Once answered, the feedback and the next steps below it come into view,
   // and focus moves to the main next step (the picked option is now inert).
@@ -110,11 +97,11 @@ function Attempt({
   return (
     <>
       <QuestionBody
-        item={{ question, optionOrder }}
+        item={state.plan[0]}
         selected={picks}
         submitted={submitted}
         flagged={flags?.has(question.id) ?? false}
-        onToggle={pick}
+        onToggle={toggle}
         onFlag={() => onFlag(question)}
         shareQuizId={quizId}
       />
@@ -149,8 +136,8 @@ function Attempt({
           </p>
           <button
             type="button"
-            onClick={() => setSubmitted(true)}
-            disabled={!canCheck}
+            onClick={check}
+            disabled={!canCheck(state)}
             className={`ml-auto ${buttonClasses('primary')}`}
           >
             Check answer

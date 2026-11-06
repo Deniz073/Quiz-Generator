@@ -1,7 +1,14 @@
 /*
- * The search params of a study deck: a quiz's Study page and a Marketplace
- * preview.
+ * Search params of quiz pages: the study deck (a quiz's Study page and a
+ * Marketplace preview) and the chapter scope of the flagged questions.
  */
+
+/** A chapter id from the URL; a numeric-looking id like `1` arrives as a number. */
+export function parseChapterParam(value: unknown): string | undefined {
+  return typeof value === 'string' || typeof value === 'number'
+    ? String(value)
+    : undefined
+}
 
 export interface StudySearch {
   chapter?: string
@@ -20,11 +27,7 @@ export function validateStudySearch(
 ): StudySearch {
   const { chapter, shuffle, showAnswers } = search
   return {
-    // A numeric-looking chapter id like `1` is parsed as a number.
-    chapter:
-      typeof chapter === 'string' || typeof chapter === 'number'
-        ? String(chapter)
-        : undefined,
+    chapter: parseChapterParam(chapter),
     shuffle: shuffle === true || shuffle === 'true' ? true : undefined,
     showAnswers:
       showAnswers === true || showAnswers === 'true' ? true : undefined,

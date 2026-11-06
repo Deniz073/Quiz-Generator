@@ -1,7 +1,7 @@
 /*
- * Quiz data model. To add a quiz, create `src/quizzes/<quiz-id>/index.ts` that
- * `export default`s a `Quiz`; it is auto-discovered (see ./index.ts) and
- * checked by ./validate.ts (`npm run validate:quizzes`). See AGENTS.md.
+ * The quiz as the app uses it. Quizzes are stored in the database; built-in
+ * ones are written from src/db/seed/quizzes and checked by ./validate.ts. See
+ * AGENTS.md.
  */
 
 interface BaseQuestion {

@@ -14,7 +14,7 @@ import {
   uuid,
 } from 'drizzle-orm/pg-core'
 // Relative: drizzle-kit loads this file without the #/ alias.
-import { MAX_EXAM_MINUTES } from '../domain/exam-settings'
+import { MAX_EXAM_MINUTES } from '../quizzes/validate'
 import { user } from './auth-schema'
 import { chapter, question, questionOption, quiz } from './quiz-schema'
 

@@ -3,7 +3,7 @@ import type { ExamOverrides } from '#/domain/exam-settings'
 import type { StoredExam } from '#/domain/mock-exam'
 import type { ExamConfig, Quiz } from '#/quizzes/types'
 import { resolveExamConfig } from '#/domain/exam-settings'
-import { resumeOrStart } from '#/lib/exam-lifecycle'
+import { clockOffset, resumeOrStart, toDeviceTimes } from '#/lib/exam-lifecycle'
 import { examReducer, startExam } from '#/lib/exam-state'
 import { createExamSync } from '#/lib/exam-sync'
 import { noteExamAttempt, useUserId } from '#/lib/user-data'
@@ -22,15 +22,6 @@ export type ExamStartData = {
 export interface ExamScore {
   score: number
   total: number
-}
-
-/** The server's times on this device's clock (the countdown uses Date.now()). */
-function toLocalClock(stored: StoredExam, offset: number): StoredExam {
-  return {
-    ...stored,
-    startedAt: stored.startedAt - offset,
-    endsAt: stored.endsAt - offset,
-  }
 }
 
 /**
@@ -55,10 +46,10 @@ export function useExam(
   const config = () =>
     resolveExamConfig(defaults, start?.overrides, countQuestions(quiz))
   const [initial] = useState(() => {
-    // How far the server's clock is ahead of this device's.
-    const offset = start ? start.serverNow - Date.now() : 0
     const session =
-      userId && start?.session ? toLocalClock(start.session, offset) : null
+      userId && start?.session
+        ? toDeviceTimes(start.session, clockOffset(start.serverNow))
+        : null
     return resumeOrStart(quiz, config(), session)
   })
   const [state, dispatch] = useReducer(examReducer, initial.state)

@@ -1,10 +1,10 @@
 import type { Dispatch } from 'react'
 import type { ExamAction, ExamState } from '#/lib/exam-state'
-import { buttonClasses } from '#/lib/button-classes'
+import { buttonClasses, tipClasses } from '#/lib/button-classes'
 import { getCounts, getStatuses } from '#/lib/exam-state'
 import { describeOptionKeys } from '#/lib/option-keys'
 import { ProgressHeader } from '#/components/ProgressHeader'
-import { QuestionBody, tipClasses } from '#/components/QuestionCard'
+import { QuestionBody } from '#/components/QuestionCard'
 import { QuestionNavigator } from '#/components/QuestionNavigator'
 
 interface Props {

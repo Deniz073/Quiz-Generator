@@ -1,4 +1,6 @@
-import type { Quiz } from './types'
+import { countQuestions } from './index'
+import type { Question, Quiz } from './types'
+import { validateQuiz } from './validate'
 
 /*
  * Size caps for quizzes users write themselves (the quiz assistant), checked
@@ -16,43 +18,57 @@ export const QUIZ_LIMITS = {
   personalQuizzes: 50,
 } as const
 
-function tooLong(text: string, max: number): boolean {
-  return text.length > max
+/** One question's cap violations, without its location. */
+export function checkQuestionLimits(
+  question: Pick<Question, 'question' | 'options' | 'explanation'>,
+): Array<string> {
+  const errors: Array<string> = []
+  const max = QUIZ_LIMITS.textLength
+  if (question.question.length > max) {
+    errors.push(`text is over ${max} characters`)
+  }
+  if (question.options.some((option) => option.length > max)) {
+    errors.push(`an option is over ${max} characters`)
+  }
+  if (question.explanation.length > QUIZ_LIMITS.explanationLength) {
+    errors.push(
+      `explanation is over ${QUIZ_LIMITS.explanationLength} characters`,
+    )
+  }
+  return errors
 }
 
 /** Human-readable cap violations; empty when within every cap. */
 export function checkQuizLimits(quiz: Quiz): Array<string> {
   const errors: Array<string> = []
   const max = QUIZ_LIMITS.textLength
-  if (tooLong(quiz.title, max)) errors.push(`title is over ${max} characters`)
-  if (tooLong(quiz.description, max)) {
+  if (quiz.title.length > max) errors.push(`title is over ${max} characters`)
+  if (quiz.description.length > max) {
     errors.push(`description is over ${max} characters`)
   }
   if (quiz.chapters.length > QUIZ_LIMITS.chapters) {
     errors.push(`more than ${QUIZ_LIMITS.chapters} chapters`)
   }
-  const total = quiz.chapters.reduce((sum, c) => sum + c.questions.length, 0)
-  if (total > QUIZ_LIMITS.questions) {
+  if (countQuestions(quiz) > QUIZ_LIMITS.questions) {
     errors.push(`more than ${QUIZ_LIMITS.questions} questions`)
   }
   for (const chapter of quiz.chapters) {
-    if (tooLong(chapter.title, max)) {
+    if (chapter.title.length > max) {
       errors.push(`chapter "${chapter.id}": title is over ${max} characters`)
     }
     for (const question of chapter.questions) {
-      const where = `question "${question.id}"`
-      if (tooLong(question.question, max)) {
-        errors.push(`${where}: text is over ${max} characters`)
-      }
-      if (question.options.some((option) => tooLong(option, max))) {
-        errors.push(`${where}: an option is over ${max} characters`)
-      }
-      if (tooLong(question.explanation, QUIZ_LIMITS.explanationLength)) {
-        errors.push(
-          `${where}: explanation is over ${QUIZ_LIMITS.explanationLength} characters`,
-        )
+      for (const error of checkQuestionLimits(question)) {
+        errors.push(`question "${question.id}": ${error}`)
       }
     }
   }
   return errors
+}
+
+/**
+ * What stands between a personal quiz and a Save: the quiz rules and the size
+ * caps. Empty when it can be saved. The browser shows it, the server enforces it.
+ */
+export function personalQuizProblems(quiz: Quiz): Array<string> {
+  return [...validateQuiz(quiz), ...checkQuizLimits(quiz)]
 }

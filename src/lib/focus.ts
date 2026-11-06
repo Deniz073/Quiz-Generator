@@ -16,3 +16,30 @@ export function isFocusLost() {
     document.activeElement === null || document.activeElement === document.body
   )
 }
+
+/**
+ * Scrolls the element in only if part of it is outside the viewport, smoothly
+ * unless the user prefers reduced motion. The element's `scroll-margin` keeps
+ * it off the edge.
+ */
+export function scrollIntoViewIfNeeded(element: HTMLElement) {
+  const reduceMotion = window.matchMedia(
+    '(prefers-reduced-motion: reduce)',
+  ).matches
+  element.scrollIntoView({
+    block: 'nearest',
+    behavior: reduceMotion ? 'auto' : 'smooth',
+  })
+}
+
+/**
+ * onKeyDown for a button inside a page with a global Enter hotkey (practice:
+ * "check / next"): Enter stays this button's own, so keyboard users can
+ * press it.
+ */
+export function keepNativeEnter(event: {
+  key: string
+  stopPropagation: () => void
+}) {
+  if (event.key === 'Enter') event.stopPropagation()
+}

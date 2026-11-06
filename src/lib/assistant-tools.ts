@@ -1,5 +1,6 @@
 import { toolDefinition } from '@tanstack/ai'
 import { z } from 'zod'
+import { MAX_OPTIONS, MIN_OPTIONS } from '#/quizzes/validate'
 
 /*
  * The quiz assistant's quiz tools. Shared definitions: the server hands them
@@ -13,9 +14,9 @@ const questionInput = z.object({
     description:
       'The question text. For multiple-answer questions state the count, e.g. "Select two."',
   }),
-  options: z
-    .array(z.string())
-    .meta({ description: '2-6 answer options (usually 4), no duplicates.' }),
+  options: z.array(z.string()).meta({
+    description: `${MIN_OPTIONS}-${MAX_OPTIONS} answer options (usually 4), no duplicates.`,
+  }),
   correctIndexes: z.array(z.number().int()).meta({
     description:
       '0-based indexes into options of the correct answers: one entry for a single-answer question, 2 or more (but fewer than all options) for a multiple-answer question.',
@@ -131,28 +132,3 @@ export const quizToolDefs = [
   updateQuestionDef,
   removeQuestionsDef,
 ] as const
-
-/** Names the chat shows for a tool call, by tool name. */
-export const toolLabels: Record<string, { running: string; done: string }> = {
-  get_outline: { running: 'Reading the quiz', done: 'Read the quiz' },
-  read_questions: { running: 'Reading questions', done: 'Read questions' },
-  set_quiz_details: { running: 'Updating details', done: 'Updated details' },
-  set_mock_exam: {
-    running: 'Updating mock exam',
-    done: 'Updated mock exam',
-  },
-  add_chapter: { running: 'Adding a chapter', done: 'Added a chapter' },
-  rename_chapter: { running: 'Renaming a chapter', done: 'Renamed a chapter' },
-  remove_chapter: { running: 'Removing a chapter', done: 'Removed a chapter' },
-  add_questions: { running: 'Adding questions', done: 'Added questions' },
-  update_question: {
-    running: 'Changing a question',
-    done: 'Changed a question',
-  },
-  remove_questions: {
-    running: 'Removing questions',
-    done: 'Removed questions',
-  },
-  web_search: { running: 'Searching the web', done: 'Searched the web' },
-  web_fetch: { running: 'Reading a page', done: 'Read a page' },
-}

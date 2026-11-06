@@ -11,15 +11,20 @@
  * Pure: relative imports only, nothing server-side.
  */
 
+import type { AnswerKey } from '../quizzes/question'
+import {
+  isCorrectPick,
+  isIndex,
+  isLegalPick,
+  isPermutation,
+  isUnique,
+} from '../quizzes/question'
+
 /** Allowance for a save or submit sent right at the deadline (the network). */
 export const GRACE_MS = 30_000
 
 /** What the rules need to know of a question. */
-export interface ExamQuestionFacts {
-  optionCount: number
-  /** Original indexes of the correct options. */
-  correct: ReadonlyArray<number>
-}
+export type ExamQuestionFacts = AnswerKey
 
 /** A question of an exam: which one, and the order its options are shown in. */
 export interface PlannedExamQuestion {
@@ -55,51 +60,6 @@ export interface StoredExam {
       flagged: boolean
     }
   >
-}
-
-function isUnique(values: ReadonlyArray<number>): boolean {
-  return new Set(values).size === values.length
-}
-
-function isIndex(value: number, count: number): boolean {
-  return Number.isInteger(value) && value >= 0 && value < count
-}
-
-/** `order` shows each of the `count` options exactly once. */
-export function isPermutation(
-  order: ReadonlyArray<number>,
-  count: number,
-): boolean {
-  return (
-    order.length === count &&
-    isUnique(order) &&
-    order.every((i) => isIndex(i, count))
-  )
-}
-
-/**
- * Whether `pick` could have come from toggling options: distinct options that
- * exist, and no more than the number of correct answers.
- */
-export function isLegalPick(
-  question: ExamQuestionFacts,
-  pick: ReadonlyArray<number>,
-): boolean {
-  return (
-    isUnique(pick) &&
-    pick.length <= question.correct.length &&
-    pick.every((i) => isIndex(i, question.optionCount))
-  )
-}
-
-/** All-or-nothing: correct only if exactly the correct options are picked. */
-export function isCorrectPick(
-  correct: ReadonlyArray<number>,
-  pick: ReadonlyArray<number>,
-): boolean {
-  return (
-    pick.length === correct.length && correct.every((i) => pick.includes(i))
-  )
 }
 
 /**
@@ -147,6 +107,16 @@ export function scoreExam(
   return questions.filter((question, position) =>
     isCorrectPick(question.correct, picks.at(position) ?? []),
   ).length
+}
+
+/** The deadline (epoch ms) of an exam of `minutes` started at `startedAt`. */
+export function examDeadline(startedAt: number, minutes: number): number {
+  return startedAt + minutes * 60_000
+}
+
+/** The time limit, in whole minutes, of an exam with these times. */
+export function examMinutes(startedAt: number, endsAt: number): number {
+  return Math.max(1, Math.round((endsAt - startedAt) / 60_000))
 }
 
 /** Whether the time is up (the client's view: no grace). */

@@ -5,6 +5,7 @@ import {
   questionToolClasses,
   questionToolIdleClasses,
 } from '#/lib/button-classes'
+import { keepNativeEnter } from '#/lib/focus'
 
 type Status =
   | { kind: 'copied' }
@@ -71,9 +72,7 @@ export function ShareButton({ path, text, compact = false }: Props) {
           variant="ghost"
           size="icon-sm"
           onClick={() => void share()}
-          onKeyDown={(event) => {
-            if (event.key === 'Enter') event.stopPropagation()
-          }}
+          onKeyDown={keepNativeEnter}
           aria-label={copied ? 'Link copied' : 'Share this question'}
           title={copied ? 'Link copied' : 'Share this question'}
         >
@@ -83,11 +82,7 @@ export function ShareButton({ path, text, compact = false }: Props) {
         <button
           type="button"
           onClick={() => void share()}
-          // Enter is a global hotkey in practice rounds ("check / next"); keep it
-          // from hijacking this button, like the flag button next to it.
-          onKeyDown={(event) => {
-            if (event.key === 'Enter') event.stopPropagation()
-          }}
+          onKeyDown={keepNativeEnter}
           className={`${questionToolClasses} ${questionToolIdleClasses}`}
         >
           {copied ? 'Link copied' : 'Share'}

@@ -50,7 +50,6 @@ import type { ApiKeyProvider } from '#/lib/api-keys-schema'
 import { providerLabels } from '#/lib/api-keys-schema'
 import { createQuizClientTools } from '#/lib/assistant-client-tools'
 import type { WorkingCopyStore } from '#/lib/assistant-client-tools'
-import { toolLabels } from '#/lib/assistant-tools'
 import { outline } from '#/lib/working-copy'
 
 /*
@@ -478,12 +477,95 @@ function toolInput(call: ToolCall): Record<string, unknown> {
   }
 }
 
-function toolIcon(name: string) {
-  if (name === 'web_search' || name === 'web_fetch') return <GlobeIcon />
-  if (name === 'get_outline' || name === 'read_questions') {
-    return <ListChecksIcon />
+type ToolArgs = Record<string, unknown>
+
+/** How the chat shows a call of each tool (the quiz tools and the web tools). */
+const TOOL_DISPLAY: Record<
+  string,
+  {
+    running: string
+    done: string
+    icon: ReactNode
+    detail?: (
+      input: ToolArgs,
+      output: ToolArgs | undefined,
+    ) => string | undefined
   }
-  return <PencilIcon />
+> = {
+  get_outline: {
+    running: 'Reading the quiz',
+    done: 'Read the quiz',
+    icon: <ListChecksIcon />,
+  },
+  read_questions: {
+    running: 'Reading questions',
+    done: 'Read questions',
+    icon: <ListChecksIcon />,
+  },
+  set_quiz_details: {
+    running: 'Updating details',
+    done: 'Updated details',
+    icon: <PencilIcon />,
+  },
+  set_mock_exam: {
+    running: 'Updating mock exam',
+    done: 'Updated mock exam',
+    icon: <PencilIcon />,
+  },
+  add_chapter: {
+    running: 'Adding a chapter',
+    done: 'Added a chapter',
+    icon: <PencilIcon />,
+  },
+  rename_chapter: {
+    running: 'Renaming a chapter',
+    done: 'Renamed a chapter',
+    icon: <PencilIcon />,
+  },
+  remove_chapter: {
+    running: 'Removing a chapter',
+    done: 'Removed a chapter',
+    icon: <PencilIcon />,
+  },
+  add_questions: {
+    running: 'Adding questions',
+    done: 'Added questions',
+    icon: <PencilIcon />,
+    detail: (_input, output) => {
+      if (!Array.isArray(output?.addedIds)) return undefined
+      const rejected = Array.isArray(output.rejected)
+        ? output.rejected.length
+        : 0
+      return `${output.addedIds.length} added${rejected > 0 ? `, ${rejected} rejected` : ''}`
+    },
+  },
+  update_question: {
+    running: 'Changing a question',
+    done: 'Changed a question',
+    icon: <PencilIcon />,
+  },
+  remove_questions: {
+    running: 'Removing questions',
+    done: 'Removed questions',
+    icon: <PencilIcon />,
+    detail: (input) =>
+      Array.isArray(input.questionIds)
+        ? `${input.questionIds.length}`
+        : undefined,
+  },
+  web_search: {
+    running: 'Searching the web',
+    done: 'Searched the web',
+    icon: <GlobeIcon />,
+    detail: (input) =>
+      typeof input.query === 'string' ? input.query : undefined,
+  },
+  web_fetch: {
+    running: 'Reading a page',
+    done: 'Read a page',
+    icon: <GlobeIcon />,
+    detail: (input) => (typeof input.url === 'string' ? input.url : undefined),
+  },
 }
 
 function ToolRow({
@@ -496,43 +578,28 @@ function ToolRow({
   active: boolean
 }) {
   const input = toolInput(call)
-  const output = call.output as Record<string, unknown> | undefined
+  const output = call.output as ToolArgs | undefined
   const failed =
     call.state === 'error' || result?.state === 'error' || output?.ok === false
   const finished =
     failed || output !== undefined || result !== undefined || !active
-  const label = toolLabels[call.name] ?? {
+  const display = TOOL_DISPLAY[call.name] ?? {
     running: `Running ${call.name}`,
     done: `Ran ${call.name}`,
+    icon: <PencilIcon />,
   }
-
-  let detail: string | undefined
-  if (call.name === 'web_search' && typeof input.query === 'string') {
-    detail = input.query
-  } else if (call.name === 'web_fetch' && typeof input.url === 'string') {
-    detail = input.url
-  } else if (call.name === 'add_questions' && Array.isArray(output?.addedIds)) {
-    detail = `${output.addedIds.length} added`
-    if (Array.isArray(output.rejected) && output.rejected.length > 0) {
-      detail += `, ${output.rejected.length} rejected`
-    }
-  } else if (
-    call.name === 'remove_questions' &&
-    Array.isArray(input.questionIds)
-  ) {
-    detail = `${input.questionIds.length}`
-  }
+  const detail = display.detail?.(input, output)
   const error = typeof output?.error === 'string' ? output.error : result?.error
 
   const line = (
     <TraceLine status={failed ? 'error' : finished ? undefined : 'running'}>
-      <TraceIcon>{toolIcon(call.name)}</TraceIcon>
+      <TraceIcon>{display.icon}</TraceIcon>
       <TraceTitle>
         {failed
-          ? `Failed: ${label.running.toLowerCase()}`
+          ? `Failed: ${display.running.toLowerCase()}`
           : finished
-            ? label.done
-            : label.running}
+            ? display.done
+            : display.running}
       </TraceTitle>
       {detail ? <TraceDescription>{detail}</TraceDescription> : null}
     </TraceLine>

@@ -41,10 +41,10 @@ function ChapterPage() {
       <QuizRunner
         key={chapter.id}
         quizId={quiz.id}
-        mode="chapter"
         buildPlan={() => buildShuffledPlan(chapter.questions)}
+        retryLabel="Retry chapter"
+        recordsChapter={chapter.id}
         nextChapterId={nextChapter?.id}
-        record={{ chapterId: chapter.id }}
       />
     </div>
   )

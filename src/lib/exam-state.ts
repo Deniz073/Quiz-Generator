@@ -1,8 +1,7 @@
-import type { PlannedQuestion } from '#/lib/quiz-plan'
-import type { Answer } from '#/lib/quiz-state'
+import type { Answer, PlannedQuestion } from '#/lib/quiz-plan'
 import type { ExamConfig, Quiz } from '#/quizzes/types'
-import { buildQuizPlan } from '#/lib/quiz-plan'
-import { buildAnswers } from '#/lib/quiz-state'
+import { buildAnswers, buildQuizPlan } from '#/lib/quiz-plan'
+import { examDeadline } from '#/domain/mock-exam'
 import { getCorrectIndexes, togglePick } from '#/quizzes/question'
 
 /*
@@ -73,7 +72,7 @@ export function createExamState(
     reviewing: false,
     submitted: false,
     startedAt,
-    endsAt: startedAt + minutes * 60_000,
+    endsAt: examDeadline(startedAt, minutes),
     passPercent,
   }
 }
@@ -90,7 +89,6 @@ export function startExam(quiz: Quiz, exam: ExamConfig): ExamState {
 
 export function examReducer(state: ExamState, action: ExamAction): ExamState {
   if (action.type === 'restart') return action.state
-  // Everything is locked once submitted.
   if (state.submitted) return state
 
   switch (action.type) {

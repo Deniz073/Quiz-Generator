@@ -19,12 +19,12 @@ import {
   removeChapter,
   removeQuestions,
   renameChapter,
-  saveProblems,
   setDetails,
   setExam,
   updateQuestion,
 } from '#/lib/working-copy'
 import type { EditResult, WorkingCopy } from '#/lib/working-copy'
+import { personalQuizProblems } from '#/quizzes/limits'
 
 /*
  * The browser side of the quiz assistant's quiz tools: each one edits the
@@ -57,7 +57,7 @@ export function createWorkingCopyStore(initial: WorkingCopy): WorkingCopyStore {
 
 /** Shown to the model after each change: what still blocks a Save. */
 function status(copy: WorkingCopy) {
-  const problems = saveProblems(copy.quiz)
+  const problems = personalQuizProblems(copy.quiz)
   return problems.length === 0
     ? { readyToSave: true }
     : {

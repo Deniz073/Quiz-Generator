@@ -10,41 +10,11 @@
  */
 
 import type { ExamConfig } from '../quizzes/types'
-
-/** Upper bound of the time limit a user can set, in minutes. */
-export const MAX_EXAM_MINUTES = 600
+import { getExamLimits, isInRange } from '../quizzes/validate'
 
 export type ExamOverrides = Partial<ExamConfig>
 
-interface Range {
-  min: number
-  max: number
-}
-
-export type ExamLimits = Record<keyof ExamConfig, Range>
-
 const KEYS = ['questionCount', 'minutes', 'passPercent'] as const
-
-/** What a user may choose for each setting of a quiz with this many questions. */
-export function getExamLimits(totalQuestions: number): ExamLimits {
-  return {
-    questionCount: { min: 1, max: totalQuestions },
-    minutes: { min: 1, max: MAX_EXAM_MINUTES },
-    passPercent: { min: 1, max: 100 },
-  }
-}
-
-export function isInRange(
-  value: unknown,
-  { min, max }: Range,
-): value is number {
-  return (
-    typeof value === 'number' &&
-    Number.isInteger(value) &&
-    value >= min &&
-    value <= max
-  )
-}
 
 /**
  * The settings in effect: the quiz's defaults with the user's valid overrides
@@ -98,4 +68,9 @@ export function matchesExamConfig(
   started: { questionCount: number; minutes: number; passPercent: number },
 ): boolean {
   return KEYS.every((key) => config[key] === started[key])
+}
+
+/** "20 questions, 30 minutes, pass mark 70%". */
+export function describeExamConfig(config: ExamConfig): string {
+  return `${config.questionCount} questions, ${config.minutes} minutes, pass mark ${config.passPercent}%`
 }

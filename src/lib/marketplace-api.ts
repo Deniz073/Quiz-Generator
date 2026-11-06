@@ -1,5 +1,6 @@
 import { createServerFn } from '@tanstack/react-start'
 import { z } from 'zod'
+import { idInput } from '#/lib/api-inputs'
 import type { Quiz } from '#/quizzes/types'
 import type { Listing, MarketplaceStanding } from '#/server/quiz-access'
 import { canDelete, canPublish } from '#/domain/marketplace'
@@ -9,10 +10,10 @@ import {
   findMarketplaceStanding,
   findPublishedQuiz,
   findQuizHeader,
-  importPublishedQuiz,
   listListings,
   setPublished,
 } from '#/server/quiz-access'
+import { importPublishedQuiz } from '#/server/quiz-writer'
 import { getRequestUserId, requireRequestUserId } from '#/server/request-user'
 
 /*
@@ -23,8 +24,6 @@ import { getRequestUserId, requireRequestUserId } from '#/server/request-user'
 
 export type { Listing, MarketplaceStanding }
 
-const slug = z.string().min(1).max(200)
-
 /** Every published quiz, newest first; visitors too. */
 export const fetchListings = createServerFn({ method: 'GET' }).handler(
   async (): Promise<Array<Listing>> => listListings(await getRequestUserId()),
@@ -32,7 +31,7 @@ export const fetchListings = createServerFn({ method: 'GET' }).handler(
 
 /** A published quiz's preview: its listing and content, or null. */
 export const fetchPreview = createServerFn({ method: 'GET' })
-  .validator(z.object({ quizId: slug }))
+  .validator(z.object({ quizId: idInput }))
   .handler(
     async ({ data }): Promise<{ listing: Listing; quiz: Quiz } | null> => {
       const userId = await getRequestUserId()
@@ -57,7 +56,7 @@ export interface QuizStanding extends MarketplaceStanding {
 
 /** Null for a quiz the user can't see (the page then is a 404 anyway). */
 export const fetchQuizStanding = createServerFn({ method: 'GET' })
-  .validator(z.object({ quizId: slug }))
+  .validator(z.object({ quizId: idInput }))
   .handler(async ({ data }): Promise<QuizStanding | null> => {
     const userId = await getRequestUserId()
     const [header, standing] = await Promise.all([
@@ -65,24 +64,24 @@ export const fetchQuizStanding = createServerFn({ method: 'GET' })
       findMarketplaceStanding(data.quizId, userId),
     ])
     if (!header || !standing) return null
-    const owned = userId !== null && !header.builtIn
+    // Visible and personal means the user's own (the visibility rule).
     return {
       ...standing,
       builtIn: header.builtIn,
       imported: header.imported,
       edited: header.edited,
       published: header.published,
-      canPublish: owned && canPublish(header),
-      canDelete: owned && canDelete(header),
+      canPublish: canPublish(header),
+      canDelete: canDelete(header),
     }
   })
 
 export const publishQuiz = createServerFn({ method: 'POST' })
-  .validator(z.object({ quizId: slug, published: z.boolean() }))
+  .validator(z.object({ quizId: idInput, published: z.boolean() }))
   .handler(async ({ data }): Promise<void> => {
     const userId = await requireRequestUserId()
     const header = await findQuizHeader(data.quizId, userId)
-    if (!header || header.builtIn) throw new Error('Quiz not found.')
+    if (!header) throw new Error('Quiz not found.')
     // Unpublishing is always allowed; publishing only what the rules allow.
     if (data.published && !canPublish(header)) {
       throw new Error('This quiz can’t be published.')
@@ -94,7 +93,7 @@ export const publishQuiz = createServerFn({ method: 'POST' })
 
 /** The user's imported quiz (new, or the one they already had). */
 export const importQuiz = createServerFn({ method: 'POST' })
-  .validator(z.object({ quizId: slug }))
+  .validator(z.object({ quizId: idInput }))
   .handler(async ({ data }): Promise<{ id: string; created: boolean }> => {
     const userId = await requireRequestUserId()
     const result = await importPublishedQuiz(data.quizId, userId)
@@ -103,11 +102,11 @@ export const importQuiz = createServerFn({ method: 'POST' })
   })
 
 export const deleteQuiz = createServerFn({ method: 'POST' })
-  .validator(z.object({ quizId: slug }))
+  .validator(z.object({ quizId: idInput }))
   .handler(async ({ data }): Promise<void> => {
     const userId = await requireRequestUserId()
     const header = await findQuizHeader(data.quizId, userId)
-    if (!header || header.builtIn) throw new Error('Quiz not found.')
+    if (!header) throw new Error('Quiz not found.')
     if (!canDelete(header)) throw new Error('This quiz can’t be deleted.')
     if (!(await deleteOwnQuiz(data.quizId, userId))) {
       throw new Error('Quiz not found.')

@@ -1,5 +1,15 @@
 import type { ReactNode } from 'react'
-import type { OptionState } from '#/lib/option-state'
+
+type OptionState =
+  | 'idle'
+  | 'selected'
+  | 'blocked'
+  // After answering. `correct` is the single-answer right option.
+  | 'correct'
+  | 'correctSelected'
+  | 'missed'
+  | 'wrong'
+  | 'dim'
 
 interface OptionStyle {
   classes: string
@@ -57,28 +67,44 @@ const OPTION_STYLES: Record<OptionState, OptionStyle> = {
 }
 
 interface Props {
-  state: OptionState
   multiple: boolean
   chosen: boolean
   /** True once the answer is locked and feedback is shown. */
   answered: boolean
   /** Exam mode: a single-answer pick can still be changed, so expose its state. */
   changeable: boolean
+  isAnswer: boolean
+  /** Multiple answers only: the required number of options is already picked. */
+  selectionFull: boolean
   letter: string
   text: string
   onClick: () => void
 }
 
-export function OptionButton({
-  state,
+function getOptionState({
   multiple,
-  chosen,
   answered,
   changeable,
-  letter,
-  text,
-  onClick,
-}: Props) {
+  chosen,
+  isAnswer,
+  selectionFull,
+}: Props): OptionState {
+  if (answered) {
+    if (isAnswer) {
+      if (!multiple) return 'correct'
+      return chosen ? 'correctSelected' : 'missed'
+    }
+    return chosen ? 'wrong' : 'dim'
+  }
+  if ((multiple || changeable) && chosen) return 'selected'
+  if (multiple && selectionFull) return 'blocked'
+  return 'idle'
+}
+
+export function OptionButton(props: Props) {
+  const { multiple, chosen, answered, changeable, letter, text, onClick } =
+    props
+  const state = getOptionState(props)
   const { classes, mark, srLabel } = OPTION_STYLES[state]
   return (
     <button

@@ -1,10 +1,12 @@
 import { createServerFn } from '@tanstack/react-start'
 import { z } from 'zod'
+import { idInput, optionIndexesInput } from '#/lib/api-inputs'
 import type { ExamOverrides } from '#/domain/exam-settings'
 import { matchesExamConfig, resolveExamConfig } from '#/domain/exam-settings'
 import type { StoredExam } from '#/domain/mock-exam'
 import {
   acceptsState,
+  examDeadline,
   isLegalPlan,
   isLegalProgress,
   scoreExam,
@@ -30,7 +32,6 @@ import { loadExamOverrides } from '#/server/user-state'
  * Thin on purpose.
  */
 
-const slug = z.string().min(1).max(200)
 const index = z.number().int().min(0)
 
 const stateSchema = z.object({
@@ -40,7 +41,7 @@ const stateSchema = z.object({
   /** Positions flagged for review. */
   flagged: z.array(index).max(1000),
   /** Original option indexes picked, per position. */
-  picks: z.array(z.array(index).max(6)).max(1000),
+  picks: z.array(optionIndexesInput).max(1000),
 })
 
 /**
@@ -48,7 +49,7 @@ const stateSchema = z.object({
  * unfinished exam of this quiz, if any. Null for visitors.
  */
 export const fetchExamStart = createServerFn({ method: 'GET' })
-  .validator(z.object({ quizId: slug }))
+  .validator(z.object({ quizId: idInput }))
   .handler(
     async ({
       data,
@@ -80,12 +81,12 @@ export const fetchExamStart = createServerFn({ method: 'GET' })
 export const startExamSession = createServerFn({ method: 'POST' })
   .validator(
     z.object({
-      quizId: slug,
+      quizId: idInput,
       minutes: z.number().int(),
       passPercent: z.number().int(),
       questions: z
         .array(
-          z.object({ questionId: slug, optionOrder: z.array(index).max(6) }),
+          z.object({ questionId: idInput, optionOrder: optionIndexesInput }),
         )
         .max(1000),
     }),
@@ -119,7 +120,7 @@ export const startExamSession = createServerFn({ method: 'POST' })
     }
 
     const startedAt = new Date()
-    const endsAt = new Date(startedAt.getTime() + config.minutes * 60_000)
+    const endsAt = new Date(examDeadline(startedAt.getTime(), config.minutes))
     const id = await createExam({
       userId,
       quizId: data.quizId,

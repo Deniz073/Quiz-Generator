@@ -2,7 +2,8 @@ import { useState } from 'react'
 import type { FormEvent } from 'react'
 import type { ExamConfig, Quiz } from '#/quizzes/types'
 import { buttonClasses } from '#/lib/button-classes'
-import { getExamLimits } from '#/domain/exam-settings'
+import { describeExamConfig } from '#/domain/exam-settings'
+import { getExamLimits } from '#/quizzes/validate'
 import { countQuestions } from '#/quizzes'
 import { saveExamSettings, useUserId } from '#/lib/user-data'
 
@@ -101,8 +102,7 @@ export function ExamSettings({ quiz, defaults, config }: Props) {
           ))}
         </div>
         <p className="mt-3 text-sm text-slate-600 dark:text-slate-400">
-          Default: {defaults.questionCount} questions, {defaults.minutes}{' '}
-          minutes, pass mark {defaults.passPercent}%. Changes apply to the next
+          Default: {describeExamConfig(defaults)}. Changes apply to the next
           exam you start; an unfinished exam keeps its own settings.
         </p>
         <div className="mt-3 flex flex-wrap gap-3">

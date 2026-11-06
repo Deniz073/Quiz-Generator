@@ -4,18 +4,16 @@ import {
   buttonClasses,
   questionToolClasses,
   questionToolIdleClasses,
+  tipClasses,
 } from '#/lib/button-classes'
+import { keepNativeEnter, scrollIntoViewIfNeeded } from '#/lib/focus'
 import { describeOptionKeys, getOptionLetter } from '#/lib/option-keys'
-import { getOptionState } from '#/lib/option-state'
 import { questionPath } from '#/lib/share'
 import { getCorrectIndexes, isMultipleAnswer } from '#/quizzes/question'
 import { Feedback } from '#/components/Feedback'
 import { OptionButton } from '#/components/OptionButton'
 import { ProgressHeader } from '#/components/ProgressHeader'
 import { ShareButton } from '#/components/ShareButton'
-
-export const tipClasses =
-  'hidden text-xs text-slate-600 dark:text-slate-400 sm:block'
 
 interface BodyProps {
   item: PlannedQuestion
@@ -65,11 +63,7 @@ export function QuestionBody({
             type="button"
             aria-pressed={flagged}
             onClick={onFlag}
-            // Enter is the global "check / next" hotkey; keep it from hijacking
-            // this button so keyboard users can still toggle it with Enter.
-            onKeyDown={(event) => {
-              if (event.key === 'Enter') event.stopPropagation()
-            }}
+            onKeyDown={keepNativeEnter}
             className={`${questionToolClasses} ${
               flagged
                 ? 'border-amber-500 bg-amber-100 text-amber-900 dark:border-amber-500 dark:bg-amber-950 dark:text-amber-100'
@@ -109,18 +103,12 @@ export function QuestionBody({
           return (
             <OptionButton
               key={originalIndex}
-              state={getOptionState({
-                multiple,
-                answered: submitted,
-                changeable,
-                chosen,
-                isAnswer: correctIndexes.includes(originalIndex),
-                selectionFull,
-              })}
               multiple={multiple}
               chosen={chosen}
               answered={submitted}
               changeable={changeable}
+              isAnswer={correctIndexes.includes(originalIndex)}
+              selectionFull={selectionFull}
               letter={getOptionLetter(position)}
               text={question.options[originalIndex]}
               onClick={() => onToggle(originalIndex)}
@@ -144,21 +132,6 @@ interface Props extends Omit<BodyProps, 'changeable'> {
   onNext: () => void
   /** Undefined on the first question. */
   onPrevious: (() => void) | undefined
-}
-
-/**
- * Scrolls the element in only if part of it is outside the viewport, smoothly
- * unless the user prefers reduced motion. The element's `scroll-margin` keeps
- * it off the edge.
- */
-export function scrollIntoViewIfNeeded(element: HTMLElement) {
-  const reduceMotion = window.matchMedia(
-    '(prefers-reduced-motion: reduce)',
-  ).matches
-  element.scrollIntoView({
-    block: 'nearest',
-    behavior: reduceMotion ? 'auto' : 'smooth',
-  })
 }
 
 /** One practice question with immediate feedback (the exam has its own view). */

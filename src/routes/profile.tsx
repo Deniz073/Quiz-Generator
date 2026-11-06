@@ -20,14 +20,18 @@ import {
   FieldLabel,
 } from '#/components/ui/field'
 import { Input } from '#/components/ui/input'
-import { apiKeysSchema } from '#/lib/api-keys-schema'
+import {
+  apiKeyField,
+  apiKeysSchema,
+  providerLabels,
+} from '#/lib/api-keys-schema'
 import type {
   ApiKeyProvider,
   ApiKeyStatus,
   ApiKeys,
 } from '#/lib/api-keys-schema'
 import { pageTitle } from '#/lib/page-title'
-import { getApiKeys, removeApiKey, saveApiKeys } from '#/lib/session'
+import { getApiKeys, removeApiKey, saveApiKeys } from '#/lib/api-keys-api'
 
 export const Route = createFileRoute('/profile')({
   beforeLoad: ({ context }) => {
@@ -43,22 +47,23 @@ export const Route = createFileRoute('/profile')({
 
 const fields = [
   {
-    name: 'claudeApiKey',
     provider: 'claude',
-    label: 'Claude API key',
     description: 'Your Anthropic API key.',
     createLabel: 'Create one in the Claude Console',
     createUrl: 'https://platform.claude.com/settings/keys',
   },
   {
-    name: 'codexApiKey',
     provider: 'codex',
-    label: 'OpenAI API key',
     description: 'Your OpenAI API key.',
     createLabel: 'Create one on the OpenAI platform',
     createUrl: 'https://platform.openai.com/api-keys',
   },
-] as const
+] as const satisfies ReadonlyArray<{
+  provider: ApiKeyProvider
+  description: string
+  createLabel: string
+  createUrl: string
+}>
 
 const emptyKeys: ApiKeys = { claudeApiKey: '', codexApiKey: '' }
 
@@ -138,14 +143,9 @@ function ProfilePage() {
                 </FieldError>
               )}
               {fields.map(
-                ({
-                  name,
-                  provider,
-                  label,
-                  description,
-                  createLabel,
-                  createUrl,
-                }) => {
+                ({ provider, description, createLabel, createUrl }) => {
+                  const name = apiKeyField[provider]
+                  const label = `${providerLabels[provider]} API key`
                   const keyStatus = keysStatus[provider]
                   const savedText = savedKeyText(keyStatus)
                   return (

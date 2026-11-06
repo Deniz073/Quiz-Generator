@@ -50,7 +50,6 @@ export function formatResult({ best, last }: Result): string {
 }
 
 function isBetter(candidate: Attempt, current: Attempt): boolean {
-  // Cross-multiplied percentage comparison; ties go to the newer attempt.
   return candidate.score * current.total >= current.score * candidate.total
 }
 

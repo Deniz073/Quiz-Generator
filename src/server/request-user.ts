@@ -1,15 +1,20 @@
 import { getRequestHeaders } from '@tanstack/react-start/server'
-import { auth } from '#/lib/auth'
+import { auth } from '#/server/auth'
 
 /*
  * The signed-in user of the current request, for server function handlers
- * only. The user id always comes from the session, never from the client.
+ * only. The user always comes from the session, never from the client.
  */
+
+/** The signed-in user, or null for a visitor. */
+export async function getRequestUser() {
+  const session = await auth.api.getSession({ headers: getRequestHeaders() })
+  return session?.user ?? null
+}
 
 /** The signed-in user's id, or null for a visitor. */
 export async function getRequestUserId(): Promise<string | null> {
-  const session = await auth.api.getSession({ headers: getRequestHeaders() })
-  return session?.user.id ?? null
+  return (await getRequestUser())?.id ?? null
 }
 
 /** The signed-in user's id; throws for a visitor (writes need an account). */

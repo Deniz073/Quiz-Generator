@@ -21,7 +21,6 @@ export function StudySession({
   /** Merges into the current search; undefined drops a param. */
   onSearchChange: (next: StudySearch) => void
 }) {
-  // An unknown chapter id (e.g. a stale link) falls back to all chapters.
   const chapterId = quiz.chapters.some((c) => c.id === search.chapter)
     ? search.chapter
     : undefined
@@ -38,7 +37,6 @@ export function StudySession({
         showAll={showAll}
         onChapterChange={(next) => onSearchChange({ chapter: next })}
         onShuffledChange={(next) =>
-          // undefined drops the param, so the default stays out of the URL.
           onSearchChange({ shuffle: next ? true : undefined })
         }
         onShowAllChange={(next) =>

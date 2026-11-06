@@ -1,5 +1,6 @@
 import { createServerFn } from '@tanstack/react-start'
 import { z } from 'zod'
+import { idInput } from '#/lib/api-inputs'
 import type { Result } from '#/domain/progress'
 import { findQuiz, listQuizHeaders } from '#/server/quiz-access'
 import { getRequestUserId } from '#/server/request-user'
@@ -27,7 +28,7 @@ export interface QuizSummary {
 }
 
 export const fetchQuiz = createServerFn({ method: 'GET' })
-  .validator(z.object({ quizId: z.string().min(1).max(200) }))
+  .validator(z.object({ quizId: idInput }))
   .handler(async ({ data }) => findQuiz(data.quizId, await getRequestUserId()))
 
 /** The home page's list: built-in quizzes and the user's own. */
@@ -41,8 +42,14 @@ export const fetchQuizSummaries = createServerFn({ method: 'GET' }).handler(
           headers.map((h) => h.id),
         )
       : new Map<string, Result>()
-    return headers.map(({ exam: _defaults, published: _p, ...header }) => ({
-      ...header,
+    return headers.map((header) => ({
+      id: header.id,
+      title: header.title,
+      description: header.description,
+      builtIn: header.builtIn,
+      imported: header.imported,
+      chapterCount: header.chapterCount,
+      questionCount: header.questionCount,
       examResult: results.get(header.id),
     }))
   },

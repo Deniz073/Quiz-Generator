@@ -1,5 +1,18 @@
-import { isCorrectPick, isLegalPick } from '../domain/mock-exam'
 import type { MultipleAnswerQuestion, Question } from './types'
+
+/*
+ * The answer rules of a question, used by every mode (practice, the mock
+ * exam on both sides, the validator). Options are referred to by their
+ * original index (their place in `options`), never by display position.
+ * Pure: relative imports only, so the domain modules can use it.
+ */
+
+/** What the answer rules need to know of a question. */
+export interface AnswerKey {
+  optionCount: number
+  /** Original indexes of the correct options. */
+  correct: ReadonlyArray<number>
+}
 
 export function isMultipleAnswer(
   question: Question,
@@ -14,7 +27,59 @@ export function getCorrectIndexes(question: Question): Array<number> {
     : [question.correctIndex]
 }
 
-/** All-or-nothing: correct only if exactly the correct options are chosen. */
+export function answerKey(question: Question): AnswerKey {
+  return {
+    optionCount: question.options.length,
+    correct: getCorrectIndexes(question),
+  }
+}
+
+export function isUnique(values: ReadonlyArray<number>): boolean {
+  return new Set(values).size === values.length
+}
+
+/** A whole number usable as an index into `count` items. */
+export function isIndex(value: number, count: number): boolean {
+  return Number.isInteger(value) && value >= 0 && value < count
+}
+
+/** `order` shows each of the `count` options exactly once. */
+export function isPermutation(
+  order: ReadonlyArray<number>,
+  count: number,
+): boolean {
+  return (
+    order.length === count &&
+    isUnique(order) &&
+    order.every((i) => isIndex(i, count))
+  )
+}
+
+/**
+ * Whether `pick` could have come from toggling options: distinct options that
+ * exist, and no more than the number of correct answers.
+ */
+export function isLegalPick(
+  key: AnswerKey,
+  pick: ReadonlyArray<number>,
+): boolean {
+  return (
+    isUnique(pick) &&
+    pick.length <= key.correct.length &&
+    pick.every((i) => isIndex(i, key.optionCount))
+  )
+}
+
+/** All-or-nothing: correct only if exactly the correct options are picked. */
+export function isCorrectPick(
+  correct: ReadonlyArray<number>,
+  pick: ReadonlyArray<number>,
+): boolean {
+  return (
+    pick.length === correct.length && correct.every((i) => pick.includes(i))
+  )
+}
+
 export function isAnswerCorrect(
   question: Question,
   chosen: ReadonlyArray<number>,
@@ -39,21 +104,4 @@ export function togglePick(
   }
   if (picks.length >= getCorrectIndexes(question).length) return picks
   return [...picks, originalIndex]
-}
-
-/**
- * Whether `pick` could have come from toggling options of `question`: distinct
- * options that exist, and no more than the number of answers.
- */
-export function isValidPick(
-  question: Question,
-  pick: ReadonlyArray<number>,
-): boolean {
-  return isLegalPick(
-    {
-      optionCount: question.options.length,
-      correct: getCorrectIndexes(question),
-    },
-    pick,
-  )
 }

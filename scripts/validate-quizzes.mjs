@@ -19,42 +19,30 @@ try {
   const { seedQuizzes } = await server.ssrLoadModule(
     '/src/db/seed/quizzes/index.ts',
   )
-  const { validateQuizzes } = await server.ssrLoadModule(
+  const { assertValidQuizzes } = await server.ssrLoadModule(
     '/src/quizzes/validate.ts',
   )
-  const quizzes = seedQuizzes
-  const errors = validateQuizzes(quizzes)
-  const ids = quizzes.map((quiz) => quiz.id)
-  for (const id of new Set(ids)) {
-    if (ids.indexOf(id) !== ids.lastIndexOf(id)) {
-      errors.push(`Quiz id "${id}" is used by two seed quizzes.`)
-    }
-  }
-  if (errors.length > 0) {
-    throw new Error(
-      `Invalid seed quizzes (${errors.length}):\n` +
-        errors.map((error) => `  - ${error}`).join('\n'),
-    )
-  }
+  const { countQuestions } = await server.ssrLoadModule('/src/quizzes/index.ts')
+  const { isMultipleAnswer } = await server.ssrLoadModule(
+    '/src/quizzes/question.ts',
+  )
+  assertValidQuizzes(seedQuizzes)
   let chapters = 0
   let questions = 0
   let multi = 0
-  for (const quiz of quizzes) {
-    const quizQuestions = quiz.chapters.reduce(
-      (total, chapter) => total + chapter.questions.length,
-      0,
-    )
+  for (const quiz of seedQuizzes) {
+    const quizQuestions = countQuestions(quiz)
     chapters += quiz.chapters.length
     questions += quizQuestions
     for (const chapter of quiz.chapters) {
-      multi += chapter.questions.filter((q) => 'correctIndexes' in q).length
+      multi += chapter.questions.filter(isMultipleAnswer).length
     }
     console.log(
       `  ${quiz.id}: ${quiz.chapters.length} chapters, ${quizQuestions} questions`,
     )
   }
   console.log(
-    `OK: ${quizzes.length} quizzes, ${chapters} chapters, ${questions} questions (${multi} multi-answer)`,
+    `OK: ${seedQuizzes.length} quizzes, ${chapters} chapters, ${questions} questions (${multi} multi-answer)`,
   )
 } catch (error) {
   console.error(error instanceof Error ? error.message : error)

@@ -4,10 +4,10 @@ import {
 } from '@tanstack/ai'
 import { createFileRoute } from '@tanstack/react-router'
 import { z } from 'zod'
-import { auth } from '#/lib/auth'
 import { apiKeyProviderSchema } from '#/lib/api-keys-schema'
 import { getDecryptedApiKey } from '#/server/api-key-store'
 import { runQuizAssistant } from '#/server/quiz-assistant'
+import { getRequestUserId } from '#/server/request-user'
 
 /*
  * The quiz assistant's chat stream (AG-UI over server-sent events). Signed-in
@@ -61,8 +61,8 @@ export const Route = createFileRoute('/api/assistant')({
   server: {
     handlers: {
       POST: async ({ request }: { request: Request }) => {
-        const session = await auth.api.getSession({ headers: request.headers })
-        if (!session) return problem(401, 'Sign in to use the quiz assistant.')
+        const userId = await getRequestUserId()
+        if (!userId) return problem(401, 'Sign in to use the quiz assistant.')
 
         const body = await readJsonBody(request)
         if (body === 'too-large') {
@@ -81,10 +81,7 @@ export const Route = createFileRoute('/api/assistant')({
         const props = forwardedPropsSchema.safeParse(params.forwardedProps)
         if (!props.success) return problem(400, 'Invalid assistant request.')
 
-        const apiKey = await getDecryptedApiKey(
-          session.user.id,
-          props.data.provider,
-        )
+        const apiKey = await getDecryptedApiKey(userId, props.data.provider)
         if (!apiKey) {
           return problem(
             400,

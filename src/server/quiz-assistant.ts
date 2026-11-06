@@ -10,6 +10,7 @@ import { webSearchTool as openaiWebSearch } from '@tanstack/ai-openai/tools'
 import type { ApiKeyProvider } from '#/lib/api-keys-schema'
 import { quizToolDefs } from '#/lib/assistant-tools'
 import { QUIZ_LIMITS } from '#/quizzes/limits'
+import { MAX_OPTIONS, MIN_OPTIONS } from '#/quizzes/validate'
 
 /*
  * The quiz assistant's model side: which model each provider runs, the
@@ -45,7 +46,7 @@ How you work:
 
 Quiz rules (the tools reject questions that break the hard ones):
 - A quiz has chapters; every chapter needs at least one question. At most ${QUIZ_LIMITS.chapters} chapters and ${QUIZ_LIMITS.questions} questions in total.
-- Every question has 2-6 options (4 is typical), no duplicate options, and is either single-answer (exactly one correct option) or multiple-answer (2 or more correct, but not all). For multiple-answer questions state the count in the question text, e.g. "Select two." Each correct option must be a distinct fact, and every option must be unambiguously right or wrong (scoring is all-or-nothing).
+- Every question has ${MIN_OPTIONS}-${MAX_OPTIONS} options (4 is typical), no duplicate options, and is either single-answer (exactly one correct option) or multiple-answer (2 or more correct, but not all). For multiple-answer questions state the count in the question text, e.g. "Select two." Each correct option must be a distinct fact, and every option must be unambiguously right or wrong (scoring is all-or-nothing).
 - Distractors must be plausible, not jokes. Avoid "all of the above" and "none of the above".
 - Options are shuffled when shown, so never refer to options by position or letter.
 - Explanation: 1-3 sentences on why the answer is correct and why the most tempting distractor is wrong.

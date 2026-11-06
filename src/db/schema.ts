@@ -7,7 +7,6 @@ export * from './user-settings-schema'
 export * from './quiz-schema'
 export * from './progress-schema'
 
-// Combine relation parts here as more tables are added.
 export const relations = {
   ...authRelations,
   ...quizRelations,

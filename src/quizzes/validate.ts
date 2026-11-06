@@ -1,11 +1,19 @@
+import { countQuestions } from './index'
 import { isMultipleAnswer } from './question'
-import type { Question, Quiz } from './types'
+import type { ExamConfig, Question, Quiz } from './types'
+
+/*
+ * Checks everything the type system cannot. Each check reports relative to
+ * what it checks (a question's problems carry no location, a quiz's carry
+ * chapter > question), and the caller adds where that is: the seed adds the
+ * quiz, the quiz assistant shows them as they are.
+ */
 
 /** Lowercase letters/digits separated by single hyphens, e.g. "1-cloud-basics". */
 const SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
 
 /** Static route segments that would shadow a chapter page of the same name. */
-const RESERVED_CHAPTER_IDS: ReadonlyArray<string> = [
+export const RESERVED_CHAPTER_IDS: ReadonlyArray<string> = [
   'practice',
   'exam',
   'study',
@@ -16,15 +24,59 @@ const RESERVED_CHAPTER_IDS: ReadonlyArray<string> = [
 export const MIN_OPTIONS = 2
 export const MAX_OPTIONS = 6
 
+/** Upper bound of a mock exam's time limit, in minutes. */
+export const MAX_EXAM_MINUTES = 600
+
+interface Range {
+  min: number
+  max: number
+}
+
+/**
+ * What each mock exam setting may be for a quiz with this many questions:
+ * the quiz's own defaults and a user's adjustments alike.
+ */
+export function getExamLimits(
+  totalQuestions: number,
+): Record<keyof ExamConfig, Range> {
+  return {
+    questionCount: { min: 1, max: totalQuestions },
+    minutes: { min: 1, max: MAX_EXAM_MINUTES },
+    passPercent: { min: 1, max: 100 },
+  }
+}
+
+export function isInRange(
+  value: unknown,
+  { min, max }: Range,
+): value is number {
+  return (
+    typeof value === 'number' &&
+    Number.isInteger(value) &&
+    value >= min &&
+    value <= max
+  )
+}
+
+/** `text` as a slug of at most `maxLength` characters; empty if nothing is left. */
+export function slugify(text: string, maxLength: number): string {
+  return text
+    .normalize('NFKD')
+    .replace(/[̀-ͯ]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, maxLength)
+    .replace(/-+$/, '')
+}
+
 const isBlank = (value: unknown): boolean =>
   typeof value !== 'string' || value.trim() === ''
 
-function validateQuestion(
-  question: Question,
-  where: string,
-  errors: Array<string>,
-) {
-  const fail = (message: string) => errors.push(`${where}: ${message}`)
+/** One question's own problems (not its id's uniqueness); empty when valid. */
+export function validateQuestion(question: Question): Array<string> {
+  const errors: Array<string> = []
+  const fail = (message: string) => errors.push(message)
 
   if (typeof question.id !== 'string' || !SLUG.test(question.id)) {
     fail('id must be a URL-safe slug like "1-01"')
@@ -35,7 +87,7 @@ function validateQuestion(
   const { options } = question
   if (!Array.isArray(options)) {
     fail('"options" must be an array')
-    return
+    return errors
   }
   if (options.length < MIN_OPTIONS || options.length > MAX_OPTIONS) {
     fail(`needs ${MIN_OPTIONS}-${MAX_OPTIONS} options, found ${options.length}`)
@@ -62,7 +114,7 @@ function validateQuestion(
     const indexes: Array<number> = question.correctIndexes
     if (!Array.isArray(indexes)) {
       fail('"correctIndexes" must be an array')
-      return
+      return errors
     }
     const bad = indexes.filter((index) => !inRange(index))
     if (bad.length > 0) {
@@ -83,126 +135,118 @@ function validateQuestion(
       `correctIndex ${JSON.stringify(question.correctIndex)} out of range (${range})`,
     )
   }
+  return errors
 }
 
-/** One question's own problems (not its id's uniqueness); empty when valid. */
-export function validateQuestionContent(question: Question): Array<string> {
-  const errors: Array<string> = []
-  validateQuestion(question, 'question', errors)
-  return errors.map((error) => error.replace(/^question: /, ''))
-}
-
-function validateExam(
-  quiz: Quiz,
-  quizWhere: string,
+/** Mock exam settings for a quiz with `totalQuestions` questions. */
+export function validateExamConfig(
+  exam: ExamConfig,
   totalQuestions: number,
-  errors: Array<string>,
-) {
-  const { exam } = quiz
-  if (exam == null) return
-  const { questionCount, minutes, passPercent } = exam
-  if (
-    !Number.isInteger(questionCount) ||
-    questionCount < 1 ||
-    questionCount > totalQuestions
-  ) {
-    errors.push(
-      `${quizWhere}: exam.questionCount ${JSON.stringify(questionCount)} must be an integer from 1 to ${totalQuestions} (the quiz's total questions)`,
-    )
+): Array<string> {
+  const limits = getExamLimits(totalQuestions)
+  const describe = {
+    questionCount: ` (the quiz's total questions)`,
+    minutes: '',
+    passPercent: '',
   }
-  if (!Number.isInteger(minutes) || minutes < 1) {
-    errors.push(
-      `${quizWhere}: exam.minutes ${JSON.stringify(minutes)} must be an integer of at least 1`,
-    )
-  }
-  if (!Number.isInteger(passPercent) || passPercent < 1 || passPercent > 100) {
-    errors.push(
-      `${quizWhere}: exam.passPercent ${JSON.stringify(passPercent)} must be an integer from 1 to 100`,
-    )
-  }
+  return (['questionCount', 'minutes', 'passPercent'] as const).flatMap(
+    (key) =>
+      isInRange(exam[key], limits[key])
+        ? []
+        : [
+            `exam.${key} ${JSON.stringify(exam[key])} must be an integer from ${limits[key].min} to ${limits[key].max}${describe[key]}`,
+          ],
+  )
 }
 
 /**
- * Checks everything the type system cannot: slugs, uniqueness, non-empty
- * text, option counts, answer indexes, question ids, reserved ids and exam settings. Returns human-readable errors with
- * quiz / chapter / question location; an empty array means valid.
+ * One quiz's content: text, chapters, questions and exam settings. Not its
+ * id: built-in quiz ids are checked with the seed (validateQuizzes), personal
+ * quiz ids are picked by the server. `where` is put in front of every
+ * problem's location, e.g. `quiz "az-900"`.
+ */
+export function validateQuiz(quiz: Quiz, where = ''): Array<string> {
+  const errors: Array<string> = []
+  const report = (location: Array<string>, message: string) => {
+    const at = [where, ...location].filter(Boolean).join(' > ')
+    errors.push(at ? `${at}: ${message}` : message)
+  }
+  if (isBlank(quiz.title)) report([], 'title must not be empty')
+  if (isBlank(quiz.description)) report([], 'description must not be empty')
+  if (quiz.chapters.length === 0) report([], 'needs at least one chapter')
+
+  const questionIds = new Set<string>()
+  const chapterIds = new Set<string>()
+  const chapterNumbers = new Set<number>()
+  for (const chapter of quiz.chapters) {
+    const chapterAt = [`chapter "${chapter.id}"`]
+    const fail = (message: string) => report(chapterAt, message)
+    if (!SLUG.test(chapter.id)) {
+      fail('id must be a URL-safe slug like "1-basics"')
+    }
+    if (chapterIds.has(chapter.id)) fail('duplicate chapter id within the quiz')
+    if (RESERVED_CHAPTER_IDS.includes(chapter.id)) {
+      fail(
+        `chapter id is reserved (used by the ${chapter.id} route), pick another`,
+      )
+    }
+    chapterIds.add(chapter.id)
+    if (!Number.isInteger(chapter.number) || chapter.number < 1) {
+      fail('number must be a whole number of 1 or more')
+    }
+    if (chapterNumbers.has(chapter.number)) {
+      fail(`duplicate chapter number ${chapter.number}`)
+    }
+    chapterNumbers.add(chapter.number)
+    if (isBlank(chapter.title)) fail('title must not be empty')
+    if (chapter.questions.length === 0) fail('needs at least one question')
+
+    chapter.questions.forEach((question, index) => {
+      const questionAt = [...chapterAt, `question #${index + 1}`]
+      for (const error of validateQuestion(question)) report(questionAt, error)
+      if (questionIds.has(question.id)) {
+        report(
+          questionAt,
+          `duplicate question id "${question.id}" within the quiz`,
+        )
+      }
+      questionIds.add(question.id)
+    })
+  }
+
+  if (quiz.exam) {
+    for (const error of validateExamConfig(quiz.exam, countQuestions(quiz))) {
+      report([], error)
+    }
+  }
+  return errors
+}
+
+/**
+ * A set of built-in quizzes: every quiz, plus their ids (URL-safe slugs,
+ * unique). Each error starts with its quiz; an empty array means valid.
  */
 export function validateQuizzes(quizzes: ReadonlyArray<Quiz>): Array<string> {
   const errors: Array<string> = []
   const quizIds = new Set<string>()
-
   for (const quiz of quizzes) {
-    const quizWhere = `quiz "${quiz.id}"`
+    const where = `quiz "${quiz.id}"`
     if (!SLUG.test(quiz.id)) {
-      errors.push(`${quizWhere}: id must be a URL-safe slug like "my-quiz"`)
+      errors.push(`${where}: id must be a URL-safe slug like "my-quiz"`)
     }
-    if (quizIds.has(quiz.id)) errors.push(`${quizWhere}: duplicate quiz id`)
+    if (quizIds.has(quiz.id)) errors.push(`${where}: duplicate quiz id`)
     quizIds.add(quiz.id)
-    if (isBlank(quiz.title))
-      errors.push(`${quizWhere}: title must not be empty`)
-    if (isBlank(quiz.description)) {
-      errors.push(`${quizWhere}: description must not be empty`)
-    }
-    if (quiz.chapters.length === 0) {
-      errors.push(`${quizWhere}: needs at least one chapter`)
-    }
-
-    const questionIds = new Set<string>()
-    const chapterIds = new Set<string>()
-    const chapterNumbers = new Set<number>()
-    for (const chapter of quiz.chapters) {
-      const chapterWhere = `${quizWhere} > chapter "${chapter.id}"`
-      if (!SLUG.test(chapter.id)) {
-        errors.push(
-          `${chapterWhere}: id must be a URL-safe slug like "1-basics"`,
-        )
-      }
-      if (chapterIds.has(chapter.id)) {
-        errors.push(`${chapterWhere}: duplicate chapter id within the quiz`)
-      }
-      if (RESERVED_CHAPTER_IDS.includes(chapter.id)) {
-        errors.push(
-          `${chapterWhere}: chapter id is reserved (used by the ${chapter.id} route), pick another`,
-        )
-      }
-      chapterIds.add(chapter.id)
-      if (!Number.isInteger(chapter.number) || chapter.number < 1) {
-        errors.push(
-          `${chapterWhere}: number must be a whole number of 1 or more`,
-        )
-      }
-      if (chapterNumbers.has(chapter.number)) {
-        errors.push(
-          `${chapterWhere}: duplicate chapter number ${chapter.number}`,
-        )
-      }
-      chapterNumbers.add(chapter.number)
-      if (isBlank(chapter.title)) {
-        errors.push(`${chapterWhere}: title must not be empty`)
-      }
-      if (chapter.questions.length === 0) {
-        errors.push(`${chapterWhere}: needs at least one question`)
-      }
-
-      chapter.questions.forEach((question, index) => {
-        const where = `${chapterWhere} > question #${index + 1}`
-        validateQuestion(question, where, errors)
-        if (questionIds.has(question.id)) {
-          errors.push(
-            `${where}: duplicate question id "${question.id}" within the quiz`,
-          )
-        }
-        questionIds.add(question.id)
-      })
-    }
-
-    validateExam(
-      quiz,
-      quizWhere,
-      quiz.chapters.reduce((sum, c) => sum + c.questions.length, 0),
-      errors,
-    )
+    errors.push(...validateQuiz(quiz, where))
   }
-
   return errors
+}
+
+/** Throws one error listing every problem of the seed quizzes. */
+export function assertValidQuizzes(quizzes: ReadonlyArray<Quiz>): void {
+  const errors = validateQuizzes(quizzes)
+  if (errors.length === 0) return
+  throw new Error(
+    `Invalid seed quizzes (${errors.length} problem${errors.length === 1 ? '' : 's'}):\n` +
+      errors.map((error) => `  - ${error}`).join('\n'),
+  )
 }

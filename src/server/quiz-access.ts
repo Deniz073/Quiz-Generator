@@ -6,6 +6,7 @@ import {
   eq,
   inArray,
   isNotNull,
+  ne,
   isNull,
   or,
   sql,
@@ -13,31 +14,57 @@ import {
 import type { SQL } from 'drizzle-orm'
 import { db } from '#/db'
 import { chapter, question, questionOption, quiz, user } from '#/db/schema'
-import { getCorrectIndexes } from '#/quizzes/question'
 import type { ExamConfig, Question, Quiz } from '#/quizzes/types'
 
 /*
- * Quiz access: a quiz as a given user may see it, and the mapping between the
- * quiz tables and the app's `Quiz` (both ways: reads here, writes by
- * #/server/quiz-writer). The only module that knows the visibility rule: a built-in quiz (no
- * owner) is visible to everyone, a personal quiz only to its owner, and
- * anything else reads as missing (null), so personal quiz ids are not
- * revealed. The one exception is the Marketplace: anyone may list and
- * preview a published quiz (listListings, findPublishedQuiz). Server only.
+ * Quiz access: a quiz as a given user may see it, read from the quiz tables
+ * as the app's `Quiz` (#/server/quiz-writer writes them). The only module
+ * that knows the visibility rule: a built-in quiz (no owner) is visible to
+ * everyone, a personal quiz only to its owner, and anything else reads as
+ * missing (null), so personal quiz ids are not revealed. The one exception
+ * is the Marketplace: anyone may list, preview and import a published quiz
+ * (listListings, findPublishedQuiz, findImportSource). Server only.
+ */
+
+/*
+ * The rules take the quiz table as a parameter, because a relational query
+ * (loadQuiz) refers to it under an alias.
  */
 
 /** The condition "this quiz is visible to `userId`" (null: a visitor). */
-function visibleTo(userId: string | null): SQL {
+function visibleTo(userId: string | null, t: typeof quiz = quiz): SQL {
   return userId
-    ? (or(isNull(quiz.ownerId), eq(quiz.ownerId, userId)) as SQL)
-    : isNull(quiz.ownerId)
+    ? (or(isNull(t.ownerId), eq(t.ownerId, userId)) as SQL)
+    : isNull(t.ownerId)
 }
 
-function visibleQuiz(quizId: string, userId: string | null): SQL {
-  return and(eq(quiz.id, quizId), visibleTo(userId)) as SQL
+function visibleQuiz(
+  quizId: string,
+  userId: string | null,
+  t: typeof quiz = quiz,
+): SQL {
+  return and(eq(t.id, quizId), visibleTo(userId, t)) as SQL
+}
+
+/** On the Marketplace: listed, previewable and importable by anyone. */
+function isPublished(t: typeof quiz = quiz): SQL {
+  return isNotNull(t.publishedAt)
 }
 
 const questionCount = db.$count(question, eq(question.quizId, quiz.id))
+const chapterCount = db.$count(chapter, eq(chapter.quizId, quiz.id))
+
+/**
+ * Original indexes of the correct options. An option's original index is its
+ * place in the question's options ordered by position.
+ */
+export function correctIndexesOf(
+  orderedOptions: ReadonlyArray<{ isCorrect: boolean }>,
+): Array<number> {
+  return orderedOptions.flatMap((option, index) =>
+    option.isCorrect ? [index] : [],
+  )
+}
 
 /** What callers need of a quiz without its content. */
 export interface QuizHeader {
@@ -69,7 +96,7 @@ const headerColumns = {
   examQuestionCount: quiz.examQuestionCount,
   examMinutes: quiz.examMinutes,
   examPassPercent: quiz.examPassPercent,
-  chapterCount: db.$count(chapter, eq(chapter.quizId, quiz.id)),
+  chapterCount,
   questionCount,
 }
 
@@ -199,24 +226,12 @@ export async function findQuestion(
   return rows.at(0) ?? null
 }
 
-type QuizFilter = NonNullable<
-  NonNullable<Parameters<typeof db.query.quiz.findFirst>[0]>['where']
->
-
 /** The quiz with all its content as the app uses it, or null. */
 export async function findQuiz(
   quizId: string,
   userId: string | null,
 ): Promise<Quiz | null> {
-  return loadQuiz(
-    db,
-    userId
-      ? {
-          id: quizId,
-          OR: [{ ownerId: { isNull: true } }, { ownerId: userId }],
-        }
-      : { id: quizId, ownerId: { isNull: true } },
-  )
+  return loadQuiz(db, (t) => visibleQuiz(quizId, userId, t))
 }
 
 /**
@@ -224,15 +239,15 @@ export async function findQuiz(
  * the one way anyone (visitors too) may see a personal quiz they don't own.
  */
 export async function findPublishedQuiz(quizId: string): Promise<Quiz | null> {
-  return loadQuiz(db, { id: quizId, publishedAt: { isNotNull: true } })
+  return loadQuiz(db, (t) => and(eq(t.id, quizId), isPublished(t)) as SQL)
 }
 
 async function loadQuiz(
   executor: Executor,
-  where: QuizFilter,
+  where: (t: typeof quiz) => SQL,
 ): Promise<Quiz | null> {
   const row = await executor.query.quiz.findFirst({
-    where,
+    where: { RAW: where },
     with: {
       chapters: {
         orderBy: { number: 'asc' },
@@ -255,10 +270,7 @@ async function loadQuiz(
       number: c.number,
       title: c.title,
       questions: c.questions.map((q): Question => {
-        // An option's original index is its place in the ordered options.
-        const correct = q.options.flatMap((o, index) =>
-          o.isCorrect ? [index] : [],
-        )
+        const correct = correctIndexesOf(q.options)
         const base = {
           id: q.slug,
           question: q.text,
@@ -271,58 +283,6 @@ async function loadQuiz(
       }),
     })),
     exam: toExamConfig(row),
-  }
-}
-
-// --- Writing (#/server/quiz-writer and imports) -----------------------------
-
-/** A quiz as rows, without generated ids: the inverse of findQuiz. */
-export interface QuizRows {
-  quiz: Omit<typeof quiz.$inferInsert, 'createdAt' | 'updatedAt'>
-  chapters: Array<{
-    slug: string
-    number: number
-    title: string
-    questions: Array<{
-      slug: string
-      position: number
-      text: string
-      explanation: string
-      options: Array<{ position: number; text: string; isCorrect: boolean }>
-    }>
-  }>
-}
-
-export function toQuizRows(data: Quiz, ownerId: string | null): QuizRows {
-  return {
-    quiz: {
-      id: data.id,
-      ownerId,
-      title: data.title,
-      description: data.description,
-      examQuestionCount: data.exam?.questionCount ?? null,
-      examMinutes: data.exam?.minutes ?? null,
-      examPassPercent: data.exam?.passPercent ?? null,
-    },
-    chapters: data.chapters.map((c) => ({
-      slug: c.id,
-      number: c.number,
-      title: c.title,
-      questions: c.questions.map((q, position) => {
-        const correct = new Set(getCorrectIndexes(q))
-        return {
-          slug: q.id,
-          position,
-          text: q.question,
-          explanation: q.explanation,
-          options: q.options.map((text, index) => ({
-            position: index,
-            text,
-            isCorrect: correct.has(index),
-          })),
-        }
-      }),
-    })),
   }
 }
 
@@ -367,13 +327,13 @@ async function queryListings(
       ownerId: quiz.ownerId,
       publishedAt: quiz.publishedAt,
       publisherName: user.name,
-      chapterCount: db.$count(chapter, eq(chapter.quizId, quiz.id)),
+      chapterCount,
       questionCount,
       importCount,
     })
     .from(quiz)
     .innerJoin(user, eq(user.id, quiz.ownerId))
-    .where(and(isNotNull(quiz.publishedAt), where))
+    .where(and(isPublished(), where))
     .orderBy(desc(quiz.publishedAt), asc(quiz.id))
   const copies =
     userId && rows.length > 0
@@ -491,113 +451,20 @@ export async function setPublished(
   return rows.length > 0
 }
 
-/** A fresh id for an imported quiz: the source's plus a random suffix. */
-function newImportedQuizId(sourceId: string): string {
-  const base = sourceId.slice(0, 60).replace(/-+$/, '')
-  const suffix = crypto.randomUUID().replaceAll('-', '').slice(0, 8)
-  return `${base}-${suffix}`
-}
-
 /**
- * Imports a published quiz (not the user's own) as a personal quiz of the
- * user: a copy of its content and mock exam defaults, nothing of the
- * publisher's progress. A user who already has a copy gets that one back.
- * Null if the quiz isn't published or is the user's own.
+ * A published quiz (not the user's own) with all its content, to import as a
+ * personal quiz of the user (see #/server/quiz-writer); null if there is none.
  */
-export async function importPublishedQuiz(
+export function findImportSource(
+  executor: Executor,
   sourceId: string,
   userId: string,
-): Promise<{ id: string; created: boolean } | null> {
-  return db.transaction(async (tx) => {
-    const findCopy = async () => {
-      const copies = await tx
-        .select({ id: quiz.id })
-        .from(quiz)
-        .where(and(eq(quiz.ownerId, userId), eq(quiz.importedFromId, sourceId)))
-        .limit(1)
-      return copies.at(0)
-    }
-    const source = await loadQuiz(tx, {
-      id: sourceId,
-      publishedAt: { isNotNull: true },
-      ownerId: { ne: userId },
-    })
-    if (!source) return null
-    const existing = await findCopy()
-    if (existing) return { id: existing.id, created: false }
-
-    const rows = toQuizRows(
-      { ...source, id: newImportedQuizId(sourceId) },
-      userId,
-    )
-    // A concurrent import of the same quiz by the same user (a double click)
-    // waits here for the other one and then inserts nothing.
-    const inserted = await tx
-      .insert(quiz)
-      .values({
-        ...rows.quiz,
-        importedAt: new Date(),
-        importedFromId: sourceId,
-      })
-      .onConflictDoNothing()
-      .returning({ id: quiz.id })
-    if (inserted.length === 0) {
-      const raced = await findCopy()
-      if (raced) return { id: raced.id, created: false }
-      throw new Error('Could not import the quiz. Please try again.')
-    }
-    await insertQuizContent(tx, rows.quiz.id, rows.chapters)
-    return { id: rows.quiz.id, created: true }
-  })
-}
-
-/** Writes the chapters, questions and options of a new quiz. */
-async function insertQuizContent(
-  tx: Executor,
-  quizId: string,
-  chapters: QuizRows['chapters'],
-): Promise<void> {
-  if (chapters.length === 0) return
-  const chapterRows = await tx
-    .insert(chapter)
-    .values(
-      chapters.map((c) => ({
-        quizId,
-        slug: c.slug,
-        number: c.number,
-        title: c.title,
-      })),
-    )
-    .returning({ id: chapter.id, slug: chapter.slug })
-  const chapterIds = new Map(chapterRows.map((row) => [row.slug, row.id]))
-  const questions = chapters.flatMap((c) =>
-    c.questions.map((q) => ({ ...q, chapterId: lookup(chapterIds, c.slug) })),
+): Promise<Quiz | null> {
+  return loadQuiz(
+    executor,
+    (t) =>
+      and(eq(t.id, sourceId), isPublished(t), ne(t.ownerId, userId)) as SQL,
   )
-  if (questions.length === 0) return
-  const questionRows = await tx
-    .insert(question)
-    .values(
-      questions.map((q) => ({
-        quizId,
-        chapterId: q.chapterId,
-        slug: q.slug,
-        position: q.position,
-        text: q.text,
-        explanation: q.explanation,
-      })),
-    )
-    .returning({ id: question.id, slug: question.slug })
-  const questionIds = new Map(questionRows.map((row) => [row.slug, row.id]))
-  const options = questions.flatMap((q) =>
-    q.options.map((o) => ({ ...o, questionId: lookup(questionIds, q.slug) })),
-  )
-  if (options.length > 0) await tx.insert(questionOption).values(options)
-}
-
-function lookup(ids: Map<string, string>, slug: string): string {
-  const id = ids.get(slug)
-  if (id === undefined) throw new Error(`Missing row for "${slug}".`)
-  return id
 }
 
 /**

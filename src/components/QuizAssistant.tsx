@@ -27,8 +27,8 @@ import {
   createWorkingCopy,
   emptyQuiz,
   rebaseWorkingCopy,
-  saveProblems,
 } from '#/lib/working-copy'
+import { personalQuizProblems } from '#/quizzes/limits'
 import type { Quiz } from '#/quizzes/types'
 
 type Impact = Extract<SaveOutcome, { status: 'confirm' }>['impact']
@@ -64,7 +64,7 @@ export function QuizAssistant({ start }: { start: AssistantStart }) {
 
   const base = saved?.quiz ?? emptyQuiz()
   const dirty = JSON.stringify(copy.quiz) !== JSON.stringify(base)
-  const problems = saveProblems(copy.quiz)
+  const problems = personalQuizProblems(copy.quiz)
   const canSave = dirty && problems.length === 0 && !saving
   const guard = useLeaveGuard(dirty && !reloading)
   useEffect(() => {

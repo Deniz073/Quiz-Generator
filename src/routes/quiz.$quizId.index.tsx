@@ -13,6 +13,7 @@ import { getFlaggedQuestions } from '#/lib/flags'
 import { formatChapter } from '#/lib/chapter-label'
 import { pageTitle } from '#/lib/page-title'
 import { formatResult } from '#/domain/progress'
+import { PRACTICE_SIZES } from '#/lib/quiz-plan'
 import { requireQuiz } from '#/lib/quiz-route'
 import {
   useExamConfig,
@@ -56,7 +57,7 @@ function QuizPage() {
 
   const total = countQuestions(quiz)
   // Offer only sizes that actually draw fewer questions than "all".
-  const practiceSizes = ([20, 50] as const).filter((size) => size < total)
+  const practiceSizes = PRACTICE_SIZES.filter((size) => size < total)
 
   return (
     <div>

@@ -1,5 +1,10 @@
 import type { ExamState } from '#/lib/exam-state'
-import { toNewSession, toStoredState } from '#/lib/exam-lifecycle'
+import {
+  clockOffset,
+  toDeviceTimes,
+  toNewSession,
+  toStoredState,
+} from '#/lib/exam-lifecycle'
 import {
   saveExamSession,
   startExamSession,
@@ -93,13 +98,10 @@ export function createExamSync(
   function store(state: ExamState) {
     const id = transport
       .start(toNewSession(quizId, state))
-      .then(({ id: sessionId, startedAt, endsAt, serverNow }) => {
-        // How far the server's clock is ahead of this device's.
-        const offset = serverNow - Date.now()
+      .then(({ id: sessionId, serverNow, ...times }) => {
         events.onClock({
           plan: state.plan,
-          startedAt: startedAt - offset,
-          endsAt: endsAt - offset,
+          ...toDeviceTimes(times, clockOffset(serverNow)),
         })
         return sessionId
       })

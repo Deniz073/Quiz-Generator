@@ -29,7 +29,6 @@ function loadQuiz(quizId: string): Promise<Quiz | null> {
   if (cached && Date.now() - cached.at < CLIENT_CACHE_MS) return cached.quiz
   const quiz = fetchQuiz({ data: { quizId } })
   clientCache.set(quizId, { at: Date.now(), quiz })
-  // A failed load is not kept, so a retry asks again.
   quiz.catch(() => clientCache.delete(quizId))
   return quiz
 }

@@ -1,7 +1,7 @@
-import type { PlannedQuestion } from '#/lib/quiz-plan'
+import type { Answer, PlannedQuestion } from '#/lib/quiz-plan'
+import { buildAnswers } from '#/lib/quiz-plan'
 import {
   getCorrectIndexes,
-  isAnswerCorrect,
   isMultipleAnswer,
   togglePick,
 } from '#/quizzes/question'
@@ -13,10 +13,11 @@ import {
  */
 export interface Round {
   /**
-   * Retry of a subset of questions (e.g. only the incorrect ones). Its score
-   * is not comparable to a full run, so it is never saved as progress.
+   * The chapter whose attempt the finished round records (signed-in users).
+   * Unset for rounds that are no chapter run: mixed practice, flagged
+   * questions, or a retry of some questions (its score is not comparable).
    */
-  subset: boolean
+  recordsChapter?: string
 }
 
 export interface QuizState {
@@ -44,16 +45,6 @@ export type QuizAction =
   | { type: 'previous' }
   /** The plan is passed in so the reducer stays pure (shuffling is random). */
   | { type: 'retry'; plan: ReadonlyArray<PlannedQuestion>; round: Round }
-
-export interface Answer {
-  /** Position in the plan. */
-  index: number
-  item: PlannedQuestion
-  /** Original indexes of the options the user picked (empty if unanswered). */
-  chosen: ReadonlyArray<number>
-  correct: boolean
-  flagged: boolean
-}
 
 export function createInitialState(
   plan: ReadonlyArray<PlannedQuestion>,
@@ -103,10 +94,6 @@ export function getCurrentItem(state: QuizState): PlannedQuestion | undefined {
   return state.plan.at(state.current)
 }
 
-export function isFinished(state: QuizState): boolean {
-  return state.current >= state.plan.length
-}
-
 export function isSubmitted(state: QuizState): boolean {
   return state.answers.length > state.current
 }
@@ -140,27 +127,6 @@ export function getAnswers(
     state.answers,
     flagged,
   )
-}
-
-/**
- * Scores `plan[i]` against `picks[i]` (a missing pick is an empty, wrong
- * answer). Shared with the exam state.
- */
-export function buildAnswers(
-  plan: ReadonlyArray<PlannedQuestion>,
-  picks: ReadonlyArray<ReadonlyArray<number>>,
-  flagged: ReadonlyArray<number>,
-): Array<Answer> {
-  return plan.map((item, index) => {
-    const chosen = picks.at(index) ?? []
-    return {
-      index,
-      item,
-      chosen,
-      correct: isAnswerCorrect(item.question, chosen),
-      flagged: flagged.includes(index),
-    }
-  })
 }
 
 export function getScore(state: QuizState): number {

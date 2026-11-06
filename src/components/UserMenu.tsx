@@ -14,7 +14,7 @@ import {
 } from '#/components/ui/dropdown-menu'
 import { authClient } from '#/lib/auth-client'
 import { clearQuizCache } from '#/lib/quiz-route'
-import type { CurrentUser } from '#/lib/session'
+import type { CurrentUser } from '#/lib/session-api'
 
 /** Top-bar sign-in link, or an account menu with the profile link and sign-out. */
 export function UserMenu({ user }: { user: CurrentUser | null }) {

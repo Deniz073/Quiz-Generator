@@ -10,9 +10,11 @@ import {
   quiz,
   quizAttempt,
 } from '#/db/schema'
-import { QUIZ_LIMITS } from '#/quizzes/limits'
+import { QUIZ_LIMITS, personalQuizProblems } from '#/quizzes/limits'
+import { getCorrectIndexes } from '#/quizzes/question'
 import type { Quiz } from '#/quizzes/types'
-import { findQuiz, toQuizRows } from '#/server/quiz-access'
+import { slugify } from '#/quizzes/validate'
+import { findImportSource, findQuiz } from '#/server/quiz-access'
 
 /*
  * Writing a quiz's content over what is stored, in place by slug (quiz id,
@@ -22,12 +24,69 @@ import { findQuiz, toQuizRows } from '#/server/quiz-access'
  * options changed loses its options' ids, so unfinished exams containing it
  * are deleted (they could no longer be scored as started).
  *
- * Used by the seed (built-in quizzes) and by Save in the quiz assistant
- * (personal quizzes, see saveOwnQuiz). Callers validate the quiz first
+ * Used by the seed (built-in quizzes), by Save in the quiz assistant
+ * (personal quizzes, see saveOwnQuiz) and by importing from the Marketplace
+ * (importPublishedQuiz). Callers validate the quiz first
  * (src/quizzes/validate.ts). Server only.
  */
 
 export type Transaction = Parameters<Parameters<typeof db.transaction>[0]>[0]
+
+/** A quiz as rows, without generated ids: the inverse of findQuiz. */
+interface QuizRows {
+  quiz: Omit<typeof quiz.$inferInsert, 'createdAt' | 'updatedAt'>
+  chapters: Array<{
+    slug: string
+    number: number
+    title: string
+    questions: Array<{
+      slug: string
+      position: number
+      text: string
+      explanation: string
+      options: Array<{ position: number; text: string; isCorrect: boolean }>
+    }>
+  }>
+}
+
+function toQuizRows(data: Quiz, ownerId: string | null): QuizRows {
+  return {
+    quiz: {
+      id: data.id,
+      ownerId,
+      title: data.title,
+      description: data.description,
+      examQuestionCount: data.exam?.questionCount ?? null,
+      examMinutes: data.exam?.minutes ?? null,
+      examPassPercent: data.exam?.passPercent ?? null,
+    },
+    chapters: data.chapters.map((c) => ({
+      slug: c.id,
+      number: c.number,
+      title: c.title,
+      questions: c.questions.map((q, position) => {
+        const correct = new Set(getCorrectIndexes(q))
+        return {
+          slug: q.id,
+          position,
+          text: q.question,
+          explanation: q.explanation,
+          options: q.options.map((text, index) => ({
+            position: index,
+            text,
+            isCorrect: correct.has(index),
+          })),
+        }
+      }),
+    })),
+  }
+}
+
+/** A fresh quiz id: `base` as a slug plus a random suffix, so ids never clash. */
+function newQuizId(base: string): string {
+  const suffix = crypto.randomUUID().replaceAll('-', '').slice(0, 8)
+  return `${slugify(base, 50) || 'quiz'}-${suffix}`
+}
 
 /** `excluded."<column>"`: the value an upsert tried to insert. */
 function excluded(column: string) {
@@ -241,20 +300,6 @@ export async function findEditableQuiz(
   return { quiz: data, updatedAt: row.updatedAt.toISOString() }
 }
 
-function newQuizId(title: string): string {
-  const base =
-    title
-      .normalize('NFKD')
-      .replace(/[̀-ͯ]/g, '')
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-+|-+$/g, '')
-      .slice(0, 50)
-      .replace(/-+$/, '') || 'quiz'
-  const suffix = crypto.randomUUID().replaceAll('-', '').slice(0, 8)
-  return `${base}-${suffix}`
-}
-
 async function impactOf(
   tx: Transaction,
   data: Quiz,
@@ -360,15 +405,19 @@ function costsUserState(impact: SaveImpact): boolean {
 /**
  * Saves a working copy as one of the user's personal quizzes: a new one when
  * `baseUpdatedAt` is null (the id is picked here), else over their quiz
- * `data.id` if it hasn't changed since `baseUpdatedAt`. The quiz must already
- * be valid and within the size caps (the caller checks). Removals that cost
- * the owner flags, attempts or an unfinished exam need `confirmed`.
+ * `data.id` if it hasn't changed since `baseUpdatedAt`. Throws if the quiz
+ * breaks the quiz rules or size caps. Removals that cost the owner flags,
+ * attempts or an unfinished exam need `confirmed`.
  */
 export async function saveOwnQuiz(
   userId: string,
   data: Quiz,
   options: { baseUpdatedAt: string | null; confirmed: boolean },
 ): Promise<SaveOutcome> {
+  const problems = personalQuizProblems(data)
+  if (problems.length > 0) {
+    throw new Error(`The quiz can't be saved yet: ${problems.join('; ')}`)
+  }
   if (options.baseUpdatedAt === null) {
     const created = { ...data, id: newQuizId(data.title) }
     const withinLimit = await db.transaction(async (tx) => {
@@ -430,4 +479,52 @@ async function finish(
   const saved = await findEditableQuiz(quizId, userId)
   if (!saved) return { status: 'not-found' }
   return { status: 'saved', created, ...saved }
+}
+
+// --- Import from the Marketplace --------------------------------------------
+
+/**
+ * Imports a published quiz (not the user's own) as a personal quiz of the
+ * user: a copy of its content and mock exam defaults, nothing of the
+ * publisher's progress. A user who already has a copy gets that one back.
+ * Null if the quiz isn't published or is the user's own.
+ */
+export async function importPublishedQuiz(
+  sourceId: string,
+  userId: string,
+): Promise<{ id: string; created: boolean } | null> {
+  return db.transaction(async (tx) => {
+    const findCopy = async () => {
+      const copies = await tx
+        .select({ id: quiz.id })
+        .from(quiz)
+        .where(and(eq(quiz.ownerId, userId), eq(quiz.importedFromId, sourceId)))
+        .limit(1)
+      return copies.at(0)
+    }
+    const source = await findImportSource(tx, sourceId, userId)
+    if (!source) return null
+    const existing = await findCopy()
+    if (existing) return { id: existing.id, created: false }
+
+    const copy = { ...source, id: newQuizId(sourceId) }
+    // A concurrent import of the same quiz by the same user (a double click)
+    // waits here for the other one and then inserts nothing.
+    const inserted = await tx
+      .insert(quiz)
+      .values({
+        ...toQuizRows(copy, userId).quiz,
+        importedAt: new Date(),
+        importedFromId: sourceId,
+      })
+      .onConflictDoNothing()
+      .returning({ id: quiz.id })
+    if (inserted.length === 0) {
+      const raced = await findCopy()
+      if (raced) return { id: raced.id, created: false }
+      throw new Error('Could not import the quiz. Please try again.')
+    }
+    await upsertQuizContent(tx, copy, userId)
+    return { id: copy.id, created: true }
+  })
 }

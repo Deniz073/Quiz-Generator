@@ -16,7 +16,7 @@ import { UserMenu } from '#/components/UserMenu'
 import { focusHeading } from '#/lib/focus'
 import { isWidePage } from '#/lib/page-width'
 import { SITE_TITLE } from '#/lib/page-title'
-import { getCurrentUser } from '#/lib/session'
+import { getCurrentUser } from '#/lib/session-api'
 import { THEME_COLORS, getChosenTheme } from '#/lib/theme'
 import appCss from '../styles.css?url'
 

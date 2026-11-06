@@ -1,7 +1,6 @@
 import { useEffect } from 'react'
 import { useBlocker } from '@tanstack/react-router'
 
-// Always block while active; the blocker is disabled otherwise.
 const alwaysBlock = () => true
 
 /**

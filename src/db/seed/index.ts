@@ -26,26 +26,9 @@ import { quiz } from '#/db/schema'
 import { upsertQuizContent } from '#/server/quiz-writer'
 import type { Transaction } from '#/server/quiz-writer'
 import type { Quiz } from '#/quizzes/types'
-import { validateQuizzes } from '#/quizzes/validate'
+import { assertValidQuizzes } from '#/quizzes/validate'
 import { seedQuizzes } from './quizzes'
 
-function validate(): void {
-  const errors = validateQuizzes([...seedQuizzes])
-  const seen = new Set<string>()
-  for (const { id } of seedQuizzes) {
-    if (seen.has(id))
-      errors.push(`Quiz id "${id}" is used by two seed quizzes.`)
-    seen.add(id)
-  }
-  if (errors.length > 0) {
-    throw new Error(
-      `Invalid seed quizzes (${errors.length} problem${errors.length === 1 ? '' : 's'}):\n` +
-        errors.map((error) => `  - ${error}`).join('\n'),
-    )
-  }
-}
-
-/** Writes one built-in quiz. */
 async function upsertQuiz(tx: Transaction, data: Quiz): Promise<void> {
   const existing = await tx
     .select({ ownerId: quiz.ownerId })
@@ -72,7 +55,7 @@ async function upsertQuiz(tx: Transaction, data: Quiz): Promise<void> {
 }
 
 async function main(): Promise<void> {
-  validate()
+  assertValidQuizzes(seedQuizzes)
   await db.transaction(async (tx) => {
     for (const data of seedQuizzes) await upsertQuiz(tx, data)
     const seedIds = seedQuizzes.map((data) => data.id)

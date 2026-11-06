@@ -82,22 +82,15 @@ function notify() {
   listeners.forEach((listener) => listener())
 }
 
-/** The system theme changed; matters only while there is no choice. */
-function onSystemChange() {
-  notify()
-}
-
 export function subscribeTheme(listener: () => void): () => void {
   if (listeners.size === 0) {
-    window.matchMedia(DARK_QUERY).addEventListener('change', onSystemChange)
+    window.matchMedia(DARK_QUERY).addEventListener('change', notify)
   }
   listeners.add(listener)
   return () => {
     listeners.delete(listener)
     if (listeners.size === 0) {
-      window
-        .matchMedia(DARK_QUERY)
-        .removeEventListener('change', onSystemChange)
+      window.matchMedia(DARK_QUERY).removeEventListener('change', notify)
     }
   }
 }

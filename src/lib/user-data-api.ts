@@ -1,5 +1,6 @@
 import { createServerFn } from '@tanstack/react-start'
 import { z } from 'zod'
+import { idInput } from '#/lib/api-inputs'
 import type { ExamOverrides } from '#/domain/exam-settings'
 import { areValidOverrides } from '#/domain/exam-settings'
 import type { Attempt, QuizProgress } from '#/domain/progress'
@@ -29,11 +30,9 @@ export interface QuizUserData {
   examOverrides: ExamOverrides
 }
 
-const slug = z.string().min(1).max(200)
-
 /** Null for visitors and for quizzes the user can't see. */
 export const fetchQuizUserData = createServerFn({ method: 'GET' })
-  .validator(z.object({ quizId: slug }))
+  .validator(z.object({ quizId: idInput }))
   .handler(async ({ data }): Promise<QuizUserData | null> => {
     const userId = await getRequestUserId()
     if (!userId || !(await findQuizHeader(data.quizId, userId))) return null
@@ -53,8 +52,8 @@ export const fetchQuizUserData = createServerFn({ method: 'GET' })
 export const recordChapterAttempt = createServerFn({ method: 'POST' })
   .validator(
     z.object({
-      quizId: slug,
-      chapterId: slug,
+      quizId: idInput,
+      chapterId: idInput,
       score: z.number().int(),
       total: z.number().int(),
     }),
@@ -77,7 +76,9 @@ export const recordChapterAttempt = createServerFn({ method: 'POST' })
   })
 
 export const setQuestionFlag = createServerFn({ method: 'POST' })
-  .validator(z.object({ quizId: slug, questionId: slug, flagged: z.boolean() }))
+  .validator(
+    z.object({ quizId: idInput, questionId: idInput, flagged: z.boolean() }),
+  )
   .handler(async ({ data }) => {
     const userId = await requireRequestUserId()
     const found = await findQuestion(data.quizId, data.questionId, userId)
@@ -91,7 +92,7 @@ const setting = z.number().int().optional()
 export const saveExamOverrides = createServerFn({ method: 'POST' })
   .validator(
     z.object({
-      quizId: slug,
+      quizId: idInput,
       overrides: z.object({
         questionCount: setting,
         minutes: setting,
@@ -103,7 +104,6 @@ export const saveExamOverrides = createServerFn({ method: 'POST' })
     const userId = await requireRequestUserId()
     const header = await findQuizHeader(data.quizId, userId)
     if (!header?.exam) throw new Error('Mock exam not found.')
-    // The limits (incl. MAX_EXAM_MINUTES) are the exam settings rules'.
     if (!areValidOverrides(data.overrides, header.questionCount)) {
       throw new Error('These exam settings are out of range.')
     }

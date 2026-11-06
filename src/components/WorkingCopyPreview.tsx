@@ -1,7 +1,9 @@
 import { CheckIcon, TriangleAlertIcon } from 'lucide-react'
 import { Badge } from '#/components/ui/badge'
 import { Alert, AlertDescription, AlertTitle } from '#/components/ui/alert'
-import { saveProblems } from '#/lib/working-copy'
+import { describeExamConfig } from '#/domain/exam-settings'
+import { countQuestions } from '#/quizzes'
+import { personalQuizProblems } from '#/quizzes/limits'
 import { getCorrectIndexes } from '#/quizzes/question'
 import type { Chapter, Question, Quiz } from '#/quizzes/types'
 
@@ -60,8 +62,8 @@ export function WorkingCopyPreview({
   const removedChapters = (saved?.chapters ?? []).filter(
     (c) => !quiz.chapters.some((current) => current.id === c.id),
   ).length
-  const problems = saveProblems(quiz)
-  const total = quiz.chapters.reduce((sum, c) => sum + c.questions.length, 0)
+  const problems = personalQuizProblems(quiz)
+  const total = countQuestions(quiz)
   const empty = quiz.title === '' && quiz.chapters.length === 0
 
   if (empty) {
@@ -101,7 +103,7 @@ export function WorkingCopyPreview({
           {quiz.chapters.length === 1 ? 'chapter' : 'chapters'} &middot; {total}
           &nbsp;{total === 1 ? 'question' : 'questions'}
           {quiz.exam
-            ? ` · Mock exam: ${quiz.exam.questionCount} questions, ${quiz.exam.minutes} minutes, pass mark ${quiz.exam.passPercent}%`
+            ? ` · Mock exam: ${describeExamConfig(quiz.exam)}`
             : ' · No mock exam'}
         </p>
         {removedChapters > 0 || removedQuestions > 0 ? (

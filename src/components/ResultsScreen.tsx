@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link } from '@tanstack/react-router'
-import type { Answer } from '#/lib/quiz-state'
+import type { Answer } from '#/lib/quiz-plan'
 import { buttonClasses } from '#/lib/button-classes'
 import { formatChapter } from '#/lib/chapter-label'
 import { isPassed, toPercent } from '#/domain/progress'

@@ -2,15 +2,15 @@ import { createFileRoute } from '@tanstack/react-router'
 import { NotFound } from '#/components/NotFound'
 import { QuizPageHeader } from '#/components/QuizPageHeader'
 import { QuizRunner } from '#/components/QuizRunner'
-import { buildQuizPlan } from '#/lib/quiz-plan'
+import { PRACTICE_SIZES, buildQuizPlan } from '#/lib/quiz-plan'
 import { pageTitle } from '#/lib/page-title'
 import { requireQuiz } from '#/lib/quiz-route'
 
 // Numbers, not '20': the router parses search values as JSON, so `?count=20`
 // arrives as a number and stays a clean URL.
-export type PracticeCount = 20 | 50 | 'all'
+type PracticeCount = (typeof PRACTICE_SIZES)[number] | 'all'
 
-const PRACTICE_COUNTS: ReadonlyArray<unknown> = [20, 50, 'all']
+const PRACTICE_COUNTS: ReadonlyArray<unknown> = [...PRACTICE_SIZES, 'all']
 
 export const Route = createFileRoute('/quiz/$quizId/practice')({
   // Invalid or missing values fall back to all questions.
@@ -46,8 +46,8 @@ function PracticePage() {
       <QuizRunner
         key={count}
         quizId={quiz.id}
-        mode="practice"
         buildPlan={() => buildQuizPlan(quiz, limit)}
+        retryLabel="New practice round"
       />
     </div>
   )

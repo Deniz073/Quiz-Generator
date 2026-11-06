@@ -24,3 +24,7 @@ export const questionToolClasses =
 /** Colours of a `questionToolClasses` button in its normal (not pressed) state. */
 export const questionToolIdleClasses =
   'border-slate-300 text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800'
+
+/** Keyboard tip under a question; hidden on small (touch) screens. */
+export const tipClasses =
+  'hidden text-xs text-slate-600 dark:text-slate-400 sm:block'

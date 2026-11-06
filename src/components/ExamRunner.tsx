@@ -49,8 +49,8 @@ export function ExamRunner({ quiz, exam, start }: Props) {
     return (
       <QuizRunner
         quizId={quiz.id}
-        mode="subset"
         buildPlan={() => reshufflePlan(retryItems)}
+        retryLabel="Practice again"
       />
     )
   }
