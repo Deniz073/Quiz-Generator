@@ -1,5 +1,6 @@
 import { and, eq, inArray } from 'drizzle-orm'
 import { db } from '#/db'
+import type { Executor } from '#/db'
 import {
   chapter,
   question,
@@ -81,8 +82,9 @@ export async function recordAttempt(
   chapterId: string | null,
   score: number,
   total: number,
+  executor: Executor = db,
 ): Promise<Date> {
-  const [row] = await db
+  const [row] = await executor
     .insert(quizAttempt)
     .values({
       userId,

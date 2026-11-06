@@ -9,7 +9,11 @@ import {
 import { keepNativeEnter, scrollIntoViewIfNeeded } from '#/lib/focus'
 import { describeOptionKeys, getOptionLetter } from '#/lib/option-keys'
 import { questionPath } from '#/lib/share'
-import { getCorrectIndexes, isMultipleAnswer } from '#/quizzes/question'
+import {
+  getCorrectIndexes,
+  isCompletePick,
+  isMultipleAnswer,
+} from '#/quizzes/question'
 import { Feedback } from '#/components/Feedback'
 import { OptionButton } from '#/components/OptionButton'
 import { ProgressHeader } from '#/components/ProgressHeader'
@@ -120,6 +124,24 @@ export function QuestionBody({
   )
 }
 
+/** The keyboard tip under a practice question; hidden on small (touch) screens. */
+export function AnswerTip({
+  item,
+  className = '',
+}: {
+  item: PlannedQuestion
+  className?: string
+}) {
+  const keys = describeOptionKeys(item.optionOrder.length)
+  return (
+    <p className={`${className} ${tipClasses}`}>
+      {isMultipleAnswer(item.question)
+        ? `Tip: press ${keys} to toggle, Enter to check.`
+        : `Tip: press ${keys} to answer.`}
+    </p>
+  )
+}
+
 interface Props extends Omit<BodyProps, 'changeable'> {
   index: number
   total: number
@@ -152,10 +174,8 @@ export function QuestionCard({
   onFlag,
   shareQuizId,
 }: Props) {
-  const { question, optionOrder } = item
+  const { question } = item
   const multiple = isMultipleAnswer(question)
-  const required = getCorrectIndexes(question).length
-  const keyTip = describeOptionKeys(optionOrder.length)
   const nextRef = useRef<HTMLButtonElement>(null)
   const wasSubmitted = useRef(submitted)
 
@@ -180,7 +200,8 @@ export function QuestionCard({
   // The selection just became complete: bring "Check answer" into view. Focus
   // stays where it is, so the user can still change the selection.
   const checkRef = useRef<HTMLButtonElement>(null)
-  const readyToCheck = multiple && !submitted && selected.length === required
+  const complete = isCompletePick(question, selected)
+  const readyToCheck = multiple && !submitted && complete
   useEffect(() => {
     if (readyToCheck && checkRef.current)
       scrollIntoViewIfNeeded(checkRef.current)
@@ -238,14 +259,12 @@ export function QuestionCard({
       ) : multiple ? (
         <div className="mt-5 flex items-center justify-between gap-3">
           {previousButton}
-          <p className={tipClasses}>
-            Tip: press {keyTip} to toggle, Enter to check.
-          </p>
+          <AnswerTip item={item} />
           <button
             ref={checkRef}
             type="button"
             onClick={onCheck}
-            disabled={selected.length !== required}
+            disabled={!complete}
             className={`ml-auto scroll-mb-6 ${buttonClasses('primary')}`}
           >
             Check answer
@@ -254,7 +273,7 @@ export function QuestionCard({
       ) : (
         <div className="mt-5 flex items-center justify-between gap-3">
           {previousButton}
-          <p className={tipClasses}>Tip: press {keyTip} to answer.</p>
+          <AnswerTip item={item} />
         </div>
       )}
     </div>

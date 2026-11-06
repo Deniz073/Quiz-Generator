@@ -3,9 +3,9 @@ import { redirect } from '@tanstack/react-router'
 import { z } from 'zod'
 import {
   API_KEY_PROVIDERS,
-  apiKeyField,
   apiKeyProviderSchema,
   apiKeysSchema,
+  providerInfo,
 } from '#/lib/api-keys-schema'
 import type { ApiKeysStatus } from '#/lib/api-keys-schema'
 import { getApiKeysStatus, updateApiKeys } from '#/server/api-key-store'
@@ -34,14 +34,13 @@ export const saveApiKeys = createServerFn({ method: 'POST' })
       userId,
       Object.fromEntries(
         API_KEY_PROVIDERS.flatMap((provider) => {
-          const key = data[apiKeyField[provider]]
+          const key = data[providerInfo[provider].field]
           return key ? [[provider, key]] : []
         }),
       ),
     )
   })
 
-/** Removes one saved key. */
 export const removeApiKey = createServerFn({ method: 'POST' })
   .validator(z.object({ provider: apiKeyProviderSchema }))
   .handler(async ({ data }) => {

@@ -1,6 +1,6 @@
 import { CheckIcon } from 'lucide-react'
 import { Separator } from '#/components/ui/separator'
-import { cn } from 'cn'
+import { cn } from '#/lib/utils'
 import { getOptionLetter } from '#/lib/option-keys'
 import { getCorrectIndexes, isMultipleAnswer } from '#/quizzes/question'
 import type { Question } from '#/quizzes/types'

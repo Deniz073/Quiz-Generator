@@ -25,7 +25,6 @@ export function ConfirmAction({
   destructive = false,
   onConfirm,
 }: {
-  /** The trigger button's text. */
   label: string
   title: string
   description: ReactNode

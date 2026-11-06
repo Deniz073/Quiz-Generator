@@ -39,7 +39,7 @@ export function checkQuestionLimits(
 }
 
 /** Human-readable cap violations; empty when within every cap. */
-export function checkQuizLimits(quiz: Quiz): Array<string> {
+function checkQuizLimits(quiz: Quiz): Array<string> {
   const errors: Array<string> = []
   const max = QUIZ_LIMITS.textLength
   if (quiz.title.length > max) errors.push(`title is over ${max} characters`)

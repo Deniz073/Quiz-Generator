@@ -20,6 +20,6 @@ export async function getRequestUserId(): Promise<string | null> {
 /** The signed-in user's id; throws for a visitor (writes need an account). */
 export async function requireRequestUserId(): Promise<string> {
   const userId = await getRequestUserId()
-  if (!userId) throw new Error('Sign in to save your progress.')
+  if (!userId) throw new Error('You need to be signed in for this.')
   return userId
 }

@@ -1,18 +1,15 @@
 import { and, eq, inArray, sql } from 'drizzle-orm'
-import { db } from '#/db'
-import {
-  examSession,
-  examSessionPick,
-  examSessionQuestion,
-  quizAttempt,
-} from '#/db/schema'
+import { db, lockUntilCommit } from '#/db'
+import type { Executor, Transaction } from '#/db'
+import { examSession, examSessionPick, examSessionQuestion } from '#/db/schema'
 import type {
   ExamProgress,
-  ExamQuestionFacts,
   PlannedExamQuestion,
   StoredExam,
 } from '#/domain/mock-exam'
-import { correctIndexesOf } from '#/server/quiz-access'
+import type { AnswerKey } from '#/quizzes/question'
+import { correctIndexesOf } from '#/server/quiz-rows'
+import { recordAttempt } from '#/server/user-state'
 
 /*
  * Storage of unfinished mock exams. Speaks the rulebook's language
@@ -21,8 +18,6 @@ import { correctIndexesOf } from '#/server/quiz-access'
  * server functions ask the rulebook. Server only.
  */
 
-type Transaction = Parameters<Parameters<typeof db.transaction>[0]>[0]
-
 /** An unfinished exam as loaded: what the rulebook needs, plus its stored state. */
 export interface LoadedExam {
   id: string
@@ -30,10 +25,8 @@ export interface LoadedExam {
   startedAt: Date
   endsAt: Date
   passPercent: number
-  /** False if questions were removed since it started (content changed). */
-  complete: boolean
   questions: Array<
-    ExamQuestionFacts & {
+    AnswerKey & {
       questionId: string
       optionOrder: Array<number>
       flagged: boolean
@@ -45,7 +38,7 @@ export interface LoadedExam {
 }
 
 async function load(
-  tx: Transaction | typeof db,
+  tx: Executor,
   where: { id: string } | { quizId: string },
   userId: string,
 ): Promise<LoadedExam | null> {
@@ -64,7 +57,15 @@ async function load(
       picks: true,
     },
   })
-  if (!row) return null
+  // Saving content deletes the exams it affects; one with questions missing
+  // (left by an older version, which didn't) counts as gone.
+  if (
+    !row ||
+    row.questions.length !== row.questionCount ||
+    row.questions.some((q, position) => q.position !== position)
+  ) {
+    return null
+  }
   const optionIds = row.questions.map((q) =>
     q.question.options.map((o) => o.id),
   )
@@ -78,9 +79,6 @@ async function load(
     startedAt: row.startedAt,
     endsAt: row.endsAt,
     passPercent: row.passPercent,
-    complete:
-      row.questions.length === row.questionCount &&
-      row.questions.every((q, position) => q.position === position),
     questions: row.questions.map((q) => ({
       questionId: q.question.slug,
       optionOrder: q.optionOrder,
@@ -195,19 +193,15 @@ export async function finishExam(
     .where(eq(examSession.id, exam.id))
     .returning({ id: examSession.id })
   if (claimed.length === 0) return false
-  await tx.insert(quizAttempt).values({
+  await recordAttempt(
     userId,
-    quizId: exam.quizId,
-    kind: 'exam',
+    exam.quizId,
+    null,
     score,
-    total: exam.questions.length,
-  })
+    exam.questions.length,
+    tx,
+  )
   return true
-}
-
-/** Deletes an exam that can no longer be finished (its content changed). */
-export async function dropExam(tx: Transaction, exam: LoadedExam) {
-  await tx.delete(examSession).where(eq(examSession.id, exam.id))
 }
 
 /**
@@ -224,8 +218,7 @@ export async function createExam(input: {
 }): Promise<string> {
   const { userId, quizId } = input
   return db.transaction(async (tx) => {
-    const lockKey = `exam:${userId}:${quizId}`
-    await tx.execute(sql`select pg_advisory_xact_lock(hashtext(${lockKey}))`)
+    await lockUntilCommit(tx, `exam:${userId}:${quizId}`)
     await tx
       .delete(examSession)
       .where(

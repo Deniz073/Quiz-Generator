@@ -14,7 +14,7 @@ import {
   uuid,
 } from 'drizzle-orm/pg-core'
 // Relative: drizzle-kit loads this file without the #/ alias.
-import { MAX_EXAM_MINUTES } from '../quizzes/validate'
+import { MAX_EXAM_MINUTES } from '../quizzes/rules'
 import { user } from './auth-schema'
 import { chapter, question, questionOption, quiz } from './quiz-schema'
 
@@ -136,7 +136,6 @@ export const examSession = pgTable(
     endsAt: timestamp('ends_at', { withTimezone: true }).notNull(),
     /** How many questions it started with; fewer rows means content was removed. */
     questionCount: integer('question_count').notNull(),
-    /** Position of the question being shown. */
     currentPosition: integer('current_position').notNull().default(0),
     reviewing: boolean('reviewing').notNull().default(false),
     /** The pass mark it was started with. */

@@ -1,6 +1,7 @@
 import { toolDefinition } from '@tanstack/ai'
 import { z } from 'zod'
-import { MAX_OPTIONS, MIN_OPTIONS } from '#/quizzes/validate'
+import { examConfigInput } from '#/lib/api-inputs'
+import { MAX_OPTIONS, MIN_OPTIONS } from '#/quizzes/rules'
 
 /*
  * The quiz assistant's quiz tools. Shared definitions: the server hands them
@@ -8,6 +9,22 @@ import { MAX_OPTIONS, MIN_OPTIONS } from '#/quizzes/validate'
  * them on the working copy (see QuizAssistant). Nothing here writes to the
  * database; only Save does. See docs/adr/0002.
  */
+
+/** The tag around the working copy's outline at the end of each user message. */
+export const OUTLINE_TAG = 'quiz_outline'
+
+const OUTLINE_START = `\n\n<${OUTLINE_TAG}>\n`
+
+/** A user message as sent: the user's text, then the outline. */
+export function withOutline(text: string, outline: string): string {
+  return `${text}${OUTLINE_START}${outline}\n</${OUTLINE_TAG}>`
+}
+
+/** The user's own text of a message sent with withOutline. */
+export function withoutOutline(content: string): string {
+  const at = content.lastIndexOf(OUTLINE_START)
+  return at === -1 ? content : content.slice(0, at)
+}
 
 const questionInput = z.object({
   question: z.string().meta({
@@ -58,13 +75,7 @@ export const setMockExamDef = toolDefinition({
   description:
     'Sets the timed mock exam settings, or removes the mock exam with exam: null. questionCount can be at most the number of questions in the quiz.',
   inputSchema: z.object({
-    exam: z
-      .object({
-        questionCount: z.number().int(),
-        minutes: z.number().int(),
-        passPercent: z.number().int(),
-      })
-      .nullable(),
+    exam: examConfigInput.nullable(),
   }),
 })
 
@@ -118,6 +129,8 @@ export const removeQuestionsDef = toolDefinition({
     'Removes questions by id. Only when the user asked for it, or to replace a question that cannot be fixed.',
   inputSchema: z.object({ questionIds: z.array(z.string()) }),
 })
+
+export type QuizToolName = (typeof quizToolDefs)[number]['name']
 
 /** Every quiz tool, as the server declares them to the model. */
 export const quizToolDefs = [

@@ -5,7 +5,7 @@ import { NotFound } from '#/components/NotFound'
 import { QuizPageHeader } from '#/components/QuizPageHeader'
 import { QuizRunner } from '#/components/QuizRunner'
 import { formatChapter } from '#/lib/chapter-label'
-import { getFlaggedQuestions } from '#/lib/flags'
+import { FLAGGING_HINT, getFlaggedQuestions } from '#/lib/flags'
 import { buildShuffledPlan } from '#/lib/quiz-plan'
 import { pageTitle } from '#/lib/page-title'
 import { requireQuiz } from '#/lib/quiz-route'
@@ -76,9 +76,8 @@ function FlaggedRound({ quiz, chapterId }: { quiz: Quiz; chapterId?: string }) {
   if (!hasQuestions) {
     return (
       <p className="text-slate-600 dark:text-slate-400">
-        No flagged questions {chapterId ? 'in this chapter' : 'yet'}. Use
-        &ldquo;Flag for review&rdquo; during a chapter or practice round to
-        collect questions here.
+        No flagged questions {chapterId ? 'in this chapter' : 'yet'}.{' '}
+        {FLAGGING_HINT}
       </p>
     )
   }

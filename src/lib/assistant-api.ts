@@ -2,13 +2,15 @@ import { createServerFn } from '@tanstack/react-start'
 import { z } from 'zod'
 import type { ApiKeyProvider } from '#/lib/api-keys-schema'
 import { API_KEY_PROVIDERS } from '#/lib/api-keys-schema'
-import { idInput } from '#/lib/api-inputs'
+import { examConfigInput, idInput } from '#/lib/api-inputs'
 import { QUIZ_LIMITS } from '#/quizzes/limits'
 import type { Question, Quiz } from '#/quizzes/types'
-import { MAX_OPTIONS } from '#/quizzes/validate'
-import type { EditableQuiz, SaveOutcome } from '#/server/quiz-writer'
+import { MAX_OPTIONS } from '#/quizzes/rules'
+import type { EditableQuiz } from '#/server/quiz-access'
+import type { SaveOutcome } from '#/server/quiz-writer'
 import { getApiKeysStatus } from '#/server/api-key-store'
-import { findEditableQuiz, saveOwnQuiz } from '#/server/quiz-writer'
+import { findEditableQuiz } from '#/server/quiz-access'
+import { saveOwnQuiz } from '#/server/quiz-writer'
 import { requireRequestUserId } from '#/server/request-user'
 
 /*
@@ -68,48 +70,8 @@ const quizSchema = z.object({
       }),
     )
     .max(QUIZ_LIMITS.chapters),
-  exam: z
-    .object({
-      questionCount: z.number().int(),
-      minutes: z.number().int(),
-      passPercent: z.number().int(),
-    })
-    .optional(),
+  exam: examConfigInput.optional(),
 })
-
-/**
- * Exactly the fields of a `Quiz`, so the validator sees what will be stored.
- * The answer fields are passed on as given (none, one or both): the
- * validator, not this shape, decides whether they make a question.
- */
-function toQuiz(input: z.infer<typeof quizSchema>): Quiz {
-  return {
-    id: input.id,
-    title: input.title,
-    description: input.description,
-    chapters: input.chapters.map((c) => ({
-      id: c.id,
-      number: c.number,
-      title: c.title,
-      questions: c.questions.map(
-        (q) =>
-          ({
-            id: q.id,
-            question: q.question,
-            options: q.options,
-            explanation: q.explanation,
-            ...(q.correctIndex !== undefined && {
-              correctIndex: q.correctIndex,
-            }),
-            ...(q.correctIndexes !== undefined && {
-              correctIndexes: q.correctIndexes,
-            }),
-          }) as Question,
-      ),
-    })),
-    ...(input.exam && { exam: input.exam }),
-  }
-}
 
 export const saveAssistantQuiz = createServerFn({ method: 'POST' })
   .validator(
@@ -121,6 +83,40 @@ export const saveAssistantQuiz = createServerFn({ method: 'POST' })
     }),
   )
   .handler(async ({ data }): Promise<SaveOutcome> => {
+    /**
+     * Exactly the fields of a `Quiz`, so the validator sees what will be stored.
+     * The answer fields are passed on as given (none, one or both): the
+     * validator, not this shape, decides whether they make a question.
+     */
+    function toQuiz(input: z.infer<typeof quizSchema>): Quiz {
+      return {
+        id: input.id,
+        title: input.title,
+        description: input.description,
+        chapters: input.chapters.map((c) => ({
+          id: c.id,
+          number: c.number,
+          title: c.title,
+          questions: c.questions.map(
+            (q) =>
+              ({
+                id: q.id,
+                question: q.question,
+                options: q.options,
+                explanation: q.explanation,
+                ...(q.correctIndex !== undefined && {
+                  correctIndex: q.correctIndex,
+                }),
+                ...(q.correctIndexes !== undefined && {
+                  correctIndexes: q.correctIndexes,
+                }),
+              }) as Question,
+          ),
+        })),
+        ...(input.exam && { exam: input.exam }),
+      }
+    }
+
     const userId = await requireRequestUserId()
     return saveOwnQuiz(userId, toQuiz(data.quiz), {
       baseUpdatedAt: data.baseUpdatedAt,

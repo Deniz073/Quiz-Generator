@@ -5,7 +5,7 @@
  */
 
 /** What the rules need to know of a quiz, as the user sees it. */
-export interface QuizStanding {
+export interface OwnershipFacts {
   /** No owner: available to everyone, never published or deleted by a user. */
   builtIn: boolean
   /** Made by importing a published quiz. */
@@ -19,12 +19,12 @@ export interface QuizStanding {
  * has edited it (with the quiz assistant): republishing someone else's quiz
  * unchanged is not allowed.
  */
-export function canPublish(quiz: QuizStanding): boolean {
+export function canPublish(quiz: OwnershipFacts): boolean {
   return !quiz.builtIn && (!quiz.imported || quiz.edited)
 }
 
 /** Any personal quiz; with it go the owner's progress and flags on it. */
-export function canDelete(quiz: QuizStanding): boolean {
+export function canDelete(quiz: OwnershipFacts): boolean {
   return !quiz.builtIn
 }
 

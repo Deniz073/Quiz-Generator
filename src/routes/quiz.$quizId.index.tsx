@@ -9,7 +9,7 @@ import { QuizMarketplace } from '#/components/QuizMarketplace'
 import { fetchQuizStanding } from '#/lib/marketplace-api'
 import { SignInBanner } from '#/components/SignInBanner'
 import { backLinkClasses } from '#/lib/button-classes'
-import { getFlaggedQuestions } from '#/lib/flags'
+import { FLAGGING_HINT, getFlaggedQuestions } from '#/lib/flags'
 import { formatChapter } from '#/lib/chapter-label'
 import { pageTitle } from '#/lib/page-title'
 import { formatResult } from '#/domain/progress'
@@ -56,7 +56,6 @@ function QuizPage() {
   const totalFlagged = countFlagged()
 
   const total = countQuestions(quiz)
-  // Offer only sizes that actually draw fewer questions than "all".
   const practiceSizes = PRACTICE_SIZES.filter((size) => size < total)
 
   return (
@@ -189,7 +188,7 @@ function QuizPage() {
           <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
             {totalFlagged > 0
               ? 'Practice the questions you flagged, from all chapters. Not saved.'
-              : 'Use \u201cFlag for review\u201d during a chapter or practice round to collect questions here.'}
+              : FLAGGING_HINT}
           </p>
           {totalFlagged > 0 ? (
             <div className="mt-3 flex flex-wrap gap-3">

@@ -1,4 +1,8 @@
-import type { MultipleAnswerQuestion, Question } from './types'
+import type {
+  MultipleAnswerQuestion,
+  Question,
+  SingleAnswerQuestion,
+} from './types'
 
 /*
  * The answer rules of a question, used by every mode (practice, the mock
@@ -25,6 +29,19 @@ export function getCorrectIndexes(question: Question): Array<number> {
   return isMultipleAnswer(question)
     ? [...question.correctIndexes].sort((a, b) => a - b)
     : [question.correctIndex]
+}
+
+/**
+ * The question with these correct options: single-answer for one index,
+ * multiple-answer for more.
+ */
+export function withCorrectIndexes(
+  base: Omit<SingleAnswerQuestion, 'correctIndex'>,
+  correct: ReadonlyArray<number>,
+): Question {
+  return correct.length === 1
+    ? { ...base, correctIndex: correct[0] }
+    : { ...base, correctIndexes: [...correct] }
 }
 
 export function answerKey(question: Question): AnswerKey {
@@ -78,6 +95,14 @@ export function isCorrectPick(
   return (
     pick.length === correct.length && correct.every((i) => pick.includes(i))
   )
+}
+
+/** Exactly as many options picked as the question has correct answers. */
+export function isCompletePick(
+  question: Question,
+  pick: ReadonlyArray<number>,
+): boolean {
+  return pick.length === getCorrectIndexes(question).length
 }
 
 export function isAnswerCorrect(

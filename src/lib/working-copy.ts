@@ -1,14 +1,14 @@
 import { describeExamConfig } from '#/domain/exam-settings'
 import { countQuestions } from '#/quizzes'
 import { QUIZ_LIMITS, checkQuestionLimits } from '#/quizzes/limits'
-import { getCorrectIndexes, isMultipleAnswer } from '#/quizzes/question'
-import type { Chapter, ExamConfig, Question, Quiz } from '#/quizzes/types'
 import {
-  RESERVED_CHAPTER_IDS,
-  slugify,
-  validateExamConfig,
-  validateQuestion,
-} from '#/quizzes/validate'
+  getCorrectIndexes,
+  isMultipleAnswer,
+  withCorrectIndexes,
+} from '#/quizzes/question'
+import { RESERVED_CHAPTER_IDS, slugify } from '#/quizzes/rules'
+import type { Chapter, ExamConfig, Question, Quiz } from '#/quizzes/types'
+import { validateExamConfig, validateQuestion } from '#/quizzes/validate'
 
 /*
  * The working copy: the quiz as the quiz assistant is editing it, before
@@ -65,18 +65,18 @@ export function rebaseWorkingCopy(copy: WorkingCopy, saved: Quiz): WorkingCopy {
 }
 
 function toQuestion(id: string, input: QuestionInput): Question {
-  const base = {
-    id,
-    question: input.question.trim(),
-    options: input.options.map((option) => option.trim()),
-    explanation: input.explanation.trim(),
-  }
-  return input.correctIndexes.length === 1
-    ? { ...base, correctIndex: input.correctIndexes[0] }
-    : { ...base, correctIndexes: [...input.correctIndexes] }
+  return withCorrectIndexes(
+    {
+      id,
+      question: input.question.trim(),
+      options: input.options.map((option) => option.trim()),
+      explanation: input.explanation.trim(),
+    },
+    input.correctIndexes,
+  )
 }
 
-export function toQuestionInput(question: Question): QuestionInput {
+function toQuestionInput(question: Question): QuestionInput {
   return {
     question: question.question,
     options: [...question.options],
@@ -111,8 +111,6 @@ function findChapter(quiz: Quiz, chapterId: string): Chapter | undefined {
 function withQuiz(copy: WorkingCopy, quiz: Quiz): WorkingCopy {
   return { ...copy, quiz }
 }
-
-// --- Operations -------------------------------------------------------------
 
 export function setDetails(
   copy: WorkingCopy,
@@ -378,8 +376,6 @@ export function removeQuestions(
     }),
   }
 }
-
-// --- Reading ----------------------------------------------------------------
 
 function shorten(text: string, max: number): string {
   const flat = text.replace(/\s+/g, ' ').trim()

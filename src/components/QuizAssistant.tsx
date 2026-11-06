@@ -21,6 +21,8 @@ import { saveAssistantQuiz } from '#/lib/assistant-api'
 import { handOverNewQuiz } from '#/lib/assistant-handover'
 import { createWorkingCopyStore } from '#/lib/assistant-client-tools'
 import { backLinkClasses } from '#/lib/button-classes'
+import { API_KEY_PROVIDERS, providerInfo } from '#/lib/api-keys-schema'
+import { ASSISTANT_PAGE_HEIGHT, ASSISTANT_PANEL_HEIGHT } from '#/lib/page-width'
 import { forgetQuiz } from '#/lib/quiz-route'
 import { useLeaveGuard } from '#/lib/use-leave-guard'
 import {
@@ -163,7 +165,7 @@ export function QuizAssistant({ start }: { start: AssistantStart }) {
   const title = saved ? saved.quiz.title : 'New quiz'
 
   return (
-    <div className="flex flex-col gap-3 lg:h-[calc(100dvh-8.5rem)]">
+    <div className={`flex flex-col gap-3 ${ASSISTANT_PAGE_HEIGHT}`}>
       {guard.blocked ? (
         <LeavePrompt
           title="Leave without saving?"
@@ -267,7 +269,7 @@ export function QuizAssistant({ start }: { start: AssistantStart }) {
         <section
           aria-label="Chat with the quiz assistant"
           data-active={tab === 'chat'}
-          className="hidden h-[calc(100dvh-15rem)] min-h-0 overflow-hidden rounded-xl border bg-background data-[active=true]:block lg:block lg:h-auto"
+          className={`hidden ${ASSISTANT_PANEL_HEIGHT} min-h-0 overflow-hidden rounded-xl border bg-background data-[active=true]:block lg:block lg:h-auto`}
         >
           {start.providers.length === 0 ? (
             <NoKey />
@@ -348,7 +350,9 @@ function NoKey() {
       <Alert>
         <AlertTitle>Add an API key first</AlertTitle>
         <AlertDescription>
-          The quiz assistant runs on your own Claude or OpenAI API key.{' '}
+          The quiz assistant runs on your own{' '}
+          {API_KEY_PROVIDERS.map((p) => providerInfo[p].label).join(' or ')} API
+          key.{' '}
           <Link to="/profile" className="underline underline-offset-4">
             Add one on your profile
           </Link>

@@ -54,10 +54,7 @@ function isBetter(candidate: Attempt, current: Attempt): boolean {
 }
 
 /** The result after `attempt`, the newest attempt. */
-export function withAttempt(
-  previous: Result | undefined,
-  attempt: Attempt,
-): Result {
+function withAttempt(previous: Result | undefined, attempt: Attempt): Result {
   return {
     best:
       previous && !isBetter(attempt, previous.best) ? previous.best : attempt,

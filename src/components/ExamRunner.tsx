@@ -1,13 +1,13 @@
 import type { Dispatch } from 'react'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useHotkey } from '@tanstack/react-hotkeys'
 import type { PlannedQuestion } from '#/lib/quiz-plan'
 import type { ExamAction, ExamState } from '#/lib/exam-state'
 import type { ExamConfig, Quiz } from '#/quizzes/types'
 import { getAnswers, getScore } from '#/lib/exam-state'
-import { focusHeading } from '#/lib/focus'
+import { useFocusHeadingOnChange } from '#/lib/focus'
 import { reshufflePlan } from '#/lib/quiz-plan'
-import type { ExamStartData, ExamScore } from '#/lib/use-exam'
+import type { ExamPageData, ExamResult } from '#/lib/exam-api'
 import { useExam } from '#/lib/use-exam'
 import { useLeaveGuard } from '#/lib/use-leave-guard'
 import { useOptionHotkeys } from '#/lib/use-option-hotkeys'
@@ -24,7 +24,7 @@ interface Props {
   quiz: Quiz
   exam: ExamConfig
   /** The user's settings and unfinished exam; null for a visitor. */
-  start: ExamStartData
+  start: ExamPageData | null
 }
 
 export function ExamRunner({ quiz, exam, start }: Props) {
@@ -62,7 +62,6 @@ export function ExamRunner({ quiz, exam, start }: Props) {
   return (
     <ExamSession
       quizId={quiz.id}
-      passPercent={state.passPercent}
       saved={saved}
       saveFailed={saveFailed}
       recorded={recorded}
@@ -77,13 +76,11 @@ export function ExamRunner({ quiz, exam, start }: Props) {
 
 interface SessionProps {
   quizId: string
-  passPercent: number
   /** Whether the exam is kept (signed in), so leaving doesn't lose it. */
   saved: boolean
-  /** A save or the submit failed. */
   saveFailed: boolean
   /** The server's score, once recorded; it counts over the local one. */
-  recorded: ExamScore | undefined
+  recorded: ExamResult | undefined
   state: ExamState
   dispatch: Dispatch<ExamAction>
   secondsLeft: number | undefined
@@ -97,7 +94,6 @@ interface SessionProps {
  */
 function ExamSession({
   quizId,
-  passPercent,
   saved,
   saveFailed,
   recorded,
@@ -119,16 +115,7 @@ function ExamSession({
     window.scrollTo(0, 0)
   }, [current, reviewing])
 
-  // Switching between a question and the review unmounts the button that was
-  // pressed, so focus would drop to <body>. Move it to the new view's first
-  // heading (the question, or "Review answers") so screen readers follow.
-  const viewRef = useRef<HTMLDivElement>(null)
-  const wasReviewing = useRef(reviewing)
-  useEffect(() => {
-    if (wasReviewing.current === reviewing) return
-    wasReviewing.current = reviewing
-    focusHeading(viewRef.current?.querySelector('h2'))
-  }, [reviewing])
+  const viewRef = useFocusHeadingOnChange(reviewing)
 
   const questionKeys = !submitted && !reviewing && !blocked
 
@@ -194,13 +181,9 @@ function ExamSession({
           answers={answers}
           score={score}
           retryLabel="New mock exam"
-          passPercent={passPercent}
+          passPercent={state.passPercent}
           onRetry={onRestart}
-          onRetryIncorrect={() =>
-            onRetryIncorrect(
-              answers.filter((answer) => !answer.correct).map((a) => a.item),
-            )
-          }
+          onRetryIncorrect={onRetryIncorrect}
         />
       </>
     )

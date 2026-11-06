@@ -1,6 +1,5 @@
 import { useEffect, useReducer, useState } from 'react'
-import type { ExamOverrides } from '#/domain/exam-settings'
-import type { StoredExam } from '#/domain/mock-exam'
+import type { ExamPageData, ExamResult } from '#/lib/exam-api'
 import type { ExamConfig, Quiz } from '#/quizzes/types'
 import { resolveExamConfig } from '#/domain/exam-settings'
 import { clockOffset, resumeOrStart, toDeviceTimes } from '#/lib/exam-lifecycle'
@@ -9,20 +8,6 @@ import { createExamSync } from '#/lib/exam-sync'
 import { noteExamAttempt, useUserId } from '#/lib/user-data'
 import { useCountdown } from '#/lib/use-countdown'
 import { countQuestions } from '#/quizzes'
-
-/** What the exam page loaded for a signed-in user (null for a visitor). */
-export type ExamStartData = {
-  overrides: ExamOverrides
-  session: StoredExam | null
-  /** The server's clock when this was loaded (epoch ms). */
-  serverNow: number
-} | null
-
-/** The score the server recorded for a submitted exam. */
-export interface ExamScore {
-  score: number
-  total: number
-}
 
 /**
  * A mock exam from opening the page to the result: offers to resume an
@@ -40,7 +25,8 @@ export interface ExamScore {
 export function useExam(
   quiz: Quiz,
   defaults: ExamConfig,
-  start: ExamStartData,
+  /** Null for a visitor. */
+  start: ExamPageData | null,
 ) {
   const userId = useUserId()
   const config = () =>
@@ -54,7 +40,7 @@ export function useExam(
   })
   const [state, dispatch] = useReducer(examReducer, initial.state)
   const [choosing, setChoosing] = useState(initial.kind === 'prompt')
-  const [recorded, setRecorded] = useState<ExamScore>()
+  const [recorded, setRecorded] = useState<ExamResult>()
   const [saveFailed, setSaveFailed] = useState(false)
 
   const [sync] = useState(() =>

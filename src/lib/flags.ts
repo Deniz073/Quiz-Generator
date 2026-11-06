@@ -6,7 +6,10 @@
  */
 import type { Question, Quiz } from '#/quizzes/types'
 
-/** Questions of a quiz (or of one of its chapters) that are flagged. */
+/** Where flags come from, for pages that have none to show yet. */
+export const FLAGGING_HINT =
+  'Use “Flag for review” during a chapter or practice round to collect questions here.'
+
 export function getFlaggedQuestions(
   quiz: Quiz,
   flagged: ReadonlySet<string>,

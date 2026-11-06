@@ -13,7 +13,6 @@ import {
 } from '#/domain/mock-exam'
 import {
   createExam,
-  dropExam,
   findExam,
   finishExam,
   saveProgress,
@@ -38,39 +37,42 @@ const stateSchema = z.object({
   sessionId: z.uuid(),
   current: index,
   reviewing: z.boolean(),
-  /** Positions flagged for review. */
   flagged: z.array(index).max(1000),
   /** Original option indexes picked, per position. */
   picks: z.array(optionIndexesInput).max(1000),
 })
 
-/**
- * What the exam page needs before it starts: the user's settings and their
- * unfinished exam of this quiz, if any. Null for visitors.
- */
+/** What the exam page needs of a signed-in user before the exam starts. */
+export interface ExamPageData {
+  overrides: ExamOverrides
+  /** Their unfinished exam of this quiz, if any. */
+  session: StoredExam | null
+  /** The server's clock (epoch ms), to correct for the device's. */
+  serverNow: number
+}
+
+/** The score the server recorded for a submitted exam. */
+export interface ExamResult {
+  score: number
+  total: number
+}
+
+/** Null for visitors. */
 export const fetchExamStart = createServerFn({ method: 'GET' })
   .validator(z.object({ quizId: idInput }))
-  .handler(
-    async ({
-      data,
-    }): Promise<{
-      overrides: ExamOverrides
-      session: StoredExam | null
-      /** The server's clock (epoch ms), to correct for the device's. */
-      serverNow: number
-    } | null> => {
-      const userId = await getRequestUserId()
-      if (!userId) return null
-      const [overrides, exam] = await Promise.all([
-        loadExamOverrides(userId, data.quizId),
-        findExam(userId, data.quizId),
-      ])
-      // An exam whose content changed is not offered; starting a new exam
-      // replaces it (no deleting here: this is a GET, also run on preload).
-      const session = exam?.complete ? toStoredExam(exam) : null
-      return { overrides, session, serverNow: Date.now() }
-    },
-  )
+  .handler(async ({ data }): Promise<ExamPageData | null> => {
+    const userId = await getRequestUserId()
+    if (!userId) return null
+    const [overrides, exam] = await Promise.all([
+      loadExamOverrides(userId, data.quizId),
+      findExam(userId, data.quizId),
+    ])
+    return {
+      overrides,
+      session: exam ? toStoredExam(exam) : null,
+      serverNow: Date.now(),
+    }
+  })
 
 /**
  * Starts a new exam with the questions the client drew, replacing the user's
@@ -150,7 +152,7 @@ export const saveExamSession = createServerFn({ method: 'POST' })
   .handler(async ({ data: { sessionId, ...progress } }): Promise<boolean> => {
     const userId = await requireRequestUserId()
     return withLockedExam(userId, sessionId, async (tx, exam) => {
-      if (!exam?.complete || !acceptsState(exam.endsAt.getTime(), Date.now())) {
+      if (!exam || !acceptsState(exam.endsAt.getTime(), Date.now())) {
         return false
       }
       if (!isLegalProgress(exam.questions, progress)) {
@@ -168,24 +170,24 @@ export const saveExamSession = createServerFn({ method: 'POST' })
  */
 export const submitExamSession = createServerFn({ method: 'POST' })
   .validator(stateSchema)
-  .handler(async ({ data: { sessionId, ...progress } }) => {
-    const userId = await requireRequestUserId()
-    return withLockedExam(userId, sessionId, async (tx, exam) => {
-      if (!exam) return null
-      if (!exam.complete) {
-        await dropExam(tx, exam)
-        return null
-      }
-      let picks = exam.progress.picks
-      if (acceptsState(exam.endsAt.getTime(), Date.now())) {
-        if (!isLegalProgress(exam.questions, progress)) {
-          throw new Error('The exam state does not match the exam.')
+  .handler(
+    async ({
+      data: { sessionId, ...progress },
+    }): Promise<ExamResult | null> => {
+      const userId = await requireRequestUserId()
+      return withLockedExam(userId, sessionId, async (tx, exam) => {
+        if (!exam) return null
+        let picks = exam.progress.picks
+        if (acceptsState(exam.endsAt.getTime(), Date.now())) {
+          if (!isLegalProgress(exam.questions, progress)) {
+            throw new Error('The exam state does not match the exam.')
+          }
+          await saveProgress(tx, exam, progress)
+          picks = progress.picks
         }
-        await saveProgress(tx, exam, progress)
-        picks = progress.picks
-      }
-      const score = scoreExam(exam.questions, picks)
-      if (!(await finishExam(tx, userId, exam, score))) return null
-      return { score, total: exam.questions.length }
-    })
-  })
+        const score = scoreExam(exam.questions, picks)
+        if (!(await finishExam(tx, userId, exam, score))) return null
+        return { score, total: exam.questions.length }
+      })
+    },
+  )

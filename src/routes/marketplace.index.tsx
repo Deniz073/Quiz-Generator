@@ -1,13 +1,11 @@
 import { useState } from 'react'
 import { Link, createFileRoute } from '@tanstack/react-router'
-import { Search } from 'lucide-react'
-import { ListingActions } from '#/components/ListingActions'
+import { ListingActions, ListingByline } from '#/components/ListingActions'
 import { Badge } from '#/components/ui/badge'
-import { Input } from '#/components/ui/input'
+import { TitleSearch, filterByTitle } from '#/components/TitleSearch'
 import type { Listing } from '#/lib/marketplace-api'
 import { fetchListings } from '#/lib/marketplace-api'
 import { pageTitle } from '#/lib/page-title'
-import { formatImports } from '#/domain/marketplace'
 import { Button } from '#/components/ui/button'
 
 export const Route = createFileRoute('/marketplace/')({
@@ -19,10 +17,7 @@ export const Route = createFileRoute('/marketplace/')({
 function Marketplace() {
   const listings = Route.useLoaderData()
   const [query, setQuery] = useState('')
-  const needle = query.trim().toLowerCase()
-  const matches = needle
-    ? listings.filter((listing) => listing.title.toLowerCase().includes(needle))
-    : listings
+  const matches = filterByTitle(listings, query)
   return (
     <div>
       <h1 className="text-3xl font-bold tracking-tight">Marketplace</h1>
@@ -30,23 +25,15 @@ function Marketplace() {
         Quizzes published by other users. Preview one, or import a copy to
         practise it as your own.
       </p>
-      <div className="relative mt-6">
-        <Search
-          aria-hidden
-          className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground"
-        />
-        <Input
-          type="search"
-          value={query}
-          onChange={(event) => setQuery(event.target.value)}
-          placeholder="Search the Marketplace by name"
-          aria-label="Search the Marketplace by name"
-          className="h-9 pl-8"
-        />
-      </div>
+      <TitleSearch
+        value={query}
+        onChange={setQuery}
+        label="Search the Marketplace by name"
+        className="mt-6"
+      />
       {matches.length === 0 ? (
         <p className="mt-6 text-muted-foreground">
-          {needle
+          {query.trim()
             ? `No published quizzes match “${query.trim()}”.`
             : 'No quizzes have been published yet.'}
         </p>
@@ -78,11 +65,7 @@ function ListingCard({ listing }: { listing: Listing }) {
           {listing.yours ? <Badge variant="secondary">Yours</Badge> : null}
         </h2>
         <p className="mt-1 text-muted-foreground">{listing.description}</p>
-        <p className="mt-3 text-sm text-muted-foreground tabular-nums">
-          By {listing.publisherName} &middot; {listing.chapterCount}
-          &nbsp;chapters &middot; {listing.questionCount}&nbsp;questions
-          &middot; {formatImports(listing.importCount)}
-        </p>
+        <ListingByline listing={listing} className="mt-3" />
       </div>
       <div className="flex shrink-0 flex-wrap items-start gap-2">
         <Button

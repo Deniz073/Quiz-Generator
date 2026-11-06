@@ -153,7 +153,7 @@ npm run dev                # optional: open http://localhost:3000 and try it
   see `src/db/quiz-schema.ts`) and user state (`quiz_attempt`,
   `question_flag`, `user_quiz_exam_settings`, `exam_session*`, see
   `src/db/progress-schema.ts`). The app keeps using the `Quiz` type of
-  `src/quizzes/types.ts`; `src/server/quiz-access.ts` maps rows to it and back.
+  `src/quizzes/types.ts`; `src/server/quiz-rows.ts` maps rows to it and back.
 - Where code lives, by where it may run (enforced by ESLint
   `no-restricted-imports`):
   - `src/domain/`: pure rules shared by client and server: progress (attempts,
@@ -161,7 +161,7 @@ npm run dev                # optional: open http://localhost:3000 and try it
     picks, scoring, deadline and grace), and the Marketplace rules (who may
     publish or delete a quiz). Relative imports only: the drizzle-kit
     schema loader imports from here without the `#/` alias. The same holds
-    for `src/quizzes/` (quiz types, answer rules, validator, size caps),
+    for `src/quizzes/` (quiz types, answer rules, rule values, validator, size caps),
     which the domain builds on.
   - `src/server/`: database and session access: `quiz-access` (the only
     module that knows the visibility rule), `user-state` (attempts, flags,

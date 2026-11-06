@@ -25,7 +25,6 @@ const STATUS_LABELS: Record<QuestionStatus, string> = {
   unanswered: 'not answered',
 }
 
-/** Numbered grid of all questions; clicking one jumps to it. */
 export function QuestionNavigator({
   statuses,
   flagged,

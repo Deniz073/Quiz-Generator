@@ -1,11 +1,16 @@
 import type { PlannedQuestion } from '#/lib/quiz-plan'
 import type { ExamState } from '#/lib/exam-state'
 import type { StoredExam } from '#/domain/mock-exam'
-import { examMinutes, isTimeUp } from '#/domain/mock-exam'
+import {
+  examMinutes,
+  isLegalPlan,
+  isLegalProgress,
+  isTimeUp,
+} from '#/domain/mock-exam'
 import type { ExamConfig, Quiz } from '#/quizzes/types'
 import { examReducer, startExam } from '#/lib/exam-state'
 import { chapterRef } from '#/lib/quiz-plan'
-import { answerKey, isLegalPick, isPermutation } from '#/quizzes/question'
+import { answerKey } from '#/quizzes/question'
 
 /*
  * What happens to a mock exam outside its reducer: deciding between a new,
@@ -46,7 +51,7 @@ export function resumeOrStart(
 }
 
 /** The stored exam against the current quiz data, or undefined if it doesn't fit. */
-export function resolveStoredExam(
+function resolveStoredExam(
   quiz: Quiz,
   stored: StoredExam,
 ): ExamState | undefined {
@@ -58,42 +63,39 @@ export function resolveStoredExam(
       ),
     ),
   )
-  const total = stored.questions.length
+  const optionCounts = new Map(
+    [...byId].map(([id, { question }]) => [id, question.options.length]),
+  )
   if (
-    total === 0 ||
-    stored.current < 0 ||
-    stored.current >= total ||
     !Number.isFinite(stored.startedAt) ||
-    !Number.isFinite(stored.endsAt)
+    !Number.isFinite(stored.endsAt) ||
+    !isLegalPlan(stored.questions, optionCounts)
   ) {
     return undefined
   }
-  const plan: Array<PlannedQuestion> = []
-  const picks: Array<Array<number>> = []
-  const flagged: Array<number> = []
-  for (const [position, entry] of stored.questions.entries()) {
-    const found = byId.get(entry.questionId)
-    if (
-      !found ||
-      !isPermutation(entry.optionOrder, found.question.options.length) ||
-      !isLegalPick(answerKey(found.question), entry.picks)
-    ) {
-      return undefined
-    }
-    plan.push({
-      question: found.question,
-      optionOrder: [...entry.optionOrder],
-      chapter: found.chapter,
-    })
-    picks.push([...entry.picks])
-    if (entry.flagged) flagged.push(position)
+  const plan: Array<PlannedQuestion> = stored.questions.map((entry) => {
+    const { question, chapter } = byId.get(entry.questionId)!
+    return { question, optionOrder: [...entry.optionOrder], chapter }
+  })
+  const progress = {
+    current: stored.current,
+    reviewing: stored.reviewing,
+    flagged: stored.questions.flatMap((entry, position) =>
+      entry.flagged ? [position] : [],
+    ),
+    picks: stored.questions.map((entry) => [...entry.picks]),
+  }
+  if (
+    !isLegalProgress(
+      plan.map((item) => answerKey(item.question)),
+      progress,
+    )
+  ) {
+    return undefined
   }
   return {
     plan,
-    picks,
-    flagged,
-    current: stored.current,
-    reviewing: stored.reviewing,
+    ...progress,
     submitted: false,
     startedAt: stored.startedAt,
     endsAt: stored.endsAt,
@@ -118,7 +120,6 @@ export function toDeviceTimes<T extends { startedAt: number; endsAt: number }>(
   }
 }
 
-/** What the server needs to start storing a new exam. */
 export function toNewSession(quizId: string, state: ExamState) {
   return {
     quizId,
@@ -131,7 +132,6 @@ export function toNewSession(quizId: string, state: ExamState) {
   }
 }
 
-/** The exam's state as the server stores it. */
 export function toStoredState(sessionId: string, state: ExamState) {
   return {
     sessionId,

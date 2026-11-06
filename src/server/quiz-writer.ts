@@ -1,5 +1,6 @@
 import { and, count, eq, inArray, notInArray, sql } from 'drizzle-orm'
-import { db } from '#/db'
+import { db, lockUntilCommit } from '#/db'
+import type { Transaction } from '#/db'
 import {
   chapter,
   examSession,
@@ -11,76 +12,25 @@ import {
   quizAttempt,
 } from '#/db/schema'
 import { QUIZ_LIMITS, personalQuizProblems } from '#/quizzes/limits'
-import { getCorrectIndexes } from '#/quizzes/question'
+import { slugify } from '#/quizzes/rules'
 import type { Quiz } from '#/quizzes/types'
-import { slugify } from '#/quizzes/validate'
-import { findImportSource, findQuiz } from '#/server/quiz-access'
+import { findEditableQuiz, findImportSource } from '#/server/quiz-access'
+import type { QuizRows } from '#/server/quiz-rows'
+import { optionsSignature, toQuizRows } from '#/server/quiz-rows'
 
 /*
  * Writing a quiz's content over what is stored, in place by slug (quiz id,
  * chapter slug, question slug): rows keep their ids, so users' flags,
  * attempts and unfinished exams survive edits. Chapters and questions no
- * longer in the quiz are deleted, with what refers to them. A question whose
- * options changed loses its options' ids, so unfinished exams containing it
- * are deleted (they could no longer be scored as started).
+ * longer in the quiz are deleted, with what refers to them. Unfinished exams
+ * containing a removed question, or one whose options changed (its options
+ * lose their ids), are deleted: they could no longer be scored as started.
  *
  * Used by the seed (built-in quizzes), by Save in the quiz assistant
  * (personal quizzes, see saveOwnQuiz) and by importing from the Marketplace
  * (importPublishedQuiz). Callers validate the quiz first
  * (src/quizzes/validate.ts). Server only.
  */
-
-export type Transaction = Parameters<Parameters<typeof db.transaction>[0]>[0]
-
-/** A quiz as rows, without generated ids: the inverse of findQuiz. */
-interface QuizRows {
-  quiz: Omit<typeof quiz.$inferInsert, 'createdAt' | 'updatedAt'>
-  chapters: Array<{
-    slug: string
-    number: number
-    title: string
-    questions: Array<{
-      slug: string
-      position: number
-      text: string
-      explanation: string
-      options: Array<{ position: number; text: string; isCorrect: boolean }>
-    }>
-  }>
-}
-
-function toQuizRows(data: Quiz, ownerId: string | null): QuizRows {
-  return {
-    quiz: {
-      id: data.id,
-      ownerId,
-      title: data.title,
-      description: data.description,
-      examQuestionCount: data.exam?.questionCount ?? null,
-      examMinutes: data.exam?.minutes ?? null,
-      examPassPercent: data.exam?.passPercent ?? null,
-    },
-    chapters: data.chapters.map((c) => ({
-      slug: c.id,
-      number: c.number,
-      title: c.title,
-      questions: c.questions.map((q, position) => {
-        const correct = new Set(getCorrectIndexes(q))
-        return {
-          slug: q.id,
-          position,
-          text: q.question,
-          explanation: q.explanation,
-          options: q.options.map((text, index) => ({
-            position: index,
-            text,
-            isCorrect: correct.has(index),
-          })),
-        }
-      }),
-    })),
-  }
-}
 
 /** A fresh quiz id: `base` as a slug plus a random suffix, so ids never clash. */
 function newQuizId(base: string): string {
@@ -93,24 +43,89 @@ function excluded(column: string) {
   return sql.raw(`excluded."${column}"`)
 }
 
-function optionsSignature(
-  options: ReadonlyArray<{ text: string; isCorrect: boolean }>,
-): string {
-  return JSON.stringify(options.map((o) => [o.text, o.isCorrect]))
+/** What writing a quiz's rows removes or replaces of what is stored. */
+interface ContentDiff {
+  removedChapters: Array<{ id: string; slug: string; title: string }>
+  removedQuestions: Array<{ id: string; slug: string; text: string }>
+  /** Kept questions (row ids) whose options differ from the stored ones. */
+  changedOptions: Array<string>
+  /** Kept questions (slugs) whose options are stored exactly as wanted. */
+  unchangedOptions: ReadonlySet<string>
+}
+
+async function diffContent(
+  tx: Transaction,
+  rows: QuizRows,
+): Promise<ContentDiff> {
+  const quizId = rows.quiz.id
+  const wantedChapters = new Set(rows.chapters.map((c) => c.slug))
+  const wantedOptions = new Map(
+    rows.chapters.flatMap((c) =>
+      c.questions.map((q) => [q.slug, optionsSignature(q.options)] as const),
+    ),
+  )
+  const chapters = await tx
+    .select({ id: chapter.id, slug: chapter.slug, title: chapter.title })
+    .from(chapter)
+    .where(eq(chapter.quizId, quizId))
+  const questions = await tx.query.question.findMany({
+    where: { quizId },
+    columns: { id: true, slug: true, text: true },
+    with: { options: { orderBy: { position: 'asc' } } },
+  })
+  const kept = questions.filter((q) => wantedOptions.has(q.slug))
+  const isUnchanged = (q: (typeof kept)[number]) =>
+    wantedOptions.get(q.slug) === optionsSignature(q.options)
+  return {
+    removedChapters: chapters.filter((c) => !wantedChapters.has(c.slug)),
+    removedQuestions: questions
+      .filter((q) => !wantedOptions.has(q.slug))
+      .map(({ id, slug, text }) => ({ id, slug, text })),
+    changedOptions: kept.filter((q) => !isUnchanged(q)).map((q) => q.id),
+    unchangedOptions: new Set(kept.filter(isUnchanged).map((q) => q.slug)),
+  }
+}
+
+/** Questions (row ids) an unfinished exam containing them can't be scored by. */
+function invalidatedQuestions(diff: ContentDiff): Array<string> {
+  return [...diff.removedQuestions.map((q) => q.id), ...diff.changedOptions]
 }
 
 /**
- * Writes one quiz (header and content) over what is stored for its id.
- * Never call it for an id owned by someone else: the caller checks that.
+ * Writes one quiz (header and content) over what is stored for its id, which
+ * must be free or already `ownerId`'s (null: built-in); throws otherwise.
  */
 export async function upsertQuizContent(
   tx: Transaction,
   data: Quiz,
   ownerId: string | null,
 ): Promise<{ questionCount: number; optionsChanged: number }> {
-  // The rows the quiz maps to (the same mapping Quiz access reads back).
+  const stored = await tx
+    .select({ ownerId: quiz.ownerId })
+    .from(quiz)
+    .where(eq(quiz.id, data.id))
+    // No key update: users' attempt inserts (foreign key checks) don't wait.
+    .for('no key update')
+  const current = stored.at(0)
+  if (current && current.ownerId !== ownerId) {
+    throw new Error(
+      `Quiz id "${data.id}" is taken by a quiz of another owner, which is never written over; use another id.`,
+    )
+  }
   const rows = toQuizRows(data, ownerId)
+  return writeContent(tx, rows, await diffContent(tx, rows))
+}
+
+async function writeContent(
+  tx: Transaction,
+  rows: QuizRows,
+  diff: ContentDiff,
+): Promise<{ questionCount: number; optionsChanged: number }> {
   const values = rows.quiz
+  const quizId = values.id
+  const written = (Object.keys(values) as Array<keyof typeof values>)
+    .filter((key) => key !== 'id')
+    .map((key) => quiz[key])
   await tx
     .insert(quiz)
     .values(values)
@@ -118,10 +133,12 @@ export async function upsertQuizContent(
       target: quiz.id,
       set: { ...values, updatedAt: new Date() },
       // Only a real change touches the row (and its updated_at).
-      setWhere: sql`(${quiz.ownerId}, ${quiz.title}, ${quiz.description}, ${quiz.examQuestionCount}, ${quiz.examMinutes}, ${quiz.examPassPercent}) IS DISTINCT FROM (${excluded('owner_id')}, ${excluded('title')}, ${excluded('description')}, ${excluded('exam_question_count')}, ${excluded('exam_minutes')}, ${excluded('exam_pass_percent')})`,
+      setWhere: sql`(${sql.join(written, sql`, `)}) IS DISTINCT FROM (${sql.join(
+        written.map((column) => excluded(column.name)),
+        sql`, `,
+      )})`,
     })
 
-  // --- Chapters -----------------------------------------------------------
   // Numbers are unique per quiz. When any chapter is renumbered (or removed),
   // move the existing numbers out of the way first so chapters can be
   // renumbered in any order. Not on every run: changing a number takes a lock
@@ -130,18 +147,18 @@ export async function upsertQuizContent(
   const existingChapters = await tx
     .select({ slug: chapter.slug, number: chapter.number })
     .from(chapter)
-    .where(eq(chapter.quizId, data.id))
+    .where(eq(chapter.quizId, quizId))
   if (existingChapters.some((c) => wantedNumbers.get(c.slug) !== c.number)) {
     await tx
       .update(chapter)
       .set({ number: sql`-${chapter.number} - 1` })
-      .where(eq(chapter.quizId, data.id))
+      .where(eq(chapter.quizId, quizId))
   }
   const chapterRows = await tx
     .insert(chapter)
     .values(
       rows.chapters.map(({ slug, number, title }) => ({
-        quizId: data.id,
+        quizId,
         slug,
         number,
         title,
@@ -154,7 +171,6 @@ export async function upsertQuizContent(
     .returning({ id: chapter.id, slug: chapter.slug })
   const chapterIds = new Map(chapterRows.map((row) => [row.slug, row.id]))
 
-  // --- Questions ----------------------------------------------------------
   const questions = rows.chapters.flatMap((c) =>
     c.questions.map((q) => ({ chapterSlug: c.slug, q })),
   )
@@ -162,7 +178,7 @@ export async function upsertQuizContent(
     .insert(question)
     .values(
       questions.map(({ chapterSlug, q }) => ({
-        quizId: data.id,
+        quizId,
         chapterId: chapterIds.get(chapterSlug) as string,
         slug: q.slug,
         position: q.position,
@@ -181,9 +197,26 @@ export async function upsertQuizContent(
     })
     .returning({ id: question.id, slug: question.slug })
   const questionIds = new Map(questionRows.map((row) => [row.slug, row.id]))
+
+  // Before the questions go: their cascade would take an exam's questions
+  // and leave the exam itself behind.
+  const invalidated = invalidatedQuestions(diff)
+  if (invalidated.length > 0) {
+    await tx
+      .delete(examSession)
+      .where(
+        inArray(
+          examSession.id,
+          tx
+            .select({ id: examSessionQuestion.sessionId })
+            .from(examSessionQuestion)
+            .where(inArray(examSessionQuestion.questionId, invalidated)),
+        ),
+      )
+  }
   await tx.delete(question).where(
     and(
-      eq(question.quizId, data.id),
+      eq(question.quizId, quizId),
       notInArray(
         question.id,
         questionRows.map((row) => row.id),
@@ -195,7 +228,7 @@ export async function upsertQuizContent(
   // above, so the cascade does not take it (and its flags) along.
   await tx.delete(chapter).where(
     and(
-      eq(chapter.quizId, data.id),
+      eq(chapter.quizId, quizId),
       notInArray(
         chapter.id,
         chapterRows.map((row) => row.id),
@@ -203,63 +236,25 @@ export async function upsertQuizContent(
     ),
   )
 
-  // --- Options ------------------------------------------------------------
   // Replaced per question, and only where they differ: rewriting them in place
   // could collide with the unique option text while options swap places.
-  const existingOptions = await tx
-    .select({
-      questionId: questionOption.questionId,
-      position: questionOption.position,
-      text: questionOption.text,
-      isCorrect: questionOption.isCorrect,
-    })
-    .from(questionOption)
-    .innerJoin(question, eq(question.id, questionOption.questionId))
-    .where(eq(question.quizId, data.id))
-  const existingByQuestion = new Map<
-    string,
-    Array<(typeof existingOptions)[number]>
-  >()
-  for (const option of existingOptions) {
-    const list = existingByQuestion.get(option.questionId) ?? []
-    list.push(option)
-    existingByQuestion.set(option.questionId, list)
-  }
-
-  const changed: Array<string> = []
-  const inserts: Array<typeof questionOption.$inferInsert> = []
-  for (const { q } of questions) {
-    const questionId = questionIds.get(q.slug) as string
-    const wanted = q.options.map((option) => ({ questionId, ...option }))
-    const before = (existingByQuestion.get(questionId) ?? []).sort(
-      (a, b) => a.position - b.position,
-    )
-    if (optionsSignature(before) === optionsSignature(wanted)) continue
-    if (before.length > 0) changed.push(questionId)
-    inserts.push(...wanted)
-  }
-  if (changed.length > 0) {
-    await tx
-      .delete(examSession)
-      .where(
-        inArray(
-          examSession.id,
-          tx
-            .select({ id: examSessionQuestion.sessionId })
-            .from(examSessionQuestion)
-            .where(inArray(examSessionQuestion.questionId, changed)),
-        ),
-      )
+  if (diff.changedOptions.length > 0) {
     await tx
       .delete(questionOption)
-      .where(inArray(questionOption.questionId, changed))
+      .where(inArray(questionOption.questionId, diff.changedOptions))
   }
+  const inserts = questions.flatMap(({ q }) => {
+    if (diff.unchangedOptions.has(q.slug)) return []
+    const questionId = questionIds.get(q.slug) as string
+    return q.options.map((option) => ({ questionId, ...option }))
+  })
   if (inserts.length > 0) await tx.insert(questionOption).values(inserts)
 
-  return { questionCount: questions.length, optionsChanged: changed.length }
+  return {
+    questionCount: questions.length,
+    optionsChanged: diff.changedOptions.length,
+  }
 }
-
-// --- Save from the quiz assistant -------------------------------------------
 
 /** What a Save would take away from the owner's progress on the quiz. */
 export interface SaveImpact {
@@ -278,91 +273,29 @@ export type SaveOutcome =
   | { status: 'not-found' }
   | { status: 'quiz-limit' }
 
-/** A personal quiz of the user, as the quiz assistant starts from it. */
-export interface EditableQuiz {
-  quiz: Quiz
-  /** ISO time of the last change: Save is refused if it has moved on. */
-  updatedAt: string
-}
-
-export async function findEditableQuiz(
-  quizId: string,
-  userId: string,
-): Promise<EditableQuiz | null> {
-  const rows = await db
-    .select({ updatedAt: quiz.updatedAt })
-    .from(quiz)
-    .where(and(eq(quiz.id, quizId), eq(quiz.ownerId, userId)))
-  const row = rows.at(0)
-  if (!row) return null
-  const data = await findQuiz(quizId, userId)
-  if (!data) return null
-  return { quiz: data, updatedAt: row.updatedAt.toISOString() }
-}
-
 async function impactOf(
   tx: Transaction,
-  data: Quiz,
-  userId: string,
+  quizId: string,
+  diff: ContentDiff,
 ): Promise<SaveImpact> {
-  const keptChapters = new Set(data.chapters.map((c) => c.id))
-  const kept = new Map(
-    data.chapters.flatMap((c) => c.questions.map((q) => [q.id, q] as const)),
-  )
-
-  const chapters = await tx
-    .select({ id: chapter.id, slug: chapter.slug, title: chapter.title })
-    .from(chapter)
-    .where(eq(chapter.quizId, data.id))
-  const removedChapterRows = chapters.filter((c) => !keptChapters.has(c.slug))
-  const attempts = removedChapterRows.length
+  const removedChapterIds = diff.removedChapters.map((c) => c.id)
+  const removedQuestionIds = diff.removedQuestions.map((q) => q.id)
+  const invalidated = invalidatedQuestions(diff)
+  const attempts = removedChapterIds.length
     ? await tx
         .select({ chapterId: quizAttempt.chapterId, n: count() })
         .from(quizAttempt)
-        .where(
-          inArray(
-            quizAttempt.chapterId,
-            removedChapterRows.map((c) => c.id),
-          ),
-        )
+        .where(inArray(quizAttempt.chapterId, removedChapterIds))
         .groupBy(quizAttempt.chapterId)
     : []
-  const attemptsByChapter = new Map(attempts.map((a) => [a.chapterId, a.n]))
-
-  const questions = await tx.query.question.findMany({
-    where: { quizId: data.id },
-    columns: { id: true, slug: true, text: true },
-    with: { options: { orderBy: { position: 'asc' } } },
-  })
-  const removedQuestionRows = questions.filter((q) => !kept.has(q.slug))
-  const flags = removedQuestionRows.length
+  const flags = removedQuestionIds.length
     ? await tx
         .select({ questionId: questionFlag.questionId, n: count() })
         .from(questionFlag)
-        .where(
-          inArray(
-            questionFlag.questionId,
-            removedQuestionRows.map((q) => q.id),
-          ),
-        )
+        .where(inArray(questionFlag.questionId, removedQuestionIds))
         .groupBy(questionFlag.questionId)
     : []
-  const flagsByQuestion = new Map(flags.map((f) => [f.questionId, f.n]))
-
-  const rows = toQuizRows(data, userId)
-  const wantedOptions = new Map(
-    rows.chapters.flatMap((c) =>
-      c.questions.map((q) => [q.slug, optionsSignature(q.options)] as const),
-    ),
-  )
-  const touched = questions
-    .filter(
-      (q) =>
-        !kept.has(q.slug) ||
-        wantedOptions.get(q.slug) !== optionsSignature(q.options),
-    )
-    .map((q) => q.id)
-  const sessions = touched.length
+  const sessions = invalidated.length
     ? await tx
         .select({ id: examSession.id })
         .from(examSession)
@@ -372,20 +305,21 @@ async function impactOf(
         )
         .where(
           and(
-            eq(examSession.quizId, data.id),
-            inArray(examSessionQuestion.questionId, touched),
+            eq(examSession.quizId, quizId),
+            inArray(examSessionQuestion.questionId, invalidated),
           ),
         )
         .limit(1)
     : []
-
+  const attemptsByChapter = new Map(attempts.map((a) => [a.chapterId, a.n]))
+  const flagsByQuestion = new Map(flags.map((f) => [f.questionId, f.n]))
   return {
-    removedChapters: removedChapterRows.map((c) => ({
+    removedChapters: diff.removedChapters.map((c) => ({
       id: c.slug,
       title: c.title,
       attempts: attemptsByChapter.get(c.id) ?? 0,
     })),
-    removedQuestions: removedQuestionRows.map((q) => ({
+    removedQuestions: diff.removedQuestions.map((q) => ({
       id: q.slug,
       text: q.text,
       flags: flagsByQuestion.get(q.id) ?? 0,
@@ -422,10 +356,8 @@ export async function saveOwnQuiz(
     const created = { ...data, id: newQuizId(data.title) }
     const withinLimit = await db.transaction(async (tx) => {
       // One new quiz per user at a time, so parallel Saves can't all pass the
-      // cap (the lock ends with the transaction).
-      await tx.execute(
-        sql`select pg_advisory_xact_lock(hashtext(${`new-quiz:${userId}`}))`,
-      )
+      // cap.
+      await lockUntilCommit(tx, `new-quiz:${userId}`)
       const owned = await tx.$count(quiz, eq(quiz.ownerId, userId))
       if (owned >= QUIZ_LIMITS.personalQuizzes) return false
       // A plain insert first: an id clash fails instead of writing over
@@ -453,11 +385,13 @@ export async function saveOwnQuiz(
       if (current.updatedAt.getTime() !== baseTime)
         return { status: 'conflict' }
 
+      const quizRows = toQuizRows(data, userId)
+      const diff = await diffContent(tx, quizRows)
       if (!options.confirmed) {
-        const impact = await impactOf(tx, data, userId)
+        const impact = await impactOf(tx, data.id, diff)
         if (costsUserState(impact)) return { status: 'confirm', impact }
       }
-      await upsertQuizContent(tx, data, userId)
+      await writeContent(tx, quizRows, diff)
       // Every Save moves the time on, content-only changes too, and marks the
       // quiz as edited by its owner (an imported quiz may then be published).
       const now = new Date()
@@ -480,8 +414,6 @@ async function finish(
   if (!saved) return { status: 'not-found' }
   return { status: 'saved', created, ...saved }
 }
-
-// --- Import from the Marketplace --------------------------------------------
 
 /**
  * Imports a published quiz (not the user's own) as a personal quiz of the

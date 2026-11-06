@@ -169,13 +169,12 @@ export function useUserId(): string | undefined {
   })
 }
 
-/** Whether someone is signed in. */
 export function useSignedIn(): boolean {
   return useUserId() !== undefined
 }
 
 /** The user's state for a quiz; undefined until loaded, empty for visitors. */
-export function useQuizUserData(quizId: string): QuizUserData | undefined {
+function useQuizUserData(quizId: string): QuizUserData | undefined {
   const userId = useUserId()
   const key = userId ? cacheKey(userId, quizId) : undefined
   const sub = useCallback(
@@ -202,7 +201,7 @@ export function useFlags(quizId: string): ReadonlySet<string> | undefined {
 }
 
 /** The user's adjustments of a quiz's mock exam settings, or undefined until loaded. */
-export function useExamOverrides(quizId: string): ExamOverrides | undefined {
+function useExamOverrides(quizId: string): ExamOverrides | undefined {
   return useQuizUserData(quizId)?.examOverrides
 }
 
@@ -226,8 +225,6 @@ export function readFlags(
   if (!userId) return new Set()
   return new Set(entries.get(cacheKey(userId, quizId))?.data?.flags)
 }
-
-// --- Changes ----------------------------------------------------------------
 
 /**
  * Flags or unflags a question. Signed-in users only. Does nothing until the

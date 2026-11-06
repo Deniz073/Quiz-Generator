@@ -1,9 +1,8 @@
 import { Link, createFileRoute, notFound } from '@tanstack/react-router'
-import { ListingActions } from '#/components/ListingActions'
+import { ListingActions, ListingByline } from '#/components/ListingActions'
 import { NotFound } from '#/components/NotFound'
 import { StudySession } from '#/components/StudySession'
 import { Badge } from '#/components/ui/badge'
-import { formatImports } from '#/domain/marketplace'
 import { backLinkClasses } from '#/lib/button-classes'
 import { fetchPreview } from '#/lib/marketplace-api'
 import { pageTitle } from '#/lib/page-title'
@@ -47,11 +46,7 @@ function PreviewPage() {
             <Badge variant="outline">Preview</Badge>
           </h1>
           <p className="mt-1 text-muted-foreground">{quiz.description}</p>
-          <p className="mt-2 text-sm text-muted-foreground tabular-nums">
-            By {listing.publisherName} &middot; {listing.chapterCount}
-            &nbsp;chapters &middot; {listing.questionCount}&nbsp;questions
-            &middot; {formatImports(listing.importCount)}
-          </p>
+          <ListingByline listing={listing} className="mt-2" />
         </div>
         <div className="shrink-0">
           <ListingActions listing={listing} />

@@ -47,9 +47,11 @@ import {
   TraceTitle,
 } from '#/components/ui/trace'
 import type { ApiKeyProvider } from '#/lib/api-keys-schema'
-import { providerLabels } from '#/lib/api-keys-schema'
+import { providerInfo } from '#/lib/api-keys-schema'
 import { createQuizClientTools } from '#/lib/assistant-client-tools'
 import type { WorkingCopyStore } from '#/lib/assistant-client-tools'
+import { withOutline, withoutOutline } from '#/lib/assistant-tools'
+import type { QuizToolName } from '#/lib/assistant-tools'
 import { outline } from '#/lib/working-copy'
 
 /*
@@ -59,14 +61,6 @@ import { outline } from '#/lib/working-copy'
  * then on, so the conversation the model sees never changes after the fact.
  * The chat shows only the user's text.
  */
-
-const OUTLINE_SEPARATOR = '\n\n<quiz_outline>\n'
-
-/** The user's own text of a message we sent: everything before the outline. */
-function userText(content: string): string {
-  const at = content.lastIndexOf(OUTLINE_SEPARATOR)
-  return at === -1 ? content : content.slice(0, at)
-}
 
 /** Chat replies with **bold** and `code` shown as such; everything else as text. */
 function ReplyText({ text }: { text: string }) {
@@ -135,9 +129,7 @@ export function AssistantChat({
   const started = messages.length > 0
 
   function send(text: string) {
-    void sendMessage(
-      `${text}${OUTLINE_SEPARATOR}${outline(store.get().quiz)}\n</quiz_outline>`,
-    )
+    void sendMessage(withOutline(text, outline(store.get().quiz)))
   }
 
   function submit(event?: FormEvent) {
@@ -347,14 +339,14 @@ function ProviderPicker({
   if (providers.length < 2 || locked) {
     return (
       <span className="px-1.5 text-xs text-muted-foreground">
-        {providerLabels[provider]}
+        {providerInfo[provider].label}
       </span>
     )
   }
   return (
     <DropdownMenu>
       <DropdownMenuTrigger render={<InputGroupButton />}>
-        {providerLabels[provider]}
+        {providerInfo[provider].label}
         <ChevronDownIcon />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start">
@@ -364,7 +356,7 @@ function ProviderPicker({
         >
           {providers.map((p) => (
             <DropdownMenuRadioItem key={p} value={p}>
-              {providerLabels[p]}
+              {providerInfo[p].label}
             </DropdownMenuRadioItem>
           ))}
         </DropdownMenuRadioGroup>
@@ -383,7 +375,9 @@ function ChatMessage({
 }) {
   if (message.role === 'user') {
     const text = message.parts
-      .flatMap((part) => (part.type === 'text' ? [userText(part.content)] : []))
+      .flatMap((part) =>
+        part.type === 'text' ? [withoutOutline(part.content)] : [],
+      )
       .join('\n')
     return (
       <Message align="end">
@@ -404,7 +398,6 @@ function ChatMessage({
     if (part.type === 'tool-result') results.set(part.toolCallId, part)
   }
 
-  // One Trace per run of activity; text ends a run.
   const blocks: Array<ReactNode> = []
   let run: Array<ReactNode> = []
   const flush = () => {
@@ -479,18 +472,20 @@ function toolInput(call: ToolCall): Record<string, unknown> {
 
 type ToolArgs = Record<string, unknown>
 
-/** How the chat shows a call of each tool (the quiz tools and the web tools). */
+interface ToolDisplay {
+  running: string
+  done: string
+  icon: ReactNode
+  detail?: (input: ToolArgs, output: ToolArgs | undefined) => string | undefined
+}
+
+/**
+ * How the chat shows a call of each tool: every quiz tool, and the providers'
+ * web tools (see #/server/quiz-assistant).
+ */
 const TOOL_DISPLAY: Record<
-  string,
-  {
-    running: string
-    done: string
-    icon: ReactNode
-    detail?: (
-      input: ToolArgs,
-      output: ToolArgs | undefined,
-    ) => string | undefined
-  }
+  QuizToolName | 'web_search' | 'web_fetch',
+  ToolDisplay
 > = {
   get_outline: {
     running: 'Reading the quiz',
@@ -583,7 +578,9 @@ function ToolRow({
     call.state === 'error' || result?.state === 'error' || output?.ok === false
   const finished =
     failed || output !== undefined || result !== undefined || !active
-  const display = TOOL_DISPLAY[call.name] ?? {
+  const display: ToolDisplay = (
+    TOOL_DISPLAY as Partial<Record<string, ToolDisplay>>
+  )[call.name] ?? {
     running: `Running ${call.name}`,
     done: `Ran ${call.name}`,
     icon: <PencilIcon />,

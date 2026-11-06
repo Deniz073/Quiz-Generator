@@ -1,4 +1,9 @@
-/** Keys per display position: 1/A picks the first option shown, 2/B the second. */
+import type { MAX_OPTIONS } from '#/quizzes/rules'
+
+/**
+ * Keys per display position: 1/A picks the first option shown, 2/B the
+ * second. One per option a question may have.
+ */
 export const OPTION_KEYS = [
   { digit: '1', letter: 'A' },
   { digit: '2', letter: 'B' },
@@ -6,7 +11,7 @@ export const OPTION_KEYS = [
   { digit: '4', letter: 'D' },
   { digit: '5', letter: 'E' },
   { digit: '6', letter: 'F' },
-] as const
+] as const satisfies { length: typeof MAX_OPTIONS }
 
 /** Letter badge for the option at `position` (empty past the supported six). */
 export function getOptionLetter(position: number): string {

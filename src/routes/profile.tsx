@@ -21,9 +21,10 @@ import {
 } from '#/components/ui/field'
 import { Input } from '#/components/ui/input'
 import {
-  apiKeyField,
+  API_KEY_PROVIDERS,
   apiKeysSchema,
-  providerLabels,
+  emptyApiKeys,
+  providerInfo,
 } from '#/lib/api-keys-schema'
 import type {
   ApiKeyProvider,
@@ -45,28 +46,6 @@ export const Route = createFileRoute('/profile')({
   component: ProfilePage,
 })
 
-const fields = [
-  {
-    provider: 'claude',
-    description: 'Your Anthropic API key.',
-    createLabel: 'Create one in the Claude Console',
-    createUrl: 'https://platform.claude.com/settings/keys',
-  },
-  {
-    provider: 'codex',
-    description: 'Your OpenAI API key.',
-    createLabel: 'Create one on the OpenAI platform',
-    createUrl: 'https://platform.openai.com/api-keys',
-  },
-] as const satisfies ReadonlyArray<{
-  provider: ApiKeyProvider
-  description: string
-  createLabel: string
-  createUrl: string
-}>
-
-const emptyKeys: ApiKeys = { claudeApiKey: '', codexApiKey: '' }
-
 function savedKeyText(status: ApiKeyStatus): string | null {
   if (status.state === 'set') return `Saved key ending in ${status.hint}.`
   if (status.state === 'unreadable')
@@ -87,14 +66,14 @@ function ProfilePage() {
   // Write-only: the inputs start empty and never show a saved key.
   const form = useForm<ApiKeys>({
     resolver: zodResolver(apiKeysSchema),
-    defaultValues: emptyKeys,
+    defaultValues: emptyApiKeys,
   })
 
   async function onSubmit(data: ApiKeys) {
     setStatus(null)
     try {
       await saveApiKeys({ data })
-      form.reset(emptyKeys)
+      form.reset(emptyApiKeys)
       await router.invalidate()
       setStatus('saved')
     } catch (error) {
@@ -142,75 +121,75 @@ function ProfilePage() {
                   Saving API keys is not available right now.
                 </FieldError>
               )}
-              {fields.map(
-                ({ provider, description, createLabel, createUrl }) => {
-                  const name = apiKeyField[provider]
-                  const label = `${providerLabels[provider]} API key`
-                  const keyStatus = keysStatus[provider]
-                  const savedText = savedKeyText(keyStatus)
-                  return (
-                    <Controller
-                      key={name}
-                      name={name}
-                      control={form.control}
-                      render={({ field, fieldState }) => (
-                        <Field data-invalid={fieldState.invalid}>
-                          <FieldLabel htmlFor={name}>{label}</FieldLabel>
-                          <div className="flex gap-2">
-                            <Input
-                              {...field}
-                              id={name}
-                              type="password"
-                              autoComplete="off"
-                              spellCheck={false}
-                              disabled={disabled}
-                              placeholder={
-                                keyStatus.state === 'set'
-                                  ? keyStatus.hint
-                                  : undefined
-                              }
-                              aria-invalid={fieldState.invalid}
-                            />
-                            {keyStatus.state !== 'none' && (
-                              <Button
-                                type="button"
-                                variant="outline"
-                                disabled={removing !== null}
-                                onClick={() => onRemove(provider)}
-                              >
-                                {removing === provider ? 'Removing…' : 'Remove'}
-                              </Button>
-                            )}
-                          </div>
-                          <FieldDescription>
-                            {description}{' '}
-                            <a
-                              href={createUrl}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="inline-flex items-center gap-0.5 underline underline-offset-4 hover:text-foreground"
+              {API_KEY_PROVIDERS.map((provider) => {
+                const {
+                  field: name,
+                  description,
+                  createLabel,
+                  createUrl,
+                } = providerInfo[provider]
+                const label = `${providerInfo[provider].label} API key`
+                const keyStatus = keysStatus[provider]
+                const savedText = savedKeyText(keyStatus)
+                return (
+                  <Controller
+                    key={name}
+                    name={name}
+                    control={form.control}
+                    render={({ field, fieldState }) => (
+                      <Field data-invalid={fieldState.invalid}>
+                        <FieldLabel htmlFor={name}>{label}</FieldLabel>
+                        <div className="flex gap-2">
+                          <Input
+                            {...field}
+                            id={name}
+                            type="password"
+                            autoComplete="off"
+                            spellCheck={false}
+                            disabled={disabled}
+                            placeholder={
+                              keyStatus.state === 'set'
+                                ? keyStatus.hint
+                                : undefined
+                            }
+                            aria-invalid={fieldState.invalid}
+                          />
+                          {keyStatus.state !== 'none' && (
+                            <Button
+                              type="button"
+                              variant="outline"
+                              disabled={removing !== null}
+                              onClick={() => onRemove(provider)}
                             >
-                              {createLabel}
-                              <ExternalLinkIcon
-                                aria-hidden
-                                className="size-3"
-                              />
-                              <span className="sr-only">
-                                {' '}
-                                (opens in a new tab)
-                              </span>
-                            </a>
-                            . {savedText}
-                          </FieldDescription>
-                          {fieldState.invalid && (
-                            <FieldError errors={[fieldState.error]} />
+                              {removing === provider ? 'Removing…' : 'Remove'}
+                            </Button>
                           )}
-                        </Field>
-                      )}
-                    />
-                  )
-                },
-              )}
+                        </div>
+                        <FieldDescription>
+                          {description}{' '}
+                          <a
+                            href={createUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="inline-flex items-center gap-0.5 underline underline-offset-4 hover:text-foreground"
+                          >
+                            {createLabel}
+                            <ExternalLinkIcon aria-hidden className="size-3" />
+                            <span className="sr-only">
+                              {' '}
+                              (opens in a new tab)
+                            </span>
+                          </a>
+                          . {savedText}
+                        </FieldDescription>
+                        {fieldState.invalid && (
+                          <FieldError errors={[fieldState.error]} />
+                        )}
+                      </Field>
+                    )}
+                  />
+                )
+              })}
             </FieldGroup>
           </CardContent>
           <CardFooter className="flex items-center gap-3">

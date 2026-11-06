@@ -1,11 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link } from '@tanstack/react-router'
-import type { Answer } from '#/lib/quiz-plan'
+import type { Answer, PlannedQuestion } from '#/lib/quiz-plan'
 import { buttonClasses } from '#/lib/button-classes'
 import { formatChapter } from '#/lib/chapter-label'
 import { isPassed, toPercent } from '#/domain/progress'
-import { getCorrectIndexes } from '#/quizzes/question'
-import { AnswerList } from '#/components/AnswerList'
+import { AnswerList, CorrectAnswers } from '#/components/AnswerList'
 import { FilterButton } from '#/components/FilterButton'
 
 type ReviewFilter = 'incorrect' | 'all' | 'flagged'
@@ -22,7 +21,7 @@ interface Props {
   /** Omit to hide the retry button (e.g. nothing left to practice). */
   onRetry?: () => void
   /** Starts a practice round with only the questions answered wrong. */
-  onRetryIncorrect: () => void
+  onRetryIncorrect: (items: Array<PlannedQuestion>) => void
 }
 
 export function ResultsScreen({
@@ -98,7 +97,7 @@ export function ResultsScreen({
         {wrong.length > 0 ? (
           <button
             type="button"
-            onClick={onRetryIncorrect}
+            onClick={() => onRetryIncorrect(wrong.map((answer) => answer.item))}
             className={buttonClasses('secondary')}
           >
             Retry incorrect ({wrong.length})
@@ -160,7 +159,6 @@ export function ResultsScreen({
         {shown.map(
           ({ index, item, chosen, correct: answeredCorrectly, flagged }) => {
             const { question, chapter } = item
-            const correct = getCorrectIndexes(question)
             const chosenSorted = [...chosen].sort((x, y) => x - y)
             const showStatus = filter !== 'incorrect'
             return (
@@ -208,13 +206,7 @@ export function ResultsScreen({
                     }
                   />
                 )}
-                <AnswerList
-                  label={
-                    correct.length > 1 ? 'Correct answers' : 'Correct answer'
-                  }
-                  labelClass="text-emerald-700 dark:text-emerald-400"
-                  texts={correct.map((i) => question.options[i])}
-                />
+                <CorrectAnswers question={question} />
                 <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">
                   {question.explanation}
                 </p>

@@ -1,4 +1,5 @@
 import { Skeleton } from '#/components/ui/skeleton'
+import { ASSISTANT_PAGE_HEIGHT, ASSISTANT_PANEL_HEIGHT } from '#/lib/page-width'
 
 /*
  * What the quiz assistant's page shows while it loads: the same layout as
@@ -8,7 +9,7 @@ import { Skeleton } from '#/components/ui/skeleton'
 export function QuizAssistantSkeleton() {
   return (
     <div
-      className="flex flex-col gap-3 lg:h-[calc(100dvh-8.5rem)]"
+      className={`flex flex-col gap-3 ${ASSISTANT_PAGE_HEIGHT}`}
       aria-busy="true"
       aria-label="Loading the quiz assistant"
     >
@@ -47,7 +48,9 @@ export function QuizAssistantSkeleton() {
           ))}
         </section>
 
-        <section className="flex h-[calc(100dvh-15rem)] min-h-0 flex-col overflow-hidden rounded-xl border bg-background lg:h-auto">
+        <section
+          className={`flex ${ASSISTANT_PANEL_HEIGHT} min-h-0 flex-col overflow-hidden rounded-xl border bg-background lg:h-auto`}
+        >
           <div className="flex flex-1 flex-col gap-3 p-4">
             <Skeleton className="h-5 w-32" />
             <Skeleton className="h-4 w-full" />

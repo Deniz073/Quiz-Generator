@@ -1,6 +1,6 @@
 import { createServerFn } from '@tanstack/react-start'
 import { z } from 'zod'
-import { idInput } from '#/lib/api-inputs'
+import { examConfigInput, idInput } from '#/lib/api-inputs'
 import type { ExamOverrides } from '#/domain/exam-settings'
 import { areValidOverrides } from '#/domain/exam-settings'
 import type { Attempt, QuizProgress } from '#/domain/progress'
@@ -86,18 +86,12 @@ export const setQuestionFlag = createServerFn({ method: 'POST' })
     await setFlag(userId, found.id, data.flagged)
   })
 
-const setting = z.number().int().optional()
-
 /** Saves the user's overrides of a quiz's mock exam defaults ({} resets them). */
 export const saveExamOverrides = createServerFn({ method: 'POST' })
   .validator(
     z.object({
       quizId: idInput,
-      overrides: z.object({
-        questionCount: setting,
-        minutes: setting,
-        passPercent: setting,
-      }),
+      overrides: examConfigInput.partial(),
     }),
   )
   .handler(async ({ data }) => {

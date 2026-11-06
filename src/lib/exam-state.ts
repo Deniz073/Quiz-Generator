@@ -2,7 +2,7 @@ import type { Answer, PlannedQuestion } from '#/lib/quiz-plan'
 import type { ExamConfig, Quiz } from '#/quizzes/types'
 import { buildAnswers, buildQuizPlan } from '#/lib/quiz-plan'
 import { examDeadline } from '#/domain/mock-exam'
-import { getCorrectIndexes, togglePick } from '#/quizzes/question'
+import { isCompletePick, isIndex, togglePick } from '#/quizzes/question'
 
 /*
  * Mock exam state. Unlike practice there is no feedback: every pick stays
@@ -21,7 +21,6 @@ export interface ExamState {
   flagged: ReadonlyArray<number>
   /** Question being shown (or the one "Back to questions" returns to). */
   current: number
-  /** Showing the review screen instead of a question. */
   reviewing: boolean
   /** Final: picks are locked and the results are shown. */
   submitted: boolean
@@ -42,7 +41,6 @@ export type ExamAction =
   | { type: 'review' }
   /** Leaves the review screen for the current question. */
   | { type: 'back' }
-  /** Flags or unflags the current question. */
   | { type: 'flag' }
   /** Ends the exam now (user or timeout). Unanswered questions count as wrong. */
   | { type: 'submit' }
@@ -58,7 +56,7 @@ export type ExamAction =
 
 export type QuestionStatus = 'answered' | 'incomplete' | 'unanswered'
 
-export function createExamState(
+function createExamState(
   plan: ReadonlyArray<PlannedQuestion>,
   startedAt: number,
   minutes: number,
@@ -106,7 +104,7 @@ export function examReducer(state: ExamState, action: ExamAction): ExamState {
       }
     }
     case 'goto':
-      if (!isValidIndex(state, action.index)) return state
+      if (!isIndex(action.index, state.plan.length)) return state
       return { ...state, current: action.index, reviewing: false }
     case 'prev':
       if (state.current === 0) return state
@@ -135,17 +133,11 @@ export function examReducer(state: ExamState, action: ExamAction): ExamState {
   }
 }
 
-function isValidIndex(state: ExamState, index: number): boolean {
-  return Number.isInteger(index) && index >= 0 && index < state.plan.length
-}
-
-export function getStatus(state: ExamState, index: number): QuestionStatus {
+function getStatus(state: ExamState, index: number): QuestionStatus {
   const item = state.plan.at(index)
-  const picked = state.picks.at(index)?.length ?? 0
-  if (!item || picked === 0) return 'unanswered'
-  return picked === getCorrectIndexes(item.question).length
-    ? 'answered'
-    : 'incomplete'
+  const picks = state.picks.at(index) ?? []
+  if (!item || picks.length === 0) return 'unanswered'
+  return isCompletePick(item.question, picks) ? 'answered' : 'incomplete'
 }
 
 export function getStatuses(state: ExamState): Array<QuestionStatus> {

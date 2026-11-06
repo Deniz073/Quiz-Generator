@@ -1,7 +1,7 @@
 import type { Answer, PlannedQuestion } from '#/lib/quiz-plan'
 import { buildAnswers } from '#/lib/quiz-plan'
 import {
-  getCorrectIndexes,
+  isCompletePick,
   isMultipleAnswer,
   togglePick,
 } from '#/quizzes/question'
@@ -61,7 +61,6 @@ export function quizReducer(state: QuizState, action: QuizAction): QuizState {
       if (!item || isSubmitted(state)) return state
       const { question } = item
       if (!isMultipleAnswer(question)) {
-        // A single answer is locked in by the pick itself.
         const pick = togglePick(question, [], action.originalIndex)
         return { ...state, answers: [...state.answers, pick] }
       }
@@ -98,19 +97,17 @@ export function isSubmitted(state: QuizState): boolean {
   return state.answers.length > state.current
 }
 
-/** Picks to show for the current question: the submitted ones, else the draft. */
 export function getSelected(state: QuizState): ReadonlyArray<number> {
   return state.answers.at(state.current) ?? state.draft
 }
 
-/** A multiple-answer draft has exactly as many picks as there are answers. */
 export function canCheck(state: QuizState): boolean {
   const item = getCurrentItem(state)
   return (
     item !== undefined &&
     !isSubmitted(state) &&
     isMultipleAnswer(item.question) &&
-    state.draft.length === getCorrectIndexes(item.question).length
+    isCompletePick(item.question, state.draft)
   )
 }
 

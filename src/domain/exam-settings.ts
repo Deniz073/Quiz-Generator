@@ -5,16 +5,14 @@
  * later still applies them to everything the user didn't adjust). Visitors
  * always get the defaults.
  *
- * Pure rules, shared by the client, the server functions and the database
- * schema (its check constraint): relative imports only, nothing server-side.
+ * Pure rules, shared by the client and the server functions: relative
+ * imports only, nothing server-side.
  */
 
 import type { ExamConfig } from '../quizzes/types'
-import { getExamLimits, isInRange } from '../quizzes/validate'
+import { EXAM_SETTINGS, getExamLimits, isInRange } from '../quizzes/rules'
 
 export type ExamOverrides = Partial<ExamConfig>
-
-const KEYS = ['questionCount', 'minutes', 'passPercent'] as const
 
 /**
  * The settings in effect: the quiz's defaults with the user's valid overrides
@@ -44,7 +42,7 @@ export function areValidOverrides(
   totalQuestions: number,
 ): boolean {
   const limits = getExamLimits(totalQuestions)
-  return KEYS.every(
+  return EXAM_SETTINGS.every(
     (key) =>
       overrides[key] === undefined || isInRange(overrides[key], limits[key]),
   )
@@ -56,7 +54,7 @@ export function toOverrides(
   config: ExamConfig,
 ): ExamOverrides {
   const overrides: ExamOverrides = {}
-  for (const key of KEYS) {
+  for (const key of EXAM_SETTINGS) {
     if (config[key] !== defaults[key]) overrides[key] = config[key]
   }
   return overrides
@@ -67,7 +65,7 @@ export function matchesExamConfig(
   config: ExamConfig,
   started: { questionCount: number; minutes: number; passPercent: number },
 ): boolean {
-  return KEYS.every((key) => config[key] === started[key])
+  return EXAM_SETTINGS.every((key) => config[key] === started[key])
 }
 
 /** "20 questions, 30 minutes, pass mark 70%". */

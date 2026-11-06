@@ -1,14 +1,13 @@
 import { Link, createFileRoute } from '@tanstack/react-router'
-import { AnswerList } from '#/components/AnswerList'
+import { CorrectAnswers } from '#/components/AnswerList'
 import { NotFound } from '#/components/NotFound'
 import { QuizPageHeader } from '#/components/QuizPageHeader'
 import { buttonClasses } from '#/lib/button-classes'
 import { formatChapter } from '#/lib/chapter-label'
-import { getFlaggedQuestions } from '#/lib/flags'
+import { FLAGGING_HINT, getFlaggedQuestions } from '#/lib/flags'
 import { pageTitle } from '#/lib/page-title'
 import { requireQuiz } from '#/lib/quiz-route'
 import { useFlags } from '#/lib/user-data'
-import { getCorrectIndexes } from '#/quizzes/question'
 
 // `flagged_` keeps this out of the flagged practice route's layout: the URL is
 // /quiz/<id>/flagged/review, but that route renders on its own.
@@ -21,7 +20,6 @@ export const Route = createFileRoute('/quiz/$quizId/flagged_/review')({
   notFoundComponent: () => <NotFound message="Quiz not found." />,
 })
 
-/** Read-only list of the flagged questions with answers and explanations. */
 function FlaggedReviewPage() {
   const quiz = Route.useLoaderData()
   const quizId = quiz.id
@@ -52,8 +50,7 @@ function FlaggedReviewPage() {
 
       {count === 0 ? (
         <p className="mt-4 text-slate-600 dark:text-slate-400">
-          No flagged questions yet. Use &ldquo;Flag for review&rdquo; during a
-          chapter or practice round to collect questions here.
+          No flagged questions yet. {FLAGGING_HINT}
         </p>
       ) : null}
 
@@ -79,28 +76,16 @@ function FlaggedReviewPage() {
                 {formatChapter(chapter)}
               </h2>
               <ol className="mt-3 flex flex-col gap-4">
-                {questions.map((question) => {
-                  const correct = getCorrectIndexes(question)
-                  return (
-                    <li
-                      key={question.id}
-                      className="rounded-lg border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900"
-                    >
-                      <p className="font-medium">{question.question}</p>
-                      <AnswerList
-                        label={
-                          correct.length > 1
-                            ? 'Correct answers'
-                            : 'Correct answer'
-                        }
-                        labelClass="text-emerald-700 dark:text-emerald-400"
-                        textClass="text-base"
-                        texts={correct.map((i) => question.options[i])}
-                      />
-                      <p className="mt-3">{question.explanation}</p>
-                    </li>
-                  )
-                })}
+                {questions.map((question) => (
+                  <li
+                    key={question.id}
+                    className="rounded-lg border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900"
+                  >
+                    <p className="font-medium">{question.question}</p>
+                    <CorrectAnswers question={question} textClass="text-base" />
+                    <p className="mt-3">{question.explanation}</p>
+                  </li>
+                ))}
               </ol>
             </section>
           ))}

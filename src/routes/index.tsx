@@ -1,11 +1,11 @@
 import { useState } from 'react'
 import { Link, createFileRoute } from '@tanstack/react-router'
-import { Search, SparklesIcon } from 'lucide-react'
+import { SparklesIcon } from 'lucide-react'
 import type { QuizSummary } from '#/lib/quiz-api'
 import { SignInBanner } from '#/components/SignInBanner'
+import { TitleSearch, filterByTitle } from '#/components/TitleSearch'
 import { Badge } from '#/components/ui/badge'
 import { Button } from '#/components/ui/button'
-import { Input } from '#/components/ui/input'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '#/components/ui/tabs'
 import { formatResult } from '#/domain/progress'
 import { fetchQuizSummaries } from '#/lib/quiz-api'
@@ -19,10 +19,7 @@ function Home() {
   const quizzes = Route.useLoaderData()
   const { user } = Route.useRouteContext()
   const [query, setQuery] = useState('')
-  const needle = query.trim().toLowerCase()
-  const matches = needle
-    ? quizzes.filter((quiz) => quiz.title.toLowerCase().includes(needle))
-    : quizzes
+  const matches = filterByTitle(quizzes, query)
   const builtIn = matches.filter((quiz) => quiz.builtIn)
   const personal = matches.filter((quiz) => !quiz.builtIn)
   // Tabs only make sense once the user has personal quizzes at all.
@@ -45,20 +42,12 @@ function Home() {
         Pick a quiz to practice chapter by chapter.
       </p>
       <SignInBanner className="mt-4" />
-      <div className="relative mt-6">
-        <Search
-          aria-hidden
-          className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground"
-        />
-        <Input
-          type="search"
-          value={query}
-          onChange={(event) => setQuery(event.target.value)}
-          placeholder="Search quizzes by name"
-          aria-label="Search quizzes by name"
-          className="h-9 pl-8"
-        />
-      </div>
+      <TitleSearch
+        value={query}
+        onChange={setQuery}
+        label="Search quizzes by name"
+        className="mt-6"
+      />
       {hasPersonal ? (
         <Tabs defaultValue="personal" className="mt-6">
           <TabsList>
@@ -87,7 +76,7 @@ function QuizList({
   quizzes,
   query,
 }: {
-  quizzes: Array<QuizSummary>
+  quizzes: ReadonlyArray<QuizSummary>
   query: string
 }) {
   if (quizzes.length === 0) {

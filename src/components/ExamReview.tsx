@@ -16,7 +16,6 @@ interface Props {
   dispatch: Dispatch<ExamAction>
 }
 
-/** Overview before submitting: counts, navigator, jump list, submit. */
 export function ExamReview({ state, secondsLeft, dispatch }: Props) {
   const { plan, flagged } = state
   const total = plan.length

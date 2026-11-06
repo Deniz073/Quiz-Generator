@@ -19,17 +19,36 @@ export const apiKeyProviderSchema = z.enum(API_KEY_PROVIDERS)
 
 export type ApiKeyProvider = z.infer<typeof apiKeyProviderSchema>
 
-/** The field of `apiKeysSchema` that holds each provider's key. */
-export const apiKeyField = {
-  claude: 'claudeApiKey',
-  codex: 'codexApiKey',
-} as const satisfies Record<ApiKeyProvider, keyof ApiKeys>
+/** Each provider as the UI shows it ("codex" is OpenAI). */
+export const providerInfo = {
+  claude: {
+    label: 'Claude',
+    field: 'claudeApiKey',
+    description: 'Your Anthropic API key.',
+    createLabel: 'Create one in the Claude Console',
+    createUrl: 'https://platform.claude.com/settings/keys',
+  },
+  codex: {
+    label: 'OpenAI',
+    field: 'codexApiKey',
+    description: 'Your OpenAI API key.',
+    createLabel: 'Create one on the OpenAI platform',
+    createUrl: 'https://platform.openai.com/api-keys',
+  },
+} as const satisfies Record<
+  ApiKeyProvider,
+  {
+    label: string
+    field: keyof ApiKeys
+    description: string
+    createLabel: string
+    createUrl: string
+  }
+>
 
-/** The provider as the UI names it ("codex" is OpenAI). */
-export const providerLabels: Record<ApiKeyProvider, string> = {
-  claude: 'Claude',
-  codex: 'OpenAI',
-}
+export const emptyApiKeys = Object.fromEntries(
+  API_KEY_PROVIDERS.map((provider) => [providerInfo[provider].field, '']),
+) as ApiKeys
 
 /** What the client may know about a saved key: never the key itself. */
 export type ApiKeyStatus =

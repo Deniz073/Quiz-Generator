@@ -4,7 +4,6 @@ import type { Quiz } from '#/quizzes/types'
 import { SignInBanner } from '#/components/SignInBanner'
 import { backLinkClasses } from '#/lib/button-classes'
 
-/** The back link to the quiz and the h1 of a page inside a quiz. */
 export function QuizPageHeader({
   quiz,
   title,

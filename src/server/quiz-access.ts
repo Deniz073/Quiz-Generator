@@ -13,8 +13,10 @@ import {
 } from 'drizzle-orm'
 import type { SQL } from 'drizzle-orm'
 import { db } from '#/db'
+import type { Executor } from '#/db'
 import { chapter, question, questionOption, quiz, user } from '#/db/schema'
-import type { ExamConfig, Question, Quiz } from '#/quizzes/types'
+import type { ExamConfig, Quiz } from '#/quizzes/types'
+import { toExamConfig, toQuiz } from '#/server/quiz-rows'
 
 /*
  * Quiz access: a quiz as a given user may see it, read from the quiz tables
@@ -54,18 +56,6 @@ function isPublished(t: typeof quiz = quiz): SQL {
 const questionCount = db.$count(question, eq(question.quizId, quiz.id))
 const chapterCount = db.$count(chapter, eq(chapter.quizId, quiz.id))
 
-/**
- * Original indexes of the correct options. An option's original index is its
- * place in the question's options ordered by position.
- */
-export function correctIndexesOf(
-  orderedOptions: ReadonlyArray<{ isCorrect: boolean }>,
-): Array<number> {
-  return orderedOptions.flatMap((option, index) =>
-    option.isCorrect ? [index] : [],
-  )
-}
-
 /** What callers need of a quiz without its content. */
 export interface QuizHeader {
   id: string
@@ -100,8 +90,6 @@ const headerColumns = {
   questionCount,
 }
 
-type Executor = typeof db | Parameters<Parameters<typeof db.transaction>[0]>[0]
-
 type HeaderRow = {
   id: string
   title: string
@@ -115,23 +103,6 @@ type HeaderRow = {
   examPassPercent: number | null
   chapterCount: number
   questionCount: number
-}
-
-function toExamConfig(row: {
-  examQuestionCount: number | null
-  examMinutes: number | null
-  examPassPercent: number | null
-}): ExamConfig | undefined {
-  const { examQuestionCount, examMinutes, examPassPercent } = row
-  return examQuestionCount !== null &&
-    examMinutes !== null &&
-    examPassPercent !== null
-    ? {
-        questionCount: examQuestionCount,
-        minutes: examMinutes,
-        passPercent: examPassPercent,
-      }
-    : undefined
 }
 
 function toHeader(row: HeaderRow): QuizHeader {
@@ -242,11 +213,37 @@ export async function findPublishedQuiz(quizId: string): Promise<Quiz | null> {
   return loadQuiz(db, (t) => and(eq(t.id, quizId), isPublished(t)) as SQL)
 }
 
+/** A personal quiz of the user, as the quiz assistant starts from it. */
+export interface EditableQuiz {
+  quiz: Quiz
+  /** ISO time of the last change: Save is refused if it has moved on. */
+  updatedAt: string
+}
+
+/** One of the user's own personal quizzes, or null. */
+export async function findEditableQuiz(
+  quizId: string,
+  userId: string,
+): Promise<EditableQuiz | null> {
+  const row = await loadStoredQuiz(
+    db,
+    (t) => and(eq(t.id, quizId), eq(t.ownerId, userId)) as SQL,
+  )
+  return row
+    ? { quiz: toQuiz(row), updatedAt: row.updatedAt.toISOString() }
+    : null
+}
+
 async function loadQuiz(
   executor: Executor,
   where: (t: typeof quiz) => SQL,
 ): Promise<Quiz | null> {
-  const row = await executor.query.quiz.findFirst({
+  const row = await loadStoredQuiz(executor, where)
+  return row ? toQuiz(row) : null
+}
+
+function loadStoredQuiz(executor: Executor, where: (t: typeof quiz) => SQL) {
+  return executor.query.quiz.findFirst({
     where: { RAW: where },
     with: {
       chapters: {
@@ -260,33 +257,7 @@ async function loadQuiz(
       },
     },
   })
-  if (!row) return null
-  return {
-    id: row.id,
-    title: row.title,
-    description: row.description,
-    chapters: row.chapters.map((c) => ({
-      id: c.slug,
-      number: c.number,
-      title: c.title,
-      questions: c.questions.map((q): Question => {
-        const correct = correctIndexesOf(q.options)
-        const base = {
-          id: q.slug,
-          question: q.text,
-          options: q.options.map((o) => o.text),
-          explanation: q.explanation,
-        }
-        return correct.length === 1
-          ? { ...base, correctIndex: correct[0] }
-          : { ...base, correctIndexes: correct }
-      }),
-    })),
-    exam: toExamConfig(row),
-  }
 }
-
-// --- Marketplace ------------------------------------------------------------
 
 /**
  * How many imported quizzes were copied from the quiz row of the query. The
@@ -298,7 +269,6 @@ const importCount =
     Number,
   )
 
-/** A published quiz as the Marketplace lists it. */
 export interface Listing {
   id: string
   title: string

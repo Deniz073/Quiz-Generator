@@ -5,6 +5,14 @@
  * instead of jumping).
  */
 
+/*
+ * The quiz assistant fills the viewport below the site header and the main
+ * padding (see __root): the whole page on large screens, the chat panel on
+ * small ones. Shared with its loading skeleton, so nothing moves.
+ */
+export const ASSISTANT_PAGE_HEIGHT = 'lg:h-[calc(100dvh-8.5rem)]'
+export const ASSISTANT_PANEL_HEIGHT = 'h-[calc(100dvh-15rem)]'
+
 export function isWidePage(pathname: string): boolean {
   return pathname.startsWith('/assistant/')
 }

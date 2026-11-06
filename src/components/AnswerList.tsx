@@ -1,3 +1,6 @@
+import { getCorrectIndexes } from '#/quizzes/question'
+import type { Question } from '#/quizzes/types'
+
 /** A labelled correct or chosen answer: inline for one text, a list for several. */
 export function AnswerList({
   label,
@@ -8,7 +11,6 @@ export function AnswerList({
   label: string
   labelClass: string
   texts: Array<string>
-  /** Font size of the whole block. */
   textClass?: string
 }) {
   return (
@@ -24,5 +26,23 @@ export function AnswerList({
         </ul>
       )}
     </div>
+  )
+}
+
+export function CorrectAnswers({
+  question,
+  textClass,
+}: {
+  question: Question
+  textClass?: string
+}) {
+  const correct = getCorrectIndexes(question)
+  return (
+    <AnswerList
+      label={correct.length > 1 ? 'Correct answers' : 'Correct answer'}
+      labelClass="text-emerald-700 dark:text-emerald-400"
+      textClass={textClass}
+      texts={correct.map((i) => question.options[i])}
+    />
   )
 }

@@ -3,7 +3,7 @@ import type { FormEvent } from 'react'
 import type { ExamConfig, Quiz } from '#/quizzes/types'
 import { buttonClasses } from '#/lib/button-classes'
 import { describeExamConfig } from '#/domain/exam-settings'
-import { getExamLimits } from '#/quizzes/validate'
+import { getExamLimits } from '#/quizzes/rules'
 import { countQuestions } from '#/quizzes'
 import { saveExamSettings, useUserId } from '#/lib/user-data'
 

@@ -5,6 +5,7 @@ import {
   toNewSession,
   toStoredState,
 } from '#/lib/exam-lifecycle'
+import type { ExamResult } from '#/lib/exam-api'
 import {
   saveExamSession,
   startExamSession,
@@ -22,26 +23,6 @@ import {
 /** How long a change waits before it is saved. */
 const SAVE_DELAY_MS = 400
 
-/** The server calls it needs (the real ones by default). */
-export interface ExamTransport {
-  start: (input: ReturnType<typeof toNewSession>) => Promise<{
-    id: string
-    startedAt: number
-    endsAt: number
-    serverNow: number
-  }>
-  save: (input: ReturnType<typeof toStoredState>) => Promise<boolean>
-  submit: (
-    input: ReturnType<typeof toStoredState>,
-  ) => Promise<{ score: number; total: number } | null>
-}
-
-const serverTransport: ExamTransport = {
-  start: (data) => startExamSession({ data }),
-  save: (data) => saveExamSession({ data }),
-  submit: (data) => submitExamSession({ data }),
-}
-
 export interface ExamSyncEvents {
   /** The server's start and deadline, on this device's clock. */
   onClock: (times: {
@@ -50,7 +31,7 @@ export interface ExamSyncEvents {
     endsAt: number
   }) => void
   /** The server recorded the submitted exam with this score. */
-  onRecorded: (result: { score: number; total: number }) => void
+  onRecorded: (result: ExamResult) => void
   /** Storing, saving or submitting failed: the exam may not be recorded. */
   onFailed: () => void
 }
@@ -70,7 +51,6 @@ export function createExamSync(
   quizId: string,
   events: ExamSyncEvents,
   resumed?: { plan: ExamState['plan']; sessionId: string },
-  transport: ExamTransport = serverTransport,
 ): ExamSync {
   let stored: { plan: ExamState['plan']; id: Promise<string | null> } | null =
     resumed
@@ -96,8 +76,7 @@ export function createExamSync(
   }
 
   function store(state: ExamState) {
-    const id = transport
-      .start(toNewSession(quizId, state))
+    const id = startExamSession({ data: toNewSession(quizId, state) })
       .then(({ id: sessionId, serverNow, ...times }) => {
         events.onClock({
           plan: state.plan,
@@ -114,7 +93,6 @@ export function createExamSync(
   }
 
   function update(state: ExamState) {
-    // A new exam (first state, or a restart) is stored once.
     if (stored?.plan !== state.plan) store(state)
     const current = stored
     if (!current) return
@@ -127,7 +105,9 @@ export function createExamSync(
       enqueue(async () => {
         const id = await current.id
         if (!id) return
-        const result = await transport.submit(toStoredState(id, state))
+        const result = await submitExamSession({
+          data: toStoredState(id, state),
+        })
         if (result) events.onRecorded(result)
         else events.onFailed()
       })
@@ -140,7 +120,7 @@ export function createExamSync(
         if (!id) return
         // Gone (submitted or replaced in another tab, content changed) or
         // past the deadline: it is no longer kept, so stop claiming it is.
-        if (!(await transport.save(toStoredState(id, state)))) {
+        if (!(await saveExamSession({ data: toStoredState(id, state) }))) {
           console.warn('The exam could no longer be saved.')
           events.onFailed()
         }

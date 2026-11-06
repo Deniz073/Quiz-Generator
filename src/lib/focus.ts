@@ -1,3 +1,5 @@
+import { useEffect, useRef } from 'react'
+
 /**
  * Moves focus to a heading, e.g. after the control that was pressed has been
  * unmounted (focus would otherwise fall back to <body> and screen readers
@@ -10,11 +12,25 @@ export function focusHeading(heading: Element | null | undefined) {
   heading.focus({ preventScroll: true })
 }
 
-/** True when nothing has focus, e.g. the focused button was just unmounted. */
-export function isFocusLost() {
-  return (
-    document.activeElement === null || document.activeElement === document.body
-  )
+/**
+ * For a container whose content is remounted when `view` changes (a keyed
+ * question, the exam's review): the pressed control unmounts with the old
+ * content and focus drops to <body>, so it moves to the new content's first
+ * <h2> instead, for screen readers. Not when the new content already placed
+ * focus inside itself. Returns the ref for the container.
+ */
+export function useFocusHeadingOnChange(view: unknown) {
+  const containerRef = useRef<HTMLDivElement>(null)
+  const shown = useRef(view)
+  useEffect(() => {
+    if (shown.current === view) return
+    shown.current = view
+    const container = containerRef.current
+    if (container && !container.contains(document.activeElement)) {
+      focusHeading(container.querySelector('h2'))
+    }
+  }, [view])
+  return containerRef
 }
 
 /**

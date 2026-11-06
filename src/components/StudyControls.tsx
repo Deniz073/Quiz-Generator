@@ -14,7 +14,6 @@ interface Props {
   onShowAllChange: (showAll: boolean) => void
 }
 
-/** One quiet toolbar: which cards (chapter), in what order, answers or not. */
 export function StudyControls({
   chapters,
   chapterId,

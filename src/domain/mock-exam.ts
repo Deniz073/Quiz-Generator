@@ -21,10 +21,7 @@ import {
 } from '../quizzes/question'
 
 /** Allowance for a save or submit sent right at the deadline (the network). */
-export const GRACE_MS = 30_000
-
-/** What the rules need to know of a question. */
-export type ExamQuestionFacts = AnswerKey
+const GRACE_MS = 30_000
 
 /** A question of an exam: which one, and the order its options are shown in. */
 export interface PlannedExamQuestion {
@@ -84,7 +81,7 @@ export function isLegalPlan(
 
 /** Whether a running exam's state fits its questions. */
 export function isLegalProgress(
-  questions: ReadonlyArray<ExamQuestionFacts>,
+  questions: ReadonlyArray<AnswerKey>,
   progress: ExamProgress,
 ): boolean {
   const count = questions.length
@@ -101,7 +98,7 @@ export function isLegalProgress(
 
 /** The number of questions answered correctly; unanswered ones are wrong. */
 export function scoreExam(
-  questions: ReadonlyArray<ExamQuestionFacts>,
+  questions: ReadonlyArray<AnswerKey>,
   picks: ReadonlyArray<ReadonlyArray<number>>,
 ): number {
   return questions.filter((question, position) =>

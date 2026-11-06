@@ -1,5 +1,14 @@
 import { countQuestions } from './index'
-import { isMultipleAnswer } from './question'
+import { isIndex, isMultipleAnswer, isUnique } from './question'
+import {
+  EXAM_SETTINGS,
+  MAX_OPTIONS,
+  MIN_OPTIONS,
+  RESERVED_CHAPTER_IDS,
+  getExamLimits,
+  isInRange,
+  isSlug,
+} from './rules'
 import type { ExamConfig, Question, Quiz } from './types'
 
 /*
@@ -9,67 +18,6 @@ import type { ExamConfig, Question, Quiz } from './types'
  * quiz, the quiz assistant shows them as they are.
  */
 
-/** Lowercase letters/digits separated by single hyphens, e.g. "1-cloud-basics". */
-const SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
-
-/** Static route segments that would shadow a chapter page of the same name. */
-export const RESERVED_CHAPTER_IDS: ReadonlyArray<string> = [
-  'practice',
-  'exam',
-  'study',
-  'flagged',
-]
-
-/** The quiz UI has hotkeys for options 1-6 / A-F. */
-export const MIN_OPTIONS = 2
-export const MAX_OPTIONS = 6
-
-/** Upper bound of a mock exam's time limit, in minutes. */
-export const MAX_EXAM_MINUTES = 600
-
-interface Range {
-  min: number
-  max: number
-}
-
-/**
- * What each mock exam setting may be for a quiz with this many questions:
- * the quiz's own defaults and a user's adjustments alike.
- */
-export function getExamLimits(
-  totalQuestions: number,
-): Record<keyof ExamConfig, Range> {
-  return {
-    questionCount: { min: 1, max: totalQuestions },
-    minutes: { min: 1, max: MAX_EXAM_MINUTES },
-    passPercent: { min: 1, max: 100 },
-  }
-}
-
-export function isInRange(
-  value: unknown,
-  { min, max }: Range,
-): value is number {
-  return (
-    typeof value === 'number' &&
-    Number.isInteger(value) &&
-    value >= min &&
-    value <= max
-  )
-}
-
-/** `text` as a slug of at most `maxLength` characters; empty if nothing is left. */
-export function slugify(text: string, maxLength: number): string {
-  return text
-    .normalize('NFKD')
-    .replace(/[̀-ͯ]/g, '')
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-    .slice(0, maxLength)
-    .replace(/-+$/, '')
-}
-
 const isBlank = (value: unknown): boolean =>
   typeof value !== 'string' || value.trim() === ''
 
@@ -78,7 +26,7 @@ export function validateQuestion(question: Question): Array<string> {
   const errors: Array<string> = []
   const fail = (message: string) => errors.push(message)
 
-  if (typeof question.id !== 'string' || !SLUG.test(question.id)) {
+  if (!isSlug(question.id)) {
     fail('id must be a URL-safe slug like "1-01"')
   }
   if (isBlank(question.question)) fail('"question" must not be empty')
@@ -102,10 +50,7 @@ export function validateQuestion(question: Question): Array<string> {
     seen.add(key)
   }
 
-  const inRange = (index: unknown): boolean =>
-    Number.isInteger(index) &&
-    (index as number) >= 0 &&
-    (index as number) < options.length
+  const inRange = (index: number): boolean => isIndex(index, options.length)
   const range = `0-${options.length - 1}`
 
   if ('correctIndex' in question && 'correctIndexes' in question) {
@@ -120,7 +65,7 @@ export function validateQuestion(question: Question): Array<string> {
     if (bad.length > 0) {
       fail(`correctIndexes ${JSON.stringify(bad)} out of range (${range})`)
     }
-    if (new Set(indexes).size !== indexes.length) {
+    if (!isUnique(indexes)) {
       fail(`correctIndexes ${JSON.stringify(indexes)} contains duplicates`)
     }
     const unique = new Set(indexes.filter(inRange))
@@ -149,13 +94,12 @@ export function validateExamConfig(
     minutes: '',
     passPercent: '',
   }
-  return (['questionCount', 'minutes', 'passPercent'] as const).flatMap(
-    (key) =>
-      isInRange(exam[key], limits[key])
-        ? []
-        : [
-            `exam.${key} ${JSON.stringify(exam[key])} must be an integer from ${limits[key].min} to ${limits[key].max}${describe[key]}`,
-          ],
+  return EXAM_SETTINGS.flatMap((key) =>
+    isInRange(exam[key], limits[key])
+      ? []
+      : [
+          `exam.${key} ${JSON.stringify(exam[key])} must be an integer from ${limits[key].min} to ${limits[key].max}${describe[key]}`,
+        ],
   )
 }
 
@@ -181,7 +125,7 @@ export function validateQuiz(quiz: Quiz, where = ''): Array<string> {
   for (const chapter of quiz.chapters) {
     const chapterAt = [`chapter "${chapter.id}"`]
     const fail = (message: string) => report(chapterAt, message)
-    if (!SLUG.test(chapter.id)) {
+    if (!isSlug(chapter.id)) {
       fail('id must be a URL-safe slug like "1-basics"')
     }
     if (chapterIds.has(chapter.id)) fail('duplicate chapter id within the quiz')
@@ -226,12 +170,12 @@ export function validateQuiz(quiz: Quiz, where = ''): Array<string> {
  * A set of built-in quizzes: every quiz, plus their ids (URL-safe slugs,
  * unique). Each error starts with its quiz; an empty array means valid.
  */
-export function validateQuizzes(quizzes: ReadonlyArray<Quiz>): Array<string> {
+function validateQuizzes(quizzes: ReadonlyArray<Quiz>): Array<string> {
   const errors: Array<string> = []
   const quizIds = new Set<string>()
   for (const quiz of quizzes) {
     const where = `quiz "${quiz.id}"`
-    if (!SLUG.test(quiz.id)) {
+    if (!isSlug(quiz.id)) {
       errors.push(`${where}: id must be a URL-safe slug like "my-quiz"`)
     }
     if (quizIds.has(quiz.id)) errors.push(`${where}: duplicate quiz id`)

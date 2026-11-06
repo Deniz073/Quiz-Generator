@@ -74,8 +74,6 @@ export function setTheme(theme: Theme): void {
   notify()
 }
 
-// --- Subscriptions -----------------------------------------------------------
-
 const listeners = new Set<() => void>()
 
 function notify() {

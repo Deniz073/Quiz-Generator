@@ -12,6 +12,8 @@ import {
   unique,
   uuid,
 } from 'drizzle-orm/pg-core'
+// Relative: drizzle-kit loads this file without the #/ alias.
+import { MAX_OPTIONS, SLUG_PATTERN } from '../quizzes/rules'
 import { user } from './auth-schema'
 
 /*
@@ -30,7 +32,7 @@ import { user } from './auth-schema'
  * src/domain/marketplace.ts, not of the database.
  */
 
-const SLUG = `'^[a-z0-9]+(-[a-z0-9]+)*$'`
+const SLUG = `'${SLUG_PATTERN}'`
 
 export const quiz = pgTable(
   'quiz',
@@ -170,7 +172,10 @@ export const questionOption = pgTable(
       t.position,
     ),
     unique('question_option_question_id_text_unique').on(t.questionId, t.text),
-    check('question_option_position_range', sql`${t.position} BETWEEN 0 AND 5`),
+    check(
+      'question_option_position_range',
+      sql`${t.position} BETWEEN 0 AND ${sql.raw(String(MAX_OPTIONS - 1))}`,
+    ),
   ],
 )
 

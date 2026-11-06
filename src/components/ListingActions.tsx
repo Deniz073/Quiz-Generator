@@ -9,6 +9,26 @@ import { Button } from '#/components/ui/button'
 import type { Listing } from '#/lib/marketplace-api'
 import { importQuiz, publishQuiz } from '#/lib/marketplace-api'
 import { useSignedIn } from '#/lib/user-data'
+import { formatImports } from '#/domain/marketplace'
+
+/** "By Ann · 5 chapters · 40 questions · imported 3 times". */
+export function ListingByline({
+  listing,
+  className,
+}: {
+  listing: Listing
+  className?: string
+}) {
+  return (
+    <p
+      className={`text-sm text-muted-foreground tabular-nums ${className ?? ''}`}
+    >
+      By {listing.publisherName} &middot; {listing.chapterCount}
+      &nbsp;chapters &middot; {listing.questionCount}&nbsp;questions &middot;{' '}
+      {formatImports(listing.importCount)}
+    </p>
+  )
+}
 
 /**
  * What the user can do with a listing: import it (or open their copy), sign

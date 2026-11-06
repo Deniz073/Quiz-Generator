@@ -1,8 +1,8 @@
-import { useEffect, useEffectEvent, useReducer, useRef } from 'react'
+import { useEffect, useEffectEvent, useReducer } from 'react'
 import { useHotkey } from '@tanstack/react-hotkeys'
 import type { PlannedQuestion } from '#/lib/quiz-plan'
 import type { Round } from '#/lib/quiz-state'
-import { focusHeading, isFocusLost } from '#/lib/focus'
+import { useFocusHeadingOnChange } from '#/lib/focus'
 import { reshufflePlan } from '#/lib/quiz-plan'
 import {
   canCheck,
@@ -110,17 +110,7 @@ export function QuizRunner({
     onPick: (originalIndex) => dispatch({ type: 'toggle', originalIndex }),
   })
 
-  // The card is keyed per question, so "Next question" unmounts with the old
-  // card and focus would drop to <body>. Put it on the new question instead,
-  // so screen readers read it. Not when the card already placed focus itself
-  // (an answered question focuses its Next button).
-  const cardRef = useRef<HTMLDivElement>(null)
-  const shownIndex = useRef(state.current)
-  useEffect(() => {
-    if (shownIndex.current === state.current) return
-    shownIndex.current = state.current
-    if (isFocusLost()) focusHeading(cardRef.current?.querySelector('h2'))
-  }, [state.current])
+  const cardRef = useFocusHeadingOnChange(state.current)
 
   if (finished) {
     const answers = getAnswers(state, flaggedIndexes)
@@ -141,14 +131,8 @@ export function QuizRunner({
                 })
             : undefined
         }
-        onRetryIncorrect={() =>
-          dispatch({
-            type: 'retry',
-            plan: reshufflePlan(
-              answers.filter((answer) => !answer.correct).map((a) => a.item),
-            ),
-            round: {},
-          })
+        onRetryIncorrect={(items) =>
+          dispatch({ type: 'retry', plan: reshufflePlan(items), round: {} })
         }
       />
     )

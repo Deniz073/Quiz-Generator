@@ -20,7 +20,6 @@ import { getCurrentUser } from '#/lib/session-api'
 import { THEME_COLORS, getChosenTheme } from '#/lib/theme'
 import appCss from '../styles.css?url'
 
-const TITLE = SITE_TITLE
 const DESCRIPTION =
   'Practice quizzes chapter by chapter, study with explanations, or take a timed mock exam.'
 
@@ -30,8 +29,6 @@ const SITE_URL = (import.meta.env.VITE_SITE_URL ?? '').replace(/\/+$/, '')
 const OG_IMAGE = `${SITE_URL}/og.png`
 
 export const Route = createRootRoute({
-  // The signed-in user (or null) is available as context.user in every route,
-  // and the chosen theme (from its cookie) as context.theme.
   beforeLoad: async () => ({
     user: await getCurrentUser(),
     theme: getChosenTheme(),
@@ -46,17 +43,17 @@ export const Route = createRootRoute({
         content: 'width=device-width, initial-scale=1',
       },
       {
-        title: TITLE,
+        title: SITE_TITLE,
       },
       { name: 'description', content: DESCRIPTION },
       { property: 'og:type', content: 'website' },
-      { property: 'og:site_name', content: TITLE },
-      { property: 'og:title', content: TITLE },
+      { property: 'og:site_name', content: SITE_TITLE },
+      { property: 'og:title', content: SITE_TITLE },
       { property: 'og:description', content: DESCRIPTION },
       { property: 'og:image', content: OG_IMAGE },
       { property: 'og:image:width', content: '1200' },
       { property: 'og:image:height', content: '630' },
-      { property: 'og:image:alt', content: TITLE },
+      { property: 'og:image:alt', content: SITE_TITLE },
       { name: 'twitter:card', content: 'summary_large_image' },
     ],
     links: [
@@ -137,7 +134,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
               to="/"
               className="-my-1 inline-block rounded-md py-1 text-lg font-bold tracking-tight transition-colors hover:text-sky-700 dark:hover:text-sky-400"
             >
-              Quiz Generator
+              {SITE_TITLE}
             </Link>
             <div className="flex items-center gap-2">
               <Link

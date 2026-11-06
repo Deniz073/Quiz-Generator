@@ -9,9 +9,9 @@
  *   exams survive content fixes. The writing is #/server/quiz-writer's,
  *   shared with Save in the quiz assistant.
  * - Chapters and questions no longer in a seed quiz are deleted, with what
- *   refers to them. A question whose options changed loses its options' ids,
- *   so unfinished exams containing it are deleted (they could no longer be
- *   scored as started).
+ *   refers to them. Unfinished exams containing a removed question or one
+ *   whose options changed are deleted (they could no longer be scored as
+ *   started).
  * - Built-in quizzes no longer in the seed are deleted. Personal quizzes are
  *   never touched: they live only in the database.
  * - A seed quiz whose id is taken by a personal quiz fails the seed; it never
@@ -20,27 +20,16 @@
  * All of it runs in one transaction: a failure leaves the database unchanged
  * (and fails the deploy before the new version is built).
  */
-import { and, eq, isNull, notInArray } from 'drizzle-orm'
+import { and, isNull, notInArray } from 'drizzle-orm'
 import { db } from '#/db'
+import type { Transaction } from '#/db'
 import { quiz } from '#/db/schema'
 import { upsertQuizContent } from '#/server/quiz-writer'
-import type { Transaction } from '#/server/quiz-writer'
 import type { Quiz } from '#/quizzes/types'
 import { assertValidQuizzes } from '#/quizzes/validate'
 import { seedQuizzes } from './quizzes'
 
 async function upsertQuiz(tx: Transaction, data: Quiz): Promise<void> {
-  const existing = await tx
-    .select({ ownerId: quiz.ownerId })
-    .from(quiz)
-    .where(eq(quiz.id, data.id))
-  const current = existing.at(0)
-  if (current && current.ownerId !== null) {
-    throw new Error(
-      `Quiz id "${data.id}" is taken by a personal quiz; give the seed quiz another id. The seed never takes a user's quiz over.`,
-    )
-  }
-
   const { questionCount, optionsChanged } = await upsertQuizContent(
     tx,
     data,

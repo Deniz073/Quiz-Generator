@@ -2,9 +2,8 @@ import { useEffect, useReducer, useRef, useState } from 'react'
 import { Link } from '@tanstack/react-router'
 import { useHotkey } from '@tanstack/react-hotkeys'
 import type { Question } from '#/quizzes/types'
-import { buttonClasses, tipClasses } from '#/lib/button-classes'
-import { focusHeading, isFocusLost, scrollIntoViewIfNeeded } from '#/lib/focus'
-import { describeOptionKeys } from '#/lib/option-keys'
+import { buttonClasses } from '#/lib/button-classes'
+import { scrollIntoViewIfNeeded, useFocusHeadingOnChange } from '#/lib/focus'
 import { buildShuffledPlan } from '#/lib/quiz-plan'
 import {
   canCheck,
@@ -18,7 +17,7 @@ import { useFlagToggle } from '#/lib/use-flag-toggle'
 import { useOptionHotkeys } from '#/lib/use-option-hotkeys'
 import { isMultipleAnswer } from '#/quizzes/question'
 import { Feedback } from '#/components/Feedback'
-import { QuestionBody } from '#/components/QuestionCard'
+import { AnswerTip, QuestionBody } from '#/components/QuestionCard'
 
 interface Props {
   quizId: string
@@ -34,14 +33,7 @@ export function SingleQuestion({ quizId, chapterId, question }: Props) {
   // A new attempt remounts the question: new option order, nothing picked.
   const [attempt, setAttempt] = useState(0)
 
-  // "Try again" unmounts with the old attempt; put focus on the question.
-  const containerRef = useRef<HTMLDivElement>(null)
-  const shownAttempt = useRef(attempt)
-  useEffect(() => {
-    if (shownAttempt.current === attempt) return
-    shownAttempt.current = attempt
-    if (isFocusLost()) focusHeading(containerRef.current?.querySelector('h2'))
-  }, [attempt])
+  const containerRef = useFocusHeadingOnChange(attempt)
 
   return (
     <div ref={containerRef}>
@@ -75,7 +67,6 @@ function Attempt({
   const onFlag = useFlagToggle(quizId)
 
   const multiple = isMultipleAnswer(question)
-  const keyTip = describeOptionKeys(optionOrder.length)
   const toggle = (originalIndex: number) =>
     dispatch({ type: 'toggle', originalIndex })
   const check = () => dispatch({ type: 'check' })
@@ -131,9 +122,7 @@ function Attempt({
         </div>
       ) : multiple ? (
         <div className="mt-5 flex items-center justify-between gap-3">
-          <p className={tipClasses}>
-            Tip: press {keyTip} to toggle, Enter to check.
-          </p>
+          <AnswerTip item={state.plan[0]} />
           <button
             type="button"
             onClick={check}
@@ -144,7 +133,7 @@ function Attempt({
           </button>
         </div>
       ) : (
-        <p className={`mt-5 ${tipClasses}`}>Tip: press {keyTip} to answer.</p>
+        <AnswerTip item={state.plan[0]} className="mt-5" />
       )}
     </>
   )
