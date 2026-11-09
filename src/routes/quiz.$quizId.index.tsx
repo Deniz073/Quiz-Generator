@@ -1,28 +1,20 @@
 import { Link, createFileRoute, notFound } from '@tanstack/react-router'
-import type { Result } from '#/domain/progress'
-import type { ExamConfig, Quiz } from '#/quizzes/types'
 import { SparklesIcon } from 'lucide-react'
-import { ExamSettings } from '#/components/ExamSettings'
 import { Button } from '#/components/ui/button'
 import { NotFound } from '#/components/NotFound'
 import { NotesSection } from '#/components/NotesSection'
 import { QuizMarketplace } from '#/components/QuizMarketplace'
+import { QuizModes } from '#/components/QuizModes'
 import { fetchQuizStanding } from '#/lib/marketplace-api'
 import { fetchQuizNotes } from '#/lib/notes-api'
 import { SignInBanner } from '#/components/SignInBanner'
 import { backLinkClasses } from '#/lib/button-classes'
-import { FLAGGING_HINT, getFlaggedQuestions } from '#/lib/flags'
+import { getFlaggedQuestions } from '#/lib/flags'
 import { formatChapter } from '#/lib/chapter-label'
 import { pageTitle } from '#/lib/page-title'
 import { formatResult } from '#/domain/progress'
-import { PRACTICE_SIZES } from '#/lib/quiz-plan'
 import { requireQuiz } from '#/lib/quiz-route'
-import {
-  useExamConfig,
-  useFlags,
-  useQuizProgress,
-  useSignedIn,
-} from '#/lib/user-data'
+import { useFlags, useQuizProgress } from '#/lib/user-data'
 import { countQuestions } from '#/quizzes'
 
 const cardLinkClasses =
@@ -61,7 +53,6 @@ function QuizPage() {
   const totalFlagged = countFlagged()
 
   const total = countQuestions(quiz)
-  const practiceSizes = PRACTICE_SIZES.filter((size) => size < total)
 
   return (
     <div>
@@ -140,89 +131,11 @@ function QuizPage() {
         })}
       </ul>
 
-      <div className="mt-10 grid gap-x-8 gap-y-8 sm:grid-cols-2">
-        <section>
-          <h2 className="text-lg font-semibold">Mixed practice</h2>
-          <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
-            Random questions from all chapters, with immediate feedback. Not
-            saved.
-          </p>
-          <ul className="mt-3 flex flex-wrap gap-3">
-            {practiceSizes.map((size) => (
-              <li key={size}>
-                <Link
-                  to="/quiz/$quizId/practice"
-                  params={{ quizId: quiz.id }}
-                  search={{ count: size }}
-                  className={`block font-medium ${cardLinkClasses}`}
-                >
-                  {size}&nbsp;questions
-                </Link>
-              </li>
-            ))}
-            <li>
-              <Link
-                to="/quiz/$quizId/practice"
-                params={{ quizId: quiz.id }}
-                search={{ count: 'all' }}
-                className={`block font-medium ${cardLinkClasses}`}
-              >
-                All {total}&nbsp;questions
-              </Link>
-            </li>
-          </ul>
-        </section>
-
-        <section>
-          <h2 className="text-lg font-semibold">Study</h2>
-          <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
-            Flip through questions with their answers and explanations. Not
-            scored.
-          </p>
-          <Link
-            to="/quiz/$quizId/study"
-            params={{ quizId: quiz.id }}
-            className={`mt-3 inline-block font-medium ${cardLinkClasses}`}
-          >
-            Study all questions
-          </Link>
-        </section>
-
-        <section>
-          <h2 className="text-lg font-semibold">Flagged questions</h2>
-          <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
-            {totalFlagged > 0
-              ? 'Practice the questions you flagged, from all chapters. Not saved.'
-              : FLAGGING_HINT}
-          </p>
-          {totalFlagged > 0 ? (
-            <div className="mt-3 flex flex-wrap gap-3">
-              <Link
-                to="/quiz/$quizId/flagged"
-                params={{ quizId: quiz.id }}
-                className={`font-medium ${cardLinkClasses}`}
-              >
-                Practice all {totalFlagged} flagged
-              </Link>
-              <Link
-                to="/quiz/$quizId/flagged/review"
-                params={{ quizId: quiz.id }}
-                className={`font-medium ${cardLinkClasses}`}
-              >
-                Review all {totalFlagged} flagged
-              </Link>
-            </div>
-          ) : null}
-        </section>
-
-        {quiz.exam ? (
-          <MockExamSection
-            quiz={quiz}
-            defaults={quiz.exam}
-            result={progress?.exam}
-          />
-        ) : null}
-      </div>
+      <QuizModes
+        quiz={quiz}
+        flaggedCount={totalFlagged}
+        examResult={progress?.exam}
+      />
 
       <NotesSection quizId={quiz.id} notes={notes} />
 
@@ -230,48 +143,5 @@ function QuizPage() {
         <QuizMarketplace quiz={quiz} standing={standing} userName={user.name} />
       ) : null}
     </div>
-  )
-}
-
-function MockExamSection({
-  quiz,
-  defaults,
-  result,
-}: {
-  quiz: Quiz
-  defaults: ExamConfig
-  result: Result | undefined
-}) {
-  // Defaults on the server and during hydration, then the user's own settings.
-  const config = useExamConfig(quiz, defaults)
-  const signedIn = useSignedIn()
-
-  return (
-    <section>
-      <h2 className="text-lg font-semibold">Mock exam</h2>
-      <Link
-        to="/quiz/$quizId/exam"
-        params={{ quizId: quiz.id }}
-        className={`mt-3 block ${cardLinkClasses}`}
-      >
-        <span className="font-medium">Start mock exam</span>
-        <span className="mt-0.5 block text-sm text-slate-600 dark:text-slate-400">
-          {config.questionCount}&nbsp;questions &middot; {config.minutes}
-          &nbsp;minutes &middot; pass mark {config.passPercent}%
-        </span>
-        {result ? (
-          <span className="mt-0.5 block text-sm text-slate-600 dark:text-slate-400">
-            {formatResult(result)}
-          </span>
-        ) : null}
-      </Link>
-      {signedIn ? (
-        <ExamSettings quiz={quiz} defaults={defaults} config={config} />
-      ) : (
-        <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">
-          Sign in to adjust the number of questions, time limit and pass mark.
-        </p>
-      )}
-    </section>
   )
 }

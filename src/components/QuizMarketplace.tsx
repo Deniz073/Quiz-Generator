@@ -40,12 +40,14 @@ export function QuizMarketplace({
 
   const copies = standing.importCount
   return (
-    <section className="mt-10">
-      <h2 className="text-lg font-semibold">Marketplace</h2>
+    <section className="mt-10 border-t pt-6" aria-labelledby="manage-quiz">
+      <h2 id="manage-quiz" className="text-lg font-semibold">
+        Manage quiz
+      </h2>
       <p className="mt-1 text-sm text-muted-foreground">
         <Status standing={standing} />
       </p>
-      <div className="mt-3 flex flex-wrap gap-3">
+      <div className="mt-3 flex flex-wrap items-center gap-2">
         {standing.published ? (
           <>
             <Button
@@ -75,19 +77,22 @@ export function QuizMarketplace({
           />
         ) : null}
         {standing.canDelete ? (
-          <ConfirmAction
-            label="Delete quiz"
-            title={`Delete ${quiz.title}?`}
-            description={
-              `Your progress, flags and unfinished mock exam on it are lost. This can't be undone.` +
-              (standing.published
-                ? ` It also comes off the Marketplace. ${copyNote(copies)}`
-                : '')
-            }
-            confirmLabel="Delete"
-            destructive
-            onConfirm={remove}
-          />
+          // Apart from the sharing actions: it removes the quiz itself.
+          <div className="sm:ml-auto">
+            <ConfirmAction
+              label="Delete quiz"
+              title={`Delete ${quiz.title}?`}
+              description={
+                `Your progress, flags and unfinished mock exam on it are lost. This can't be undone.` +
+                (standing.published
+                  ? ` It also comes off the Marketplace. ${copyNote(copies)}`
+                  : '')
+              }
+              confirmLabel="Delete"
+              destructive
+              onConfirm={remove}
+            />
+          </div>
         ) : null}
       </div>
     </section>

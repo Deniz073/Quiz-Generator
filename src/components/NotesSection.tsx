@@ -54,9 +54,25 @@ export function NotesSection({
     }
   }
 
+  const atLimit = notes !== null && !canAddNote(notes.length)
+
   return (
-    <section className="mt-10">
-      <h2 className="text-lg font-semibold">Notes</h2>
+    <section className="mt-10" aria-labelledby="notes">
+      <div className="flex items-end justify-between gap-3">
+        <h2 id="notes" className="text-lg font-semibold">
+          Notes
+        </h2>
+        {notes !== null ? (
+          <Button
+            variant="outline"
+            disabled={pending || atLimit}
+            onClick={() => void create()}
+          >
+            <PlusIcon data-icon="inline-start" />
+            New note
+          </Button>
+        ) : null}
+      </div>
       {notes === null ? (
         <p className="mt-1 text-sm text-muted-foreground">
           <Link
@@ -68,58 +84,46 @@ export function NotesSection({
           </Link>{' '}
           to keep notes on this quiz.
         </p>
+      ) : notes.length === 0 ? (
+        <p className="mt-3 rounded-lg border border-dashed px-4 py-6 text-center text-sm text-muted-foreground">
+          No notes yet. Keep what you want to remember about this quiz, with
+          links and images. Only you can see them.
+        </p>
       ) : (
-        <>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Your own notes on this quiz, with links and images. Only you can see
-            them.
-          </p>
-          {notes.length > 0 ? (
-            <ul className="mt-3 flex flex-col gap-2">
-              {notes.map((note) => (
-                <li key={note.id}>
-                  <Link
-                    to="/quiz/$quizId/notes/$noteId"
-                    params={{ quizId, noteId: note.id }}
-                    className="flex flex-col gap-0.5 rounded-lg border bg-card px-4 py-3 transition-colors hover:border-ring sm:flex-row sm:items-center sm:justify-between sm:gap-4"
-                  >
-                    <span className="min-w-0 truncate font-medium">
-                      {note.title}
-                    </span>
-                    <span className="shrink-0 text-sm text-muted-foreground">
-                      {hydrated ? (
-                        <time dateTime={note.updatedAt}>
-                          Edited {dateFormat.format(new Date(note.updatedAt))}
-                        </time>
-                      ) : null}
-                    </span>
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          ) : null}
-          <div className="mt-3 flex flex-wrap items-center gap-3">
-            <Button
-              variant="outline"
-              disabled={pending || !canAddNote(notes.length)}
-              onClick={() => void create()}
-            >
-              <PlusIcon data-icon="inline-start" />
-              New note
-            </Button>
-            {!canAddNote(notes.length) ? (
-              <span className="text-sm text-muted-foreground">
-                You can keep at most {MAX_NOTES_PER_QUIZ} notes on a quiz.
-              </span>
-            ) : null}
-          </div>
-          {error ? (
-            <p role="alert" className="mt-2 text-sm text-destructive">
-              {error}
-            </p>
-          ) : null}
-        </>
+        <ul className="mt-3 divide-y overflow-hidden rounded-lg border bg-card">
+          {notes.map((note) => (
+            <li key={note.id}>
+              <Link
+                to="/quiz/$quizId/notes/$noteId"
+                params={{ quizId, noteId: note.id }}
+                className="flex flex-col gap-0.5 px-4 py-3 transition-colors hover:bg-muted focus-visible:bg-muted focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none focus-visible:ring-inset sm:flex-row sm:items-center sm:justify-between sm:gap-4"
+              >
+                <span className="min-w-0 truncate font-medium">
+                  {note.title}
+                </span>
+                <span className="shrink-0 text-sm text-muted-foreground">
+                  {hydrated ? (
+                    <time dateTime={note.updatedAt}>
+                      Edited {dateFormat.format(new Date(note.updatedAt))}
+                    </time>
+                  ) : null}
+                </span>
+              </Link>
+            </li>
+          ))}
+        </ul>
       )}
+      {atLimit ? (
+        <p className="mt-2 text-sm text-muted-foreground">
+          You can keep at most {MAX_NOTES_PER_QUIZ} notes on a quiz. Delete one
+          to add another.
+        </p>
+      ) : null}
+      {error ? (
+        <p role="alert" className="mt-2 text-sm text-destructive">
+          {error}
+        </p>
+      ) : null}
     </section>
   )
 }
