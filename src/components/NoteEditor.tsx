@@ -28,6 +28,9 @@ const editorProps = {
     id: 'note-content',
     class: 'note-content px-4 py-3',
     'aria-label': 'Note',
+    // No browser spell check: it marks everything when its language isn't
+    // the note's.
+    spellcheck: 'false',
   },
 }
 
