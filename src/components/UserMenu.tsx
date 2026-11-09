@@ -13,6 +13,8 @@ import {
   DropdownMenuTrigger,
 } from '#/components/ui/dropdown-menu'
 import { authClient } from '#/lib/auth-client'
+import { forgetCurrentUser } from '#/lib/current-user'
+import { settleWrites } from '#/lib/pending-writes'
 import { clearQuizCache } from '#/lib/quiz-route'
 import type { CurrentUser } from '#/lib/session-api'
 
@@ -35,17 +37,25 @@ export function UserMenu({ user }: { user: CurrentUser | null }) {
 
   async function signOut() {
     setPending(true)
-    const { error } = await authClient.signOut()
-    setPending(false)
-    if (error) {
-      console.error('Sign-out failed', error)
-      return
+    try {
+      // Whatever the open page still has to save (a note, an exam), it saves
+      // now, while the session still exists.
+      await settleWrites()
+      const { error } = await authClient.signOut()
+      if (error) {
+        console.error('Sign-out failed', error)
+        return
+      }
+      // Leave (the profile page would redirect to /login), past any leave
+      // prompt: its work is saved and the user chose to sign out. Then re-run
+      // the root beforeLoad so every route sees the signed-out state.
+      clearQuizCache()
+      forgetCurrentUser()
+      await navigate({ to: '/', ignoreBlocker: true })
+      await router.invalidate()
+    } finally {
+      setPending(false)
     }
-    // Leave first (the profile page would redirect to /login), then re-run the
-    // root beforeLoad so every route sees the signed-out state.
-    clearQuizCache()
-    await navigate({ to: '/' })
-    await router.invalidate()
   }
 
   return (

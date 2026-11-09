@@ -1,4 +1,5 @@
 import { useEffect, useReducer, useState } from 'react'
+import { registerFlush } from '#/lib/pending-writes'
 import type { ExamPageData, ExamResult } from '#/lib/exam-api'
 import type { ExamConfig, Quiz } from '#/quizzes/types'
 import { resolveExamConfig } from '#/domain/exam-settings'
@@ -82,8 +83,10 @@ export function useExam(
   useEffect(() => {
     if (!sync) return
     window.addEventListener('pagehide', sync.flush)
+    const unregister = registerFlush(sync.flush)
     return () => {
       window.removeEventListener('pagehide', sync.flush)
+      unregister()
       sync.flush()
     }
   }, [sync])

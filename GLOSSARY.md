@@ -133,6 +133,10 @@ A user's most recent attempt for a chapter or the mock exam.
 A user's mark on a question to come back to it later; flagged questions can be practised on their own.
 _Avoid_: Bookmark, star
 
+**Note**:
+A signed-in user's own markdown page about a quiz, with a title; only they can see it. A user can have several notes per quiz, on built-in quizzes and their own personal quizzes.
+_Avoid_: Annotation, comment, memo
+
 **Unfinished exam**:
 A user's started, not yet submitted mock exam, which can be resumed until its time runs out. At most one per user per quiz.
 _Avoid_: Exam session (in conversation), draft

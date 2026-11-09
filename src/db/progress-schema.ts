@@ -14,14 +14,16 @@ import {
   uuid,
 } from 'drizzle-orm/pg-core'
 // Relative: drizzle-kit loads this file without the #/ alias.
+import { MAX_NOTE_LENGTH, MAX_NOTE_TITLE_LENGTH } from '../domain/notes'
 import { MAX_EXAM_MINUTES } from '../quizzes/rules'
 import { user } from './auth-schema'
 import { chapter, question, questionOption, quiz } from './quiz-schema'
 
 /*
  * What signed-in users keep: attempts (finished chapter runs and mock exams),
- * flags, their own mock exam settings and unfinished exams. Visitors keep
- * nothing. Everything goes with the user, and with the content it refers to.
+ * flags, their own mock exam settings, unfinished exams and notes. Visitors
+ * keep nothing. Everything goes with the user, and with the content it refers
+ * to.
  */
 
 export const attemptKind = pgEnum('attempt_kind', ['chapter', 'exam'])
@@ -197,6 +199,47 @@ export const examSessionPick = pgTable(
       ],
     }).onDelete('cascade'),
     index('exam_session_pick_option_id_idx').on(t.optionId),
+  ],
+)
+
+/**
+ * A user's own markdown page about a quiz; only they can see it. Several per
+ * quiz (the cap is a rule of src/domain/notes.ts). Kept when the quiz's
+ * content changes, deleted with the quiz.
+ */
+export const quizNote = pgTable(
+  'quiz_note',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    userId: text('user_id')
+      .notNull()
+      .references(() => user.id, { onDelete: 'cascade' }),
+    quizId: text('quiz_id')
+      .notNull()
+      .references(() => quiz.id, { onDelete: 'cascade' }),
+    title: text('title').notNull(),
+    /** Markdown, as the note editor writes it. */
+    body: text('body').notNull().default(''),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  (t) => [
+    index('quiz_note_user_quiz_idx').on(t.userId, t.quizId, t.updatedAt),
+    // For the cascade when a quiz is deleted (e.g. by the seed).
+    index('quiz_note_quiz_id_idx').on(t.quizId),
+    check(
+      'quiz_note_title_length',
+      sql`char_length(${t.title}) BETWEEN 1 AND ${sql.raw(String(MAX_NOTE_TITLE_LENGTH))}`,
+    ),
+    check(
+      'quiz_note_body_length',
+      sql`char_length(${t.body}) <= ${sql.raw(String(MAX_NOTE_LENGTH))}`,
+    ),
   ],
 )
 

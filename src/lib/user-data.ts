@@ -13,6 +13,7 @@ import {
   saveExamOverrides,
   setQuestionFlag,
 } from '#/lib/user-data-api'
+import { trackWrite } from '#/lib/pending-writes'
 
 /*
  * The signed-in user's state per quiz (progress, flags, exam settings) on the
@@ -133,7 +134,7 @@ function afterSave(
   send: () => Promise<unknown>,
 ): Promise<void> {
   const current = entry(key)
-  const request = current.writes.then(send, send)
+  const request = trackWrite(current.writes.then(send, send))
   current.writes = request.catch(() => {})
   return request.then(
     () => {

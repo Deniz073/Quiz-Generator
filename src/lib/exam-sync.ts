@@ -1,3 +1,4 @@
+import { trackWrite } from '#/lib/pending-writes'
 import type { ExamState } from '#/lib/exam-state'
 import {
   clockOffset,
@@ -62,10 +63,12 @@ export function createExamSync(
   const sent = new WeakSet<ExamState['plan']>()
 
   function enqueue(task: () => Promise<void>) {
-    queue = queue.then(task).catch((error: unknown) => {
-      console.error('Could not save the exam', error)
-      events.onFailed()
-    })
+    queue = trackWrite(
+      queue.then(task).catch((error: unknown) => {
+        console.error('Could not save the exam', error)
+        events.onFailed()
+      }),
+    )
   }
 
   function flush() {

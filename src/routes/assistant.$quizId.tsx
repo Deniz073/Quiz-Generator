@@ -45,7 +45,7 @@ export const Route = createFileRoute('/assistant/$quizId')({
     ],
   }),
   // A skeleton soon instead of keeping the previous page up while the quiz
-  // and keys load. Not at once: every navigation also checks the session
+  // and keys load. Not at once: a navigation may also check the session
   // (root beforeLoad), and a handover must finish without one. Kept up
   // briefly once shown, so it doesn't flash.
   pendingComponent: QuizAssistantSkeleton,

@@ -3,6 +3,7 @@ import {
   toServerSentEventsResponse,
 } from '@tanstack/ai'
 import { createFileRoute } from '@tanstack/react-router'
+import { createCsrfMiddleware } from '@tanstack/react-start'
 import { z } from 'zod'
 import { apiKeyProviderSchema } from '#/lib/api-keys-schema'
 import { getDecryptedApiKey } from '#/server/api-key-store'
@@ -59,6 +60,10 @@ async function readJsonBody(request: Request): Promise<unknown> {
 
 export const Route = createFileRoute('/api/assistant')({
   server: {
+    // Same-origin requests only (by Sec-Fetch-Site, else Origin or Referer),
+    // as Start does for server functions: the chat runs on the user's own
+    // API key, so another site must not be able to start one.
+    middleware: [createCsrfMiddleware()],
     handlers: {
       POST: async ({ request }: { request: Request }) => {
         const userId = await getRequestUserId()

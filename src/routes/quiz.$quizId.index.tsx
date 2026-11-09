@@ -5,8 +5,10 @@ import { SparklesIcon } from 'lucide-react'
 import { ExamSettings } from '#/components/ExamSettings'
 import { Button } from '#/components/ui/button'
 import { NotFound } from '#/components/NotFound'
+import { NotesSection } from '#/components/NotesSection'
 import { QuizMarketplace } from '#/components/QuizMarketplace'
 import { fetchQuizStanding } from '#/lib/marketplace-api'
+import { fetchQuizNotes } from '#/lib/notes-api'
 import { SignInBanner } from '#/components/SignInBanner'
 import { backLinkClasses } from '#/lib/button-classes'
 import { FLAGGING_HINT, getFlaggedQuestions } from '#/lib/flags'
@@ -27,15 +29,18 @@ const cardLinkClasses =
   'rounded-lg border border-slate-200 bg-white px-4 py-3 transition-colors hover:border-sky-500 dark:border-slate-800 dark:bg-slate-900 dark:hover:border-sky-400'
 
 export const Route = createFileRoute('/quiz/$quizId/')({
-  loader: async ({ params }) => {
+  loader: async ({ params, context }) => {
     // The quiz may come from the browser's cache; its Marketplace standing
-    // (published or not) is always fresh.
-    const [quiz, standing] = await Promise.all([
+    // (published or not) and the user's notes are always fresh.
+    const [quiz, standing, notes] = await Promise.all([
       requireQuiz(params.quizId),
       fetchQuizStanding({ data: { quizId: params.quizId } }),
+      context.user
+        ? fetchQuizNotes({ data: { quizId: params.quizId } })
+        : Promise.resolve(null),
     ])
     if (!standing) throw notFound()
-    return { quiz, standing }
+    return { quiz, standing, notes }
   },
   head: ({ loaderData }) => ({
     meta: [{ title: pageTitle(loaderData?.quiz.title) }],
@@ -45,7 +50,7 @@ export const Route = createFileRoute('/quiz/$quizId/')({
 })
 
 function QuizPage() {
-  const { quiz, standing } = Route.useLoaderData()
+  const { quiz, standing, notes } = Route.useLoaderData()
   const { user } = Route.useRouteContext()
   // Empty on the server and during hydration, then loaded (visitors: empty).
   const progress = useQuizProgress(quiz.id)
@@ -218,6 +223,8 @@ function QuizPage() {
           />
         ) : null}
       </div>
+
+      <NotesSection quizId={quiz.id} notes={notes} />
 
       {user ? (
         <QuizMarketplace quiz={quiz} standing={standing} userName={user.name} />
