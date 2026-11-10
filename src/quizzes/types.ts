@@ -58,6 +58,27 @@ export interface ExamConfig {
   passPercent: number
 }
 
+/**
+ * A quiz without the content of its questions: what a page needs that lists
+ * the chapters and counts questions (the quiz's own page). Every `Quiz` is
+ * also a `QuizOutline`.
+ */
+export interface QuizOutline {
+  id: string
+  title: string
+  description: string
+  chapters: Array<ChapterOutline>
+  exam?: ExamConfig
+}
+
+export interface ChapterOutline {
+  id: string
+  number: number
+  title: string
+  /** The chapter's questions in order, by id only. */
+  questions: Array<{ id: string }>
+}
+
 export interface Quiz {
   /** URL slug, unique across all quizzes, e.g. "az-900" (a-z, 0-9, hyphens). Should match the folder name. */
   id: string

@@ -1,6 +1,6 @@
 import type { quiz } from '#/db/schema'
 import { getCorrectIndexes, withCorrectIndexes } from '#/quizzes/question'
-import type { ExamConfig, Quiz } from '#/quizzes/types'
+import type { ExamConfig, Quiz, QuizOutline } from '#/quizzes/types'
 
 /*
  * The app's `Quiz` as rows of the quiz tables and back: the one place that
@@ -82,6 +82,34 @@ export function toQuiz(row: StoredQuiz): Quiz {
           correctIndexesOf(q.options),
         ),
       ),
+    })),
+    exam: toExamConfig(row),
+  }
+}
+
+/** A quiz row with its chapters and the slugs of their questions, each ordered. */
+export interface StoredQuizOutline extends ExamColumns {
+  id: string
+  title: string
+  description: string
+  chapters: Array<{
+    slug: string
+    number: number
+    title: string
+    questions: Array<{ slug: string }>
+  }>
+}
+
+export function toQuizOutline(row: StoredQuizOutline): QuizOutline {
+  return {
+    id: row.id,
+    title: row.title,
+    description: row.description,
+    chapters: row.chapters.map((c) => ({
+      id: c.slug,
+      number: c.number,
+      title: c.title,
+      questions: c.questions.map((q) => ({ id: q.slug })),
     })),
     exam: toExamConfig(row),
   }

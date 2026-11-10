@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useSyncExternalStore } from 'react'
 import { useRouteContext } from '@tanstack/react-router'
-import type { ExamConfig, Question, Quiz } from '#/quizzes/types'
+import type { ExamConfig, Question, QuizOutline } from '#/quizzes/types'
 import type { QuizUserData } from '#/lib/user-data-api'
 import type { Attempt, ProgressTarget, QuizProgress } from '#/domain/progress'
 import type { ExamOverrides } from '#/domain/exam-settings'
@@ -210,7 +210,10 @@ function useExamOverrides(quizId: string): ExamOverrides | undefined {
  * The mock exam settings in effect for a quiz: its defaults with the user's
  * adjustments. The defaults until the adjustments have loaded.
  */
-export function useExamConfig(quiz: Quiz, defaults: ExamConfig): ExamConfig {
+export function useExamConfig(
+  quiz: QuizOutline,
+  defaults: ExamConfig,
+): ExamConfig {
   return resolveExamConfig(
     defaults,
     useExamOverrides(quiz.id),

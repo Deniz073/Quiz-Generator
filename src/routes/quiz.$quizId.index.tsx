@@ -18,7 +18,7 @@ import { getFlaggedQuestions } from '#/lib/flags'
 import { formatChapter } from '#/lib/chapter-label'
 import { pageTitle } from '#/lib/page-title'
 import { formatResult } from '#/domain/progress'
-import { forgetQuiz, requireQuiz } from '#/lib/quiz-route'
+import { forgetQuiz, requireQuizOutline } from '#/lib/quiz-route'
 import { settledSoon } from '#/lib/skeleton-delay'
 import { useFlags, useQuizProgress } from '#/lib/user-data'
 import { countQuestions } from '#/quizzes'
@@ -28,7 +28,8 @@ const cardLinkClasses =
 
 export const Route = createFileRoute('/quiz/$quizId/')({
   loader: async ({ params, context }) => {
-    // The quiz may come from the browser's cache; its Marketplace standing
+    // Only the quiz's outline (no question content), which may come from
+    // the browser's cache; its Marketplace standing
     // (published or not) and the user's notes are always fresh. Those two
     // are not awaited for long: the quiz decides the 404 and the title, and
     // if they take a while the page shows without them and they are
@@ -46,7 +47,7 @@ export const Route = createFileRoute('/quiz/$quizId/')({
       () => {},
     )
     const [quiz] = await Promise.all([
-      requireQuiz(params.quizId),
+      requireQuizOutline(params.quizId),
       settledSoon(standing, notes),
     ])
     return { quiz, standing, notes }

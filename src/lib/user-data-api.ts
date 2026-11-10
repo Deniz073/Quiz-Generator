@@ -5,7 +5,12 @@ import type { ExamOverrides } from '#/domain/exam-settings'
 import { areValidOverrides } from '#/domain/exam-settings'
 import type { Attempt, QuizProgress } from '#/domain/progress'
 import { isValidChapterResult } from '#/domain/progress'
-import { findChapter, findQuestion, findQuizHeader } from '#/server/quiz-access'
+import {
+  findChapter,
+  findQuestion,
+  findQuizHeader,
+  isQuizVisible,
+} from '#/server/quiz-access'
 import { getRequestUserId, requireRequestUserId } from '#/server/request-user'
 import {
   loadExamOverrides,
@@ -35,13 +40,16 @@ export const fetchQuizUserData = createServerFn({ method: 'GET' })
   .validator(z.object({ quizId: idInput }))
   .handler(async ({ data }): Promise<QuizUserData | null> => {
     const userId = await getRequestUserId()
-    if (!userId || !(await findQuizHeader(data.quizId, userId))) return null
-    const [progress, flags, examOverrides] = await Promise.all([
+    if (!userId) return null
+    // Together with the visibility check, not after it: one round trip to
+    // the database instead of two. All of it is the user's own data.
+    const [visible, progress, flags, examOverrides] = await Promise.all([
+      isQuizVisible(data.quizId, userId),
       loadQuizProgress(userId, data.quizId),
       loadFlags(userId, data.quizId),
       loadExamOverrides(userId, data.quizId),
     ])
-    return { progress, flags, examOverrides }
+    return visible ? { progress, flags, examOverrides } : null
   })
 
 /**

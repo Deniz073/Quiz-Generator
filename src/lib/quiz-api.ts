@@ -2,7 +2,11 @@ import { createServerFn } from '@tanstack/react-start'
 import { z } from 'zod'
 import { idInput } from '#/lib/api-inputs'
 import type { Result } from '#/domain/progress'
-import { findQuiz, listQuizHeaders } from '#/server/quiz-access'
+import {
+  findQuiz,
+  findQuizOutline,
+  listQuizHeaders,
+} from '#/server/quiz-access'
 import { getRequestUserId } from '#/server/request-user'
 import { loadExamResults } from '#/server/user-state'
 
@@ -30,6 +34,13 @@ export interface QuizSummary {
 export const fetchQuiz = createServerFn({ method: 'GET' })
   .validator(z.object({ quizId: idInput }))
   .handler(async ({ data }) => findQuiz(data.quizId, await getRequestUserId()))
+
+/** The quiz without its questions' content, for the quiz's own page. */
+export const fetchQuizOutline = createServerFn({ method: 'GET' })
+  .validator(z.object({ quizId: idInput }))
+  .handler(async ({ data }) =>
+    findQuizOutline(data.quizId, await getRequestUserId()),
+  )
 
 /** The home page's list: built-in quizzes and the user's own. */
 export const fetchQuizSummaries = createServerFn({ method: 'GET' }).handler(

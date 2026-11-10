@@ -15,8 +15,8 @@ import type { SQL } from 'drizzle-orm'
 import { db } from '#/db'
 import type { Executor } from '#/db'
 import { chapter, question, questionOption, quiz, user } from '#/db/schema'
-import type { ExamConfig, Quiz } from '#/quizzes/types'
-import { toExamConfig, toQuiz } from '#/server/quiz-rows'
+import type { ExamConfig, Quiz, QuizOutline } from '#/quizzes/types'
+import { toExamConfig, toQuiz, toQuizOutline } from '#/server/quiz-rows'
 
 /*
  * Quiz access: a quiz as a given user may see it, read from the quiz tables
@@ -118,6 +118,19 @@ function toHeader(row: HeaderRow): QuizHeader {
   }
 }
 
+/** Whether the quiz exists and the user may see it: the cheapest check. */
+export async function isQuizVisible(
+  quizId: string,
+  userId: string | null,
+): Promise<boolean> {
+  const rows = await db
+    .select({ id: quiz.id })
+    .from(quiz)
+    .where(visibleQuiz(quizId, userId))
+    .limit(1)
+  return rows.length > 0
+}
+
 /** The quiz without its content, or null if missing or not visible. */
 export async function findQuizHeader(
   quizId: string,
@@ -201,6 +214,37 @@ export async function findQuiz(
   userId: string | null,
 ): Promise<Quiz | null> {
   return loadQuiz(db, (t) => visibleQuiz(quizId, userId, t))
+}
+
+/**
+ * The quiz with its chapters and question ids but no question content, or
+ * null: a fraction of the full quiz to read and to send.
+ */
+export async function findQuizOutline(
+  quizId: string,
+  userId: string | null,
+): Promise<QuizOutline | null> {
+  const row = await db.query.quiz.findFirst({
+    where: { RAW: (t) => visibleQuiz(quizId, userId, t) },
+    columns: {
+      id: true,
+      title: true,
+      description: true,
+      examQuestionCount: true,
+      examMinutes: true,
+      examPassPercent: true,
+    },
+    with: {
+      chapters: {
+        columns: { slug: true, number: true, title: true },
+        orderBy: { number: 'asc' },
+        with: {
+          questions: { columns: { slug: true }, orderBy: { position: 'asc' } },
+        },
+      },
+    },
+  })
+  return row ? toQuizOutline(row) : null
 }
 
 /**

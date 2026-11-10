@@ -18,7 +18,7 @@ import {
   listNotes,
   updateNote,
 } from '#/server/note-store'
-import { findQuizHeader } from '#/server/quiz-access'
+import { isQuizVisible } from '#/server/quiz-access'
 import { getRequestUserId, requireRequestUserId } from '#/server/request-user'
 
 /*
@@ -37,8 +37,13 @@ export const fetchQuizNotes = createServerFn({ method: 'GET' })
   .validator(z.object({ quizId: idInput }))
   .handler(async ({ data }): Promise<Array<NoteSummary> | null> => {
     const userId = await getRequestUserId()
-    if (!userId || !(await findQuizHeader(data.quizId, userId))) return null
-    return listNotes(userId, data.quizId)
+    if (!userId) return null
+    // Together, not one after the other: the notes are the user's own.
+    const [visible, notes] = await Promise.all([
+      isQuizVisible(data.quizId, userId),
+      listNotes(userId, data.quizId),
+    ])
+    return visible ? notes : null
   })
 
 /** Null unless it is one of the user's notes on a quiz they can see. */
@@ -46,8 +51,12 @@ export const fetchNote = createServerFn({ method: 'GET' })
   .validator(noteInput)
   .handler(async ({ data }): Promise<Note | null> => {
     const userId = await getRequestUserId()
-    if (!userId || !(await findQuizHeader(data.quizId, userId))) return null
-    return findNote(userId, data.quizId, data.noteId)
+    if (!userId) return null
+    const [visible, note] = await Promise.all([
+      isQuizVisible(data.quizId, userId),
+      findNote(userId, data.quizId, data.noteId),
+    ])
+    return visible ? note : null
   })
 
 /** A new, empty note on the quiz; its id. */
@@ -55,7 +64,7 @@ export const createQuizNote = createServerFn({ method: 'POST' })
   .validator(z.object({ quizId: idInput }))
   .handler(async ({ data }): Promise<{ id: string }> => {
     const userId = await requireRequestUserId()
-    if (!(await findQuizHeader(data.quizId, userId))) {
+    if (!(await isQuizVisible(data.quizId, userId))) {
       throw new Error('Quiz not found.')
     }
     const created = await createNote(userId, data.quizId)

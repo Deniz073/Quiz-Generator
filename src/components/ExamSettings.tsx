@@ -1,6 +1,6 @@
 import { useId, useState } from 'react'
 import type { FormEvent } from 'react'
-import type { ExamConfig, Quiz } from '#/quizzes/types'
+import type { ExamConfig, QuizOutline } from '#/quizzes/types'
 import { Button } from '#/components/ui/button'
 import { Field, FieldDescription, FieldLabel } from '#/components/ui/field'
 import { Input } from '#/components/ui/input'
@@ -12,7 +12,7 @@ import { saveExamSettings, useUserId } from '#/lib/user-data'
 type Status = { kind: 'success' | 'error'; message: string }
 
 interface Props {
-  quiz: Quiz
+  quiz: QuizOutline
   /** The quiz's own exam settings. */
   defaults: ExamConfig
   /** The settings in effect: the defaults with the user's adjustments. */

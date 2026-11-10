@@ -210,6 +210,11 @@ li {
 /* A note's content in the note editor (Tiptap's ProseMirror element). */
 .note-content {
   min-height: 16rem;
+  /* A long note scrolls within the editor, under its toolbar, instead of
+     growing the page: what is left of the viewport below the page's header,
+     the title field and the toolbar, and above the save state. */
+  max-height: max(16rem, calc(100dvh - 24rem));
+  overflow-y: auto;
   outline: none;
   overflow-wrap: anywhere;
 

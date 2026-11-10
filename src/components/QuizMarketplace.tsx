@@ -17,7 +17,7 @@ export function QuizMarketplace({
   standing,
   userName,
 }: {
-  quiz: Quiz
+  quiz: Pick<Quiz, 'id' | 'title'>
   standing: QuizStanding
   /** Shown publicly as the publisher. */
   userName: string

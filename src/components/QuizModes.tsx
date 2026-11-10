@@ -15,7 +15,7 @@ import { formatResult } from '#/domain/progress'
 import { FLAGGING_HINT } from '#/lib/flags'
 import { PRACTICE_SIZES } from '#/lib/quiz-plan'
 import { useExamConfig, useSignedIn } from '#/lib/user-data'
-import type { ExamConfig, Quiz } from '#/quizzes/types'
+import type { ExamConfig, QuizOutline } from '#/quizzes/types'
 import { countQuestions } from '#/quizzes'
 
 /*
@@ -30,7 +30,7 @@ export function QuizModes({
   flaggedCount,
   examResult,
 }: {
-  quiz: Quiz
+  quiz: QuizOutline
   /** Flagged questions in the whole quiz (0 until loaded, and for visitors). */
   flaggedCount: number
   examResult: Result | undefined
@@ -187,7 +187,7 @@ function MockExamMode({
   defaults,
   result,
 }: {
-  quiz: Quiz
+  quiz: QuizOutline
   defaults: ExamConfig
   result: Result | undefined
 }) {
