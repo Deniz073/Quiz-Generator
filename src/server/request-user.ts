@@ -12,7 +12,6 @@ export async function getRequestUser() {
   return session?.user ?? null
 }
 
-/** The signed-in user's id, or null for a visitor. */
 export async function getRequestUserId(): Promise<string | null> {
   return (await getRequestUser())?.id ?? null
 }

@@ -1,8 +1,13 @@
-import { Link, createFileRoute, notFound } from '@tanstack/react-router'
+import { Suspense } from 'react'
+import { Await, Link, createFileRoute } from '@tanstack/react-router'
 import { SparklesIcon } from 'lucide-react'
 import { Button } from '#/components/ui/button'
 import { NotFound } from '#/components/NotFound'
 import { NotesSection } from '#/components/NotesSection'
+import {
+  NotesSectionSkeleton,
+  QuizPageSkeleton,
+} from '#/components/PageSkeleton'
 import { QuizMarketplace } from '#/components/QuizMarketplace'
 import { QuizModes } from '#/components/QuizModes'
 import { fetchQuizStanding } from '#/lib/marketplace-api'
@@ -13,7 +18,8 @@ import { getFlaggedQuestions } from '#/lib/flags'
 import { formatChapter } from '#/lib/chapter-label'
 import { pageTitle } from '#/lib/page-title'
 import { formatResult } from '#/domain/progress'
-import { requireQuiz } from '#/lib/quiz-route'
+import { forgetQuiz, requireQuiz } from '#/lib/quiz-route'
+import { settledSoon } from '#/lib/skeleton-delay'
 import { useFlags, useQuizProgress } from '#/lib/user-data'
 import { countQuestions } from '#/quizzes'
 
@@ -23,20 +29,32 @@ const cardLinkClasses =
 export const Route = createFileRoute('/quiz/$quizId/')({
   loader: async ({ params, context }) => {
     // The quiz may come from the browser's cache; its Marketplace standing
-    // (published or not) and the user's notes are always fresh.
-    const [quiz, standing, notes] = await Promise.all([
+    // (published or not) and the user's notes are always fresh. Those two
+    // are not awaited for long: the quiz decides the 404 and the title, and
+    // if they take a while the page shows without them and they are
+    // streamed in.
+    const standing = fetchQuizStanding({ data: { quizId: params.quizId } })
+    const notes = context.user
+      ? fetchQuizNotes({ data: { quizId: params.quizId } })
+      : null
+    // No standing: the quiz is gone since the browser cached it (deleted in
+    // another tab). The next navigation then asks again and gets the 404.
+    void standing.then(
+      (found) => {
+        if (!found) forgetQuiz(params.quizId)
+      },
+      () => {},
+    )
+    const [quiz] = await Promise.all([
       requireQuiz(params.quizId),
-      fetchQuizStanding({ data: { quizId: params.quizId } }),
-      context.user
-        ? fetchQuizNotes({ data: { quizId: params.quizId } })
-        : Promise.resolve(null),
+      settledSoon(standing, notes),
     ])
-    if (!standing) throw notFound()
     return { quiz, standing, notes }
   },
   head: ({ loaderData }) => ({
     meta: [{ title: pageTitle(loaderData?.quiz.title) }],
   }),
+  pendingComponent: QuizPageSkeleton,
   component: QuizPage,
   notFoundComponent: () => <NotFound message="Quiz not found." />,
 })
@@ -61,17 +79,30 @@ function QuizPage() {
       </Link>
       <div className="mt-3 flex flex-wrap items-start justify-between gap-3">
         <h1 className="text-3xl font-bold tracking-tight">{quiz.title}</h1>
-        {user && !standing.builtIn ? (
-          <Button
-            variant="outline"
-            nativeButton={false}
-            render={
-              <Link to="/assistant/$quizId" params={{ quizId: quiz.id }} />
-            }
-          >
-            <SparklesIcon data-icon="inline-start" />
-            Edit with assistant
-          </Button>
+        {user ? (
+          // Its own boundary: without one, waiting here would put the whole
+          // page back behind its skeleton.
+          <Suspense>
+            <Await promise={standing}>
+              {(loaded) =>
+                loaded && !loaded.builtIn ? (
+                  <Button
+                    variant="outline"
+                    nativeButton={false}
+                    render={
+                      <Link
+                        to="/assistant/$quizId"
+                        params={{ quizId: quiz.id }}
+                      />
+                    }
+                  >
+                    <SparklesIcon data-icon="inline-start" />
+                    Edit with assistant
+                  </Button>
+                ) : null
+              }
+            </Await>
+          </Suspense>
         ) : null}
       </div>
       <p className="mt-2 text-slate-600 dark:text-slate-400">
@@ -137,11 +168,27 @@ function QuizPage() {
         examResult={progress?.exam}
       />
 
-      <NotesSection quizId={quiz.id} notes={notes} />
+      {notes ? (
+        <Await promise={notes} fallback={<NotesSectionSkeleton />}>
+          {(loaded) => <NotesSection quizId={quiz.id} notes={loaded} />}
+        </Await>
+      ) : (
+        <NotesSection quizId={quiz.id} notes={null} />
+      )}
 
-      {user ? (
-        <QuizMarketplace quiz={quiz} standing={standing} userName={user.name} />
-      ) : null}
+      <Suspense>
+        <Await promise={standing}>
+          {(loaded) =>
+            loaded && user ? (
+              <QuizMarketplace
+                quiz={quiz}
+                standing={loaded}
+                userName={user.name}
+              />
+            ) : null
+          }
+        </Await>
+      </Suspense>
     </div>
   )
 }

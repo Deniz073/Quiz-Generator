@@ -12,7 +12,6 @@ export function filterByTitle<T extends { title: string }>(
     : items
 }
 
-/** A search box for filtering a list by title (see filterByTitle). */
 export function TitleSearch({
   value,
   onChange,

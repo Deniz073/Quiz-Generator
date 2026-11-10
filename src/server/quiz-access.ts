@@ -63,11 +63,9 @@ export interface QuizHeader {
   description: string
   /** False: a personal quiz (of this user). */
   builtIn: boolean
-  /** An imported quiz (copied from a published quiz). */
   imported: boolean
   /** Its owner has saved changes to it (the quiz assistant). */
   edited: boolean
-  /** On the Marketplace. */
   published: boolean
   /** The mock exam defaults; undefined if the quiz has no mock exam. */
   exam: ExamConfig | undefined

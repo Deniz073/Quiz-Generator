@@ -1,23 +1,33 @@
 import { useState } from 'react'
-import { Link, createFileRoute } from '@tanstack/react-router'
+import { Await, Link, createFileRoute } from '@tanstack/react-router'
 import { ListingActions, ListingByline } from '#/components/ListingActions'
+import { CardListSkeleton } from '#/components/PageSkeleton'
 import { Badge } from '#/components/ui/badge'
 import { TitleSearch, filterByTitle } from '#/components/TitleSearch'
 import type { Listing } from '#/lib/marketplace-api'
 import { fetchListings } from '#/lib/marketplace-api'
 import { pageTitle } from '#/lib/page-title'
+import { SKELETON_DELAY_MS, settledSoon } from '#/lib/skeleton-delay'
 import { Button } from '#/components/ui/button'
 
 export const Route = createFileRoute('/marketplace/')({
-  loader: () => fetchListings(),
+  // Not awaited for long: if the listings take a while, the page shows
+  // without them and they are streamed in.
+  loader: async () => {
+    const listings = fetchListings()
+    await settledSoon(listings)
+    return { listings }
+  },
+  // The loader never takes long, so only a slow first download of the page's
+  // code shows the whole-page skeleton; not just ahead of the list's own.
+  pendingMs: 2 * SKELETON_DELAY_MS,
   head: () => ({ meta: [{ title: pageTitle('Marketplace') }] }),
   component: Marketplace,
 })
 
 function Marketplace() {
-  const listings = Route.useLoaderData()
+  const { listings } = Route.useLoaderData()
   const [query, setQuery] = useState('')
-  const matches = filterByTitle(listings, query)
   return (
     <div>
       <h1 className="text-3xl font-bold tracking-tight">Marketplace</h1>
@@ -31,22 +41,41 @@ function Marketplace() {
         label="Search the Marketplace by name"
         className="mt-6"
       />
-      {matches.length === 0 ? (
-        <p className="mt-6 text-muted-foreground">
-          {query.trim()
-            ? `No published quizzes match “${query.trim()}”.`
-            : 'No quizzes have been published yet.'}
-        </p>
-      ) : (
-        <ul className="mt-6 flex flex-col gap-4">
-          {matches.map((listing) => (
-            <li key={listing.id}>
-              <ListingCard listing={listing} />
-            </li>
-          ))}
-        </ul>
-      )}
+      <Await
+        promise={listings}
+        fallback={<CardListSkeleton label="Loading the Marketplace" />}
+      >
+        {(loaded) => <Listings listings={loaded} query={query} />}
+      </Await>
     </div>
+  )
+}
+
+function Listings({
+  listings,
+  query,
+}: {
+  listings: ReadonlyArray<Listing>
+  query: string
+}) {
+  const matches = filterByTitle(listings, query)
+  if (matches.length === 0) {
+    return (
+      <p className="mt-6 text-muted-foreground">
+        {query.trim()
+          ? `No published quizzes match “${query.trim()}”.`
+          : 'No quizzes have been published yet.'}
+      </p>
+    )
+  }
+  return (
+    <ul className="mt-6 flex flex-col gap-4">
+      {matches.map((listing) => (
+        <li key={listing.id}>
+          <ListingCard listing={listing} />
+        </li>
+      ))}
+    </ul>
   )
 }
 

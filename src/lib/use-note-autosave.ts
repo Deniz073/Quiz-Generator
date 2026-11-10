@@ -10,7 +10,6 @@ import { trackWrite } from '#/lib/pending-writes'
  */
 
 export type SaveStatus =
-  /** Everything is saved. */
   | { kind: 'saved' }
   /** Changes wait for the next save. */
   | { kind: 'unsaved' }

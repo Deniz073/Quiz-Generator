@@ -21,7 +21,6 @@ import {
  * sent once. ./use-exam feeds it every state and reacts to its events.
  */
 
-/** How long a change waits before it is saved. */
 const SAVE_DELAY_MS = 400
 
 export interface ExamSyncEvents {

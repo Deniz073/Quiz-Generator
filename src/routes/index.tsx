@@ -1,7 +1,8 @@
 import { useState } from 'react'
-import { Link, createFileRoute } from '@tanstack/react-router'
+import { Await, Link, createFileRoute } from '@tanstack/react-router'
 import { SparklesIcon } from 'lucide-react'
 import type { QuizSummary } from '#/lib/quiz-api'
+import { CardListSkeleton } from '#/components/PageSkeleton'
 import { SignInBanner } from '#/components/SignInBanner'
 import { TitleSearch, filterByTitle } from '#/components/TitleSearch'
 import { Badge } from '#/components/ui/badge'
@@ -9,21 +10,26 @@ import { Button } from '#/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '#/components/ui/tabs'
 import { formatResult } from '#/domain/progress'
 import { fetchQuizSummaries } from '#/lib/quiz-api'
+import { SKELETON_DELAY_MS, settledSoon } from '#/lib/skeleton-delay'
 
 export const Route = createFileRoute('/')({
-  loader: () => fetchQuizSummaries(),
+  // Not awaited for long: if the quizzes take a while, the page shows
+  // without them and they are streamed in.
+  loader: async () => {
+    const quizzes = fetchQuizSummaries()
+    await settledSoon(quizzes)
+    return { quizzes }
+  },
+  // The loader never takes long, so only a slow first download of the page's
+  // code shows the whole-page skeleton; not just ahead of the list's own.
+  pendingMs: 2 * SKELETON_DELAY_MS,
   component: Home,
 })
 
 function Home() {
-  const quizzes = Route.useLoaderData()
+  const { quizzes } = Route.useLoaderData()
   const { user } = Route.useRouteContext()
   const [query, setQuery] = useState('')
-  const matches = filterByTitle(quizzes, query)
-  const builtIn = matches.filter((quiz) => quiz.builtIn)
-  const personal = matches.filter((quiz) => !quiz.builtIn)
-  // Tabs only make sense once the user has personal quizzes at all.
-  const hasPersonal = quizzes.some((quiz) => !quiz.builtIn)
   return (
     <div>
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -48,27 +54,46 @@ function Home() {
         label="Search quizzes by name"
         className="mt-6"
       />
-      {hasPersonal ? (
-        <Tabs defaultValue="personal" className="mt-6">
-          <TabsList>
-            <TabsTrigger value="personal">
-              My quizzes ({personal.length})
-            </TabsTrigger>
-            <TabsTrigger value="built-in">
-              Built-in quizzes ({builtIn.length})
-            </TabsTrigger>
-          </TabsList>
-          <TabsContent value="personal">
-            <QuizList quizzes={personal} query={query} />
-          </TabsContent>
-          <TabsContent value="built-in">
-            <QuizList quizzes={builtIn} query={query} />
-          </TabsContent>
-        </Tabs>
-      ) : (
-        <QuizList quizzes={builtIn} query={query} />
-      )}
+      <Await
+        promise={quizzes}
+        fallback={<CardListSkeleton label="Loading quizzes" />}
+      >
+        {(loaded) => <Quizzes quizzes={loaded} query={query} />}
+      </Await>
     </div>
+  )
+}
+
+function Quizzes({
+  quizzes,
+  query,
+}: {
+  quizzes: ReadonlyArray<QuizSummary>
+  query: string
+}) {
+  const matches = filterByTitle(quizzes, query)
+  const builtIn = matches.filter((quiz) => quiz.builtIn)
+  const personal = matches.filter((quiz) => !quiz.builtIn)
+  // Tabs only make sense once the user has personal quizzes at all.
+  const hasPersonal = quizzes.some((quiz) => !quiz.builtIn)
+  if (!hasPersonal) return <QuizList quizzes={builtIn} query={query} />
+  return (
+    <Tabs defaultValue="personal" className="mt-6">
+      <TabsList>
+        <TabsTrigger value="personal">
+          My quizzes ({personal.length})
+        </TabsTrigger>
+        <TabsTrigger value="built-in">
+          Built-in quizzes ({builtIn.length})
+        </TabsTrigger>
+      </TabsList>
+      <TabsContent value="personal">
+        <QuizList quizzes={personal} query={query} />
+      </TabsContent>
+      <TabsContent value="built-in">
+        <QuizList quizzes={builtIn} query={query} />
+      </TabsContent>
+    </Tabs>
   )
 }
 

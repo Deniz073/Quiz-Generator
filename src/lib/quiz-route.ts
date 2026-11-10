@@ -10,7 +10,6 @@ import { fetchQuiz } from '#/lib/quiz-api'
  * `if (!quiz) return null`.
  */
 
-/** How long the browser reuses a loaded quiz before asking the server again. */
 const CLIENT_CACHE_MS = 5 * 60_000
 
 const clientCache = new Map<

@@ -3,7 +3,6 @@ import { InfoIcon } from 'lucide-react'
 import { Alert, AlertDescription, AlertTitle } from '#/components/ui/alert'
 import { useSignedIn } from '#/lib/user-data'
 
-/** Tells visitors that nothing they do is kept until they sign in. */
 export function SignInBanner({ className }: { className?: string }) {
   const signedIn = useSignedIn()
   const redirect = useLocation({ select: (location) => location.href })

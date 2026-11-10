@@ -47,7 +47,6 @@ export const EXAM_SETTINGS = [
   'passPercent',
 ] as const satisfies ReadonlyArray<keyof ExamConfig>
 
-/** Upper bound of a mock exam's time limit, in minutes. */
 export const MAX_EXAM_MINUTES = 600
 
 export interface Range {

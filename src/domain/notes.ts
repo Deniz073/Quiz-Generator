@@ -13,10 +13,8 @@ export const MAX_NOTE_LENGTH = 100_000
 /** Characters in a note's title. */
 export const MAX_NOTE_TITLE_LENGTH = 120
 
-/** The title a new note starts with. */
 export const DEFAULT_NOTE_TITLE = 'Untitled note'
 
-/** Protocols a link in a note may use. */
 const LINK_PROTOCOLS: ReadonlyArray<string> = ['http:', 'https:', 'mailto:']
 
 /** Protocols an image in a note may load from (https: no mixed content). */

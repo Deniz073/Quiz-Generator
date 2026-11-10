@@ -220,7 +220,6 @@ function contentExtensions(): Array<AnyExtension> {
   ]
 }
 
-/** Every extension of the note editor. */
 export function noteEditorExtensions(): Array<AnyExtension> {
   return [
     ...contentExtensions(),
